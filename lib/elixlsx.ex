@@ -166,7 +166,7 @@ defmodule Elixlsx do
       </c>
     </row>
   </sheetData>
-  <pageMargins left="0.7875" right="0.7875" top="1.05277777777778" bottom="1.05277777777778" header="0.7875" footer="0.7875"/>
+  <pageMargins left="0.75" right="0.75" top="1" bottom="1.0" header="0.5" footer="0.5"/>
 </worksheet>
 			"""
 			}]
