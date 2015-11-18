@@ -1,3 +1,7 @@
+defmodule Sheet do
+  defstruct name: "", rows: []
+end
+
 defmodule Elixlsx do
   
   @doc ~S"""
@@ -143,6 +147,64 @@ defmodule Elixlsx do
 		}
 	end
 
+  @col_alphabet to_string(Enum.to_list(?A..?Z))
+  
+  @doc ~S"""
+    returns the column letter(s) associated with a column index. Col idx starts at 1.
+  """
+  def encode_col(0) do "" end
+  def encode_col num do
+    znum = num - 1
+    encode_col(div(znum, String.length(@col_alphabet))) <> String.at(@col_alphabet, rem(znum, String.length(@col_alphabet)))
+  end
+
+  @doc ~S"""
+  Returns the Char/Number representation of a given row/column combination.
+  Indizes start with 1.
+
+  ## Examples
+  
+    iex> Elixlsx.to_excel_coords(1, 1)
+    "A1"
+
+    iex> Elixlsx.to_excel_coords(10, 27)
+    "AA10"
+
+  """
+  def to_excel_coords(row, col) do
+    encode_col(col) <> to_string(row)
+  end
+
+  defp xl_sheet_cols(row, rowidx) do
+    Enum.zip(row, 1 .. length row) |>
+    Enum.map(
+      fn {col, colidx} ->
+        {type, value} = cond do
+          is_number(col) -> {"n", to_string(col)}
+          true -> {"s", to_string(col)} # TODO this may throw.
+        end
+        List.foldr ["<c r=\"",
+                     to_excel_coords(rowidx, colidx),
+                     "\" s=\"0\" t=\"",
+                     type,
+                     "\">",
+                     "<v>",
+                     value,
+                     "</v></c>"], "", &<>/2
+        end) |>
+    List.foldr "", &<>/2
+  end
+
+  defp xl_sheet_rows(data) do
+    Enum.zip(data, 1 .. length data) |>
+    Enum.map(fn {row, rowidx} -> 
+        List.foldr(["<row r=\"",
+                     to_string(rowidx),
+                     "\">\n",
+                     xl_sheet_cols(row, rowidx),
+                     "</row>"], "", &<>/2) end) |>
+    List.foldr("", &<>/2)
+  end
 
 	def get_xl_worksheets_dir(data) do
 		[{'xl/worksheets/sheet1.xml',
@@ -160,11 +222,11 @@ defmodule Elixlsx do
   </sheetViews>
   <sheetFormatPr defaultRowHeight="12.8"/>
   <sheetData>
-    <row r="1">
-      <c r="A1" s="0" t="s">
-        <v>0</v>
-      </c>
-    </row>
+  """ 
+  <>
+  xl_sheet_rows(data.rows)
+  <>
+  ~S"""
   </sheetData>
   <pageMargins left="0.75" right="0.75" top="1" bottom="1.0" header="0.5" footer="0.5"/>
 </worksheet>
@@ -205,9 +267,5 @@ defmodule Elixlsx do
       get_xl_dir(data) ++
       [ get_contentTypes_xml(data) ])
   end
-end
-
-defmodule Sheet do
-  defstruct name: "", data: []
 end
 
