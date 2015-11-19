@@ -2,5 +2,6 @@
 
 require Elixlsx
 
-data = %Sheet{name: 'First', rows: [[1,2,3],[4,5,6]]}
-Elixlsx.write_to(data, "empty.xlsx")
+sheet = %Sheet{name: 'First', rows: [[1,2,3],[4,5,6]]}
+workbook = %Workbook{sheets: [sheet]}
+Elixlsx.write_to(workbook, "empty.xlsx")

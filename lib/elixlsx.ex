@@ -1,37 +1,35 @@
+defmodule Workbook do
+  defstruct sheets: [], datetime: nil
+  @type t :: %Workbook{
+      sheets: nonempty_list(Sheet.t),
+      datetime: Elixlsx.Util.calendar
+  }
+end
+
 defmodule Sheet do
   defstruct name: "", rows: []
+  @type t :: %Sheet {
+    name: String.t,
+    rows: list(list(any()))
+  }
 end
 
 defmodule Elixlsx do
+
+  alias Elixlsx.Util
+  alias Elixlsx.XML_Templates
   
   @doc ~S"""
     returns a tuple {'docProps/app.xml', "XML Data"}
     TODO: This is stolen from libreoffice. Write reasonable stuff here.
   """
   def get_docProps_app_xml(data) do
-    {'docProps/app.xml',
-      ~S"""
-<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<Properties xmlns="http://schemas.openxmlformats.org/officeDocument/2006/extended-properties" xmlns:vt="http://schemas.openxmlformats.org/officeDocument/2006/docPropsVTypes">
-  <TotalTime>0</TotalTime>
-  <Application>Elixlsx/0.0.1$Linux_X86_64 nweh_project/00m0$Build-2</Application>
-</Properties>
-"""
-	}
+    {'docProps/app.xml', XML_Templates.docprops_app}
   end
 
-  def get_docProps_core_xml(data) do
-    {'docProps/core.xml',
-      ~S"""
-<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<cp:coreProperties xmlns:cp="http://schemas.openxmlformats.org/package/2006/metadata/core-properties" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:dcterms="http://purl.org/dc/terms/" xmlns:dcmitype="http://purl.org/dc/dcmitype/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
-  <dcterms:created xsi:type="dcterms:W3CDTF">2015-11-16T19:38:34Z</dcterms:created>
-  <dc:language>en-US</dc:language>
-  <dcterms:modified xsi:type="dcterms:W3CDTF">2015-11-16T19:38:56Z</dcterms:modified>
-  <cp:revision>1</cp:revision>
-</cp:coreProperties>
-"""
-		}
+  @spec get_docProps_core_xml(Workbook.t) :: String.t
+  def get_docProps_core_xml(workbook) do
+    {'docProps/core.xml', XML_Templates.docprops_core(workbook.datetime)}
   end
 
 
@@ -147,34 +145,6 @@ defmodule Elixlsx do
 		}
 	end
 
-  @col_alphabet to_string(Enum.to_list(?A..?Z))
-  
-  @doc ~S"""
-    returns the column letter(s) associated with a column index. Col idx starts at 1.
-  """
-  def encode_col(0) do "" end
-  def encode_col num do
-    znum = num - 1
-    encode_col(div(znum, String.length(@col_alphabet))) <> String.at(@col_alphabet, rem(znum, String.length(@col_alphabet)))
-  end
-
-  @doc ~S"""
-  Returns the Char/Number representation of a given row/column combination.
-  Indizes start with 1.
-
-  ## Examples
-  
-    iex> Elixlsx.to_excel_coords(1, 1)
-    "A1"
-
-    iex> Elixlsx.to_excel_coords(10, 27)
-    "AA10"
-
-  """
-  def to_excel_coords(row, col) do
-    encode_col(col) <> to_string(row)
-  end
-
   defp xl_sheet_cols(row, rowidx) do
     Enum.zip(row, 1 .. length row) |>
     Enum.map(
@@ -184,7 +154,7 @@ defmodule Elixlsx do
           true -> {"s", to_string(col)} # TODO this may throw.
         end
         List.foldr ["<c r=\"",
-                     to_excel_coords(rowidx, colidx),
+                     Util.to_excel_coords(rowidx, colidx),
                      "\" s=\"0\" t=\"",
                      type,
                      "\">",
@@ -194,6 +164,7 @@ defmodule Elixlsx do
         end) |>
     List.foldr "", &<>/2
   end
+
 
   defp xl_sheet_rows(data) do
     Enum.zip(data, 1 .. length data) |>
@@ -224,7 +195,7 @@ defmodule Elixlsx do
   <sheetData>
   """ 
   <>
-  xl_sheet_rows(data.rows)
+  xl_sheet_rows(hd(data.sheets).rows)
   <>
   ~S"""
   </sheetData>
@@ -260,12 +231,12 @@ defmodule Elixlsx do
 		get_xl_worksheets_dir(data)
 	end
 
-  def write_to(data, filename) do
+  def write_to(workbook, filename) do
     :zip.create(filename,
-			get_docProps_dir(data) ++
-      get__rels_dir(data) ++
-      get_xl_dir(data) ++
-      [ get_contentTypes_xml(data) ])
+			get_docProps_dir(workbook) ++
+      get__rels_dir(workbook) ++
+      get_xl_dir(workbook) ++
+      [ get_contentTypes_xml(workbook) ])
   end
 end
 
