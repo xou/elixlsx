@@ -1,0 +1,97 @@
+defmodule Elixlsx.Util do
+  @col_alphabet to_string(Enum.to_list(?A..?Z))
+
+  @doc ~S"""
+    returns the column letter(s) associated with a column index. Col idx starts at 1.
+  """
+  @spec encode_col(non_neg_integer) :: String.t
+  def encode_col(0) do "" end
+  def encode_col num do
+    znum = num - 1
+    encode_col(div(znum, String.length(@col_alphabet))) <> String.at(@col_alphabet, rem(znum, String.length(@col_alphabet)))
+  end
+
+  @spec decode_col(list(char()) | String.t) :: non_neg_integer
+  def decode_col s do
+    cond do
+      is_list s -> decode_col(to_string s)
+      String.valid? s -> decode_col_ s
+      true -> raise %ArgumentError{message: "decode_col expects string or charlist, got "
+                                   <> inspect s}
+    end
+  end
+
+  @spec decode_col_(String.t) :: non_neg_integer
+  defp decode_col_("") do 0 end
+  defp decode_col_(s) do
+    alphabet_list = String.to_char_list @col_alphabet
+
+    if !String.match? s, ~r/^[A-Z]*$/ do
+      raise %ArgumentError{message: "Invalid column string: " <> inspect s}
+    end
+      
+    # translate list of strings to the base-26 value they represent
+    Enum.map(String.to_char_list(s), (fn x -> :string.chr(alphabet_list, x) end)) |>
+    # multiply and aggregate them
+    List.foldl 0, (fn (x, acc) -> x + 26 * acc end) 
+  end
+
+
+  @doc ~S"""
+  Returns the Char/Number representation of a given row/column combination.
+  Indizes start with 1.
+
+  ## Examples
+  
+    iex> Elixlsx.Util.to_excel_coords(1, 1)
+    "A1"
+
+    iex> Elixlsx.Util.to_excel_coords(10, 27)
+    "AA10"
+
+  """
+  @spec to_excel_coords(number, number) :: String.t
+  def to_excel_coords(row, col) do
+    encode_col(col) <> to_string(row)
+  end
+
+
+  @type datetime_t :: :calendar.datetime()
+  @spec iso_from_datetime(datetime_t) :: String.t
+  def iso_from_datetime calendar do
+    {{y, m, d}, {h, min, s}} = calendar
+    to_string(:io_lib.format('~4.10.0b-~2.10.0b-~2.10.0bT~2.10.0b:~2.10.0b:~2.10.0bZ', [y, m, d, h, min, s]))
+  end
+
+  @doc ~S"""
+    returns
+    - the current current timestamp if input is nil,
+    - the UNIX-Timestamp interpretation when given an integer,
+    both in ISO-Repr.
+
+    If input is a String, the string is returned.
+
+      iex> Elixlsx.Util.iso_timestamp 0
+      "1970-01-01T00:00:00Z"
+
+      iex> Elixlsx.Util.iso_timestamp 1447885907
+      "2015-11-18T22:31:47Z"
+
+  """
+  @spec iso_timestamp(String.t | integer | nil) :: String.t
+  def iso_timestamp input \\ nil do
+    cond do
+      input == nil ->
+        iso_from_datetime(:calendar.universal_time)
+      is_integer(input) ->
+        iso_from_datetime(:calendar.now_to_universal_time({div(input, 1000000), rem(input, 1000000), 0}))
+      # TODO this case should parse the string i guess
+      # TODO also prominently absent: [char].
+      String.valid? input ->
+        input
+      true -> raise "Invalid input to iso_timestamp." <> (IO.inspect input)
+    end
+  end
+
+end
+
