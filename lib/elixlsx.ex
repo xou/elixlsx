@@ -9,36 +9,36 @@ end
 defmodule SheetCompInfo do
   @moduledoc ~S"""
   Compilation info for a sheet, to be filled during the actual
-  write process
+  write process.
   """
-  defstruct rId: "", sheetName: "sheet1.xml", sheetId: 0
+  defstruct rId: "", filename: "sheet1.xml", sheetId: 0
   @type t :: %SheetCompInfo{
     rId: String.t,
-    sheetName: String.t,
+    filename: String.t,
     sheetId: non_neg_integer
   }
 
   @spec make(non_neg_integer, non_neg_integer) :: SheetCompInfo.t
   def make sheetidx, rId do
     %SheetCompInfo{rId: "rId" <> to_string(rId),
-                   sheetName: "sheet" <> to_string(sheetidx) <> ".xml",
+                   filename: "sheet" <> to_string(sheetidx) <> ".xml",
                    sheetId: sheetidx}
   end
 end
+
 
 defmodule Sheet do
   defstruct name: "", rows: [], sheetCompInfo: nil
   @type t :: %Sheet {
     name: String.t,
     rows: list(list(any())),
-    sheetCompInfo: nil | SheetCompInfo.t
   }
 end
 
 defmodule Elixlsx do
 
   alias Elixlsx.Util, as: U
-  alias Elixlsx.XML_Templates
+  alias Elixlsx.XMLTemplates
   
   @doc ~S"""
   Accepts a list of Sheets and the next free relationship ID.
@@ -63,14 +63,14 @@ defmodule Elixlsx do
   returns a tuple {'docProps/app.xml', "XML Data"}
   """
   def get_docProps_app_xml(data) do
-    {'docProps/app.xml', XML_Templates.docprops_app}
+    {'docProps/app.xml', XMLTemplates.docprops_app}
   end
 
 
   @spec get_docProps_core_xml(Workbook.t) :: String.t
   def get_docProps_core_xml(workbook) do
     timestamp = U.iso_timestamp(workbook.datetime)
-    {'docProps/core.xml', XML_Templates.docprops_core(timestamp)}
+    {'docProps/core.xml', XMLTemplates.docprops_core(timestamp)}
   end
 
 
@@ -104,7 +104,7 @@ defmodule Elixlsx do
   <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/>
   """
   <>
-  XML_Templates.make_xl_rel_sheets(sheetCompInfos)
+  XMLTemplates.make_xl_rel_sheets(sheetCompInfos)
   <>
   """
   <Relationship Id="rId#{next_rId}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/sharedStrings" Target="sharedStrings.xml"/>
@@ -169,10 +169,9 @@ defmodule Elixlsx do
     <workbookView activeTab="0"/>
   </bookViews>
   <sheets>
-  """ <>
-  XML_Templates.make_xl_workbook_xml_sheet_entries(data.sheets, sheetCompInfos)
-  <>
-  ~S"""
+  """ 
+  <> XMLTemplates.make_xl_workbook_xml_sheet_entries(data.sheets, sheetCompInfos)
+  <> ~S"""
   </sheets>
   <calcPr iterateCount="100" refMode="A1" iterate="false" iterateDelta="0.001"/>
 </workbook>
@@ -196,14 +195,15 @@ defmodule Elixlsx do
 
   @spec sheet_full_path(SheetCompInfo.t) :: list(char)
   defp sheet_full_path sci do
-    String.to_char_list "xl/worksheets/#{sci.sheetName}"
+    String.to_char_list "xl/worksheets/#{sci.filename}"
   end
+
 
 	def get_xl_worksheets_dir(data, sheet_comp_infos) do
     sheets = data.sheets
     Enum.zip(sheets, sheet_comp_infos)
     |> Enum.map fn ({s, sci}) ->
-                  {sheet_full_path(sci), XML_Templates.make_sheet s}
+                  {sheet_full_path(sci), XMLTemplates.make_sheet s}
                 end
 	end
 
@@ -219,13 +219,14 @@ defmodule Elixlsx do
   <Override PartName="/xl/_rels/workbook.xml.rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>
   <Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>
   <Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/>
-  """ <> XML_Templates.make_content_types_xml_sheet_entries(sheet_comp_infos) <>
+  """ <> XMLTemplates.make_content_types_xml_sheet_entries(sheet_comp_infos) <>
   ~S"""
   <Override PartName="/xl/sharedStrings.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sharedStrings+xml"/>
 </Types>
 """
 		}
 	end
+
 
 	def get_xl_dir(data, sheet_comp_infos, next_rId) do
 		[ get_xl_styles_xml(data),
@@ -234,6 +235,7 @@ defmodule Elixlsx do
 		get_xl_rels_dir(data, sheet_comp_infos, next_rId) ++
 		get_xl_worksheets_dir(data, sheet_comp_infos)
 	end
+
 
   def write_to(workbook, filename) do
     {sheet_comp_infos, next_rId} = make_sheet_info workbook.sheets, 2

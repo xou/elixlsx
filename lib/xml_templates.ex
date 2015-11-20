@@ -1,4 +1,4 @@
-defmodule Elixlsx.XML_Templates do
+defmodule Elixlsx.XMLTemplates do
   alias Elixlsx.Util, as: U
 
   @docprops_app ~S"""
@@ -34,7 +34,7 @@ defmodule Elixlsx.XML_Templates do
   def make_xl_rel_sheet sheet_comp_info do
     # I'd love to use string interpolation here, but unfortunately """< is heredoc notation, so i have to use
     # string concatenation or escape all the quotes. Choosing the first.
-    "<Relationship Id=\"#{sheet_comp_info.rId}\" Type=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet\" Target=\"worksheets/#{sheet_comp_info.sheetName}\"/>"
+    "<Relationship Id=\"#{sheet_comp_info.rId}\" Type=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet\" Target=\"worksheets/#{sheet_comp_info.filename}\"/>"
   end
 
 
@@ -63,7 +63,7 @@ defmodule Elixlsx.XML_Templates do
   ### [Content_Types].xml
   def make_content_types_xml_sheet_entry sheet_comp_info do
     """
-    <Override PartName="/xl/worksheets/#{sheet_comp_info.sheetName}" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>
+    <Override PartName="/xl/worksheets/#{sheet_comp_info.filename}" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>
     """
   end
 
