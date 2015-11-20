@@ -2,7 +2,14 @@ defmodule Elixlsx.Util do
   @col_alphabet to_string(Enum.to_list(?A..?Z))
 
   @doc ~S"""
-    returns the column letter(s) associated with a column index. Col idx starts at 1.
+  returns the column letter(s) associated with a column index. Col idx starts at 1.
+
+  Example:
+    iex> Elixlsx.Util.encode_col(1)
+    "A"
+
+    iex> Elixlsx.Util.encode_col(28)
+    "AB"
   """
   @spec encode_col(non_neg_integer) :: String.t
   def encode_col(0) do "" end
@@ -11,6 +18,15 @@ defmodule Elixlsx.Util do
     encode_col(div(znum, String.length(@col_alphabet))) <> String.at(@col_alphabet, rem(znum, String.length(@col_alphabet)))
   end
 
+
+  @doc ~S"""
+  returns the column index associated with a given letter.
+
+  Example:
+  
+    iex> Elixlsx.Util.decode_col("AB")
+    28
+  """
   @spec decode_col(list(char()) | String.t) :: non_neg_integer
   def decode_col s do
     cond do
@@ -20,6 +36,7 @@ defmodule Elixlsx.Util do
                                    <> inspect s}
     end
   end
+
 
   @spec decode_col_(String.t) :: non_neg_integer
   defp decode_col_("") do 0 end
@@ -56,12 +73,23 @@ defmodule Elixlsx.Util do
   end
 
 
+  @doc ~S"""
+  Returns the ISO String representation (in UTC) for a erlang datetime() or datetime1970()
+  object.
+
+  Example:
+    
+    iex> Elixlsx.Util.iso_from_datetime {{2000, 12, 30}, {23, 59, 59}}
+    "2000-12-30T23:59:59Z"
+
+  """
   @type datetime_t :: :calendar.datetime()
   @spec iso_from_datetime(datetime_t) :: String.t
   def iso_from_datetime calendar do
     {{y, m, d}, {h, min, s}} = calendar
     to_string(:io_lib.format('~4.10.0b-~2.10.0b-~2.10.0bT~2.10.0b:~2.10.0b:~2.10.0bZ', [y, m, d, h, min, s]))
   end
+
 
   @doc ~S"""
     returns
@@ -76,6 +104,10 @@ defmodule Elixlsx.Util do
 
       iex> Elixlsx.Util.iso_timestamp 1447885907
       "2015-11-18T22:31:47Z"
+
+    It doesn't validate string inputs though:
+      iex> Elixlsx.Util.iso_timestamp "goat"
+      "goat"
 
   """
   @spec iso_timestamp(String.t | integer | nil) :: String.t

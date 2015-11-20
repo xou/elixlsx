@@ -6,30 +6,71 @@ defmodule Workbook do
   }
 end
 
+defmodule SheetCompInfo do
+  @moduledoc ~S"""
+  Compilation info for a sheet, to be filled during the actual
+  write process
+  """
+  defstruct rId: "", sheetName: "sheet1.xml", sheetId: 0
+  @type t :: %SheetCompInfo{
+    rId: String.t,
+    sheetName: String.t,
+    sheetId: non_neg_integer
+  }
+
+  @spec make(non_neg_integer, non_neg_integer) :: SheetCompInfo.t
+  def make sheetidx, rId do
+    %SheetCompInfo{rId: "rId" <> to_string(rId),
+                   sheetName: "sheet" <> to_string(sheetidx) <> ".xml",
+                   sheetId: sheetidx}
+  end
+end
+
 defmodule Sheet do
-  defstruct name: "", rows: []
+  defstruct name: "", rows: [], sheetCompInfo: nil
   @type t :: %Sheet {
     name: String.t,
-    rows: list(list(any()))
+    rows: list(list(any())),
+    sheetCompInfo: nil | SheetCompInfo.t
   }
 end
 
 defmodule Elixlsx do
 
-  alias Elixlsx.Util
+  alias Elixlsx.Util, as: U
   alias Elixlsx.XML_Templates
   
   @doc ~S"""
-    returns a tuple {'docProps/app.xml', "XML Data"}
-    TODO: This is stolen from libreoffice. Write reasonable stuff here.
+  Accepts a list of Sheets and the next free relationship ID.
+  Returns a tuple containing a list of SheetCompInfo's and the next free
+  relationship ID.
+  """
+  @spec make_sheet_info(nonempty_list(Sheet.t), non_neg_integer) :: {list(SheetCompInfo.t), non_neg_integer}
+  def make_sheet_info sheets, init_rId do
+    # fold helper. aggregator holds {list(SheetCompInfo), sheetidx, rId}.
+    add_sheet =
+      fn (_, {sci, idx, rId}) ->
+        {[SheetCompInfo.make(idx, rId) | sci], idx + 1, rId + 1}
+      end
+
+    # TODO probably better to use a zip [1..] |> map instead of fold[l|r]/reverse
+    {sheetCompInfos, _, nextrID} = List.foldl(sheets, {[], 1, init_rId}, add_sheet)
+    {Enum.reverse(sheetCompInfos), nextrID}
+  end
+
+
+  @doc ~S"""
+  returns a tuple {'docProps/app.xml', "XML Data"}
   """
   def get_docProps_app_xml(data) do
     {'docProps/app.xml', XML_Templates.docprops_app}
   end
 
+
   @spec get_docProps_core_xml(Workbook.t) :: String.t
   def get_docProps_core_xml(workbook) do
-    {'docProps/core.xml', XML_Templates.docprops_core(workbook.datetime)}
+    timestamp = U.iso_timestamp(workbook.datetime)
+    {'docProps/core.xml', XML_Templates.docprops_core(timestamp)}
   end
 
 
@@ -55,14 +96,18 @@ defmodule Elixlsx do
 		[get__rels_dotrels(data)]
 	end
 
-	def get_xl_rels_dir(data) do
+	def get_xl_rels_dir(data, sheetCompInfos, next_rId) do
 		[{'xl/_rels/workbook.xml.rels',
 			~S"""
 <?xml version="1.0" encoding="UTF-8"?>
 <Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
   <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/>
-  <Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/>
-  <Relationship Id="rId3" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/sharedStrings" Target="sharedStrings.xml"/>
+  """
+  <>
+  XML_Templates.make_xl_rel_sheets(sheetCompInfos)
+  <>
+  """
+  <Relationship Id="rId#{next_rId}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/sharedStrings" Target="sharedStrings.xml"/>
 </Relationships>
 """
 		}]
@@ -114,7 +159,7 @@ defmodule Elixlsx do
 		}
 	end
 
-	def get_xl_workbook_xml(data) do
+	def get_xl_workbook_xml(data, sheetCompInfos) do
 		{'xl/workbook.xml',
 			~S"""
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
@@ -124,7 +169,10 @@ defmodule Elixlsx do
     <workbookView activeTab="0"/>
   </bookViews>
   <sheets>
-    <sheet name="Sheet1" sheetId="1" state="visible" r:id="rId2"/>
+  """ <>
+  XML_Templates.make_xl_workbook_xml_sheet_entries(data.sheets, sheetCompInfos)
+  <>
+  ~S"""
   </sheets>
   <calcPr iterateCount="100" refMode="A1" iterate="false" iterateDelta="0.001"/>
 </workbook>
@@ -145,67 +193,22 @@ defmodule Elixlsx do
 		}
 	end
 
-  defp xl_sheet_cols(row, rowidx) do
-    Enum.zip(row, 1 .. length row) |>
-    Enum.map(
-      fn {col, colidx} ->
-        {type, value} = cond do
-          is_number(col) -> {"n", to_string(col)}
-          true -> {"s", to_string(col)} # TODO this may throw.
-        end
-        List.foldr ["<c r=\"",
-                     Util.to_excel_coords(rowidx, colidx),
-                     "\" s=\"0\" t=\"",
-                     type,
-                     "\">",
-                     "<v>",
-                     value,
-                     "</v></c>"], "", &<>/2
-        end) |>
-    List.foldr "", &<>/2
+
+  @spec sheet_full_path(SheetCompInfo.t) :: list(char)
+  defp sheet_full_path sci do
+    String.to_char_list "xl/worksheets/#{sci.sheetName}"
   end
 
-
-  defp xl_sheet_rows(data) do
-    Enum.zip(data, 1 .. length data) |>
-    Enum.map(fn {row, rowidx} -> 
-        List.foldr(["<row r=\"",
-                     to_string(rowidx),
-                     "\">\n",
-                     xl_sheet_cols(row, rowidx),
-                     "</row>"], "", &<>/2) end) |>
-    List.foldr("", &<>/2)
-  end
-
-	def get_xl_worksheets_dir(data) do
-		[{'xl/worksheets/sheet1.xml',
-			~S"""
-<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">
-  <sheetPr filterMode="false">
-    <pageSetUpPr fitToPage="false"/>
-  </sheetPr>
-  <dimension ref="A1"/>
-  <sheetViews>
-    <sheetView workbookViewId="0">
-      <selection activeCell="A1" sqref="A1"/>
-    </sheetView>
-  </sheetViews>
-  <sheetFormatPr defaultRowHeight="12.8"/>
-  <sheetData>
-  """ 
-  <>
-  xl_sheet_rows(hd(data.sheets).rows)
-  <>
-  ~S"""
-  </sheetData>
-  <pageMargins left="0.75" right="0.75" top="1" bottom="1.0" header="0.5" footer="0.5"/>
-</worksheet>
-			"""
-			}]
+	def get_xl_worksheets_dir(data, sheet_comp_infos) do
+    sheets = data.sheets
+    Enum.zip(sheets, sheet_comp_infos)
+    |> Enum.map fn ({s, sci}) ->
+                  {sheet_full_path(sci), XML_Templates.make_sheet s}
+                end
 	end
 
-	def get_contentTypes_xml(data) do
+
+	def get_contentTypes_xml(data, sheet_comp_infos) do
 		{'[Content_Types].xml',
 			~S"""
 <?xml version="1.0" encoding="UTF-8"?>
@@ -216,27 +219,29 @@ defmodule Elixlsx do
   <Override PartName="/xl/_rels/workbook.xml.rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>
   <Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>
   <Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/>
-  <Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>
+  """ <> XML_Templates.make_content_types_xml_sheet_entries(sheet_comp_infos) <>
+  ~S"""
   <Override PartName="/xl/sharedStrings.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sharedStrings+xml"/>
 </Types>
 """
 		}
 	end
 
-	def get_xl_dir(data) do
+	def get_xl_dir(data, sheet_comp_infos, next_rId) do
 		[ get_xl_styles_xml(data),
 			get_xl_sharedStrings_xml(data),
-			get_xl_workbook_xml(data)] ++
-		get_xl_rels_dir(data) ++
-		get_xl_worksheets_dir(data)
+			get_xl_workbook_xml(data, sheet_comp_infos)] ++
+		get_xl_rels_dir(data, sheet_comp_infos, next_rId) ++
+		get_xl_worksheets_dir(data, sheet_comp_infos)
 	end
 
   def write_to(workbook, filename) do
+    {sheet_comp_infos, next_rId} = make_sheet_info workbook.sheets, 2
     :zip.create(filename,
 			get_docProps_dir(workbook) ++
       get__rels_dir(workbook) ++
-      get_xl_dir(workbook) ++
-      [ get_contentTypes_xml(workbook) ])
+      get_xl_dir(workbook, sheet_comp_infos, next_rId) ++
+      [ get_contentTypes_xml(workbook, sheet_comp_infos) ])
   end
 end
 
