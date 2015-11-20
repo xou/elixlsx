@@ -6,6 +6,41 @@ defmodule Workbook do
   }
 end
 
+defmodule StringDB do
+  @moduledoc ~S"""
+  Strings in XLSX can be stored in a sharedStrings.xml file and be looked up
+  by ID. This module handles collection of the data in the preprocessing phase.
+  """
+  defstruct strings: %{}, element_count: 0
+
+  @type t :: %StringDB {
+    strings: %{String.t => non_neg_integer},
+    element_count: non_neg_integer
+  }
+
+  @spec register_string(StringDB.t, String.t) :: StringDB.t
+  def register_string(stringdb, s) do
+    case Dict.fetch(stringdb.strings, s) do
+      :error -> %StringDB{strings: Dict.put(stringdb.strings, s, stringdb.element_count),
+                          element_count: stringdb.element_count + 1}
+      {:ok, _} -> stringdb
+    end
+  end
+
+  def get_id(stringdb, s) do
+    case Dict.fetch(stringdb.strings, s) do
+      :error ->
+        raise %ArgumentError{message: "Invalid key provided for StringDB.get_id: " <> inspect(s)}
+      {:ok, id} ->
+        id
+    end
+  end
+
+  def sorted_id_string_tuples(stringdb) do
+    Enum.map(stringdb.strings, fn ({k, v}) -> {v, k} end) |> Enum.sort
+  end
+end
+
 defmodule SheetCompInfo do
   @moduledoc ~S"""
   Compilation info for a sheet, to be filled during the actual
@@ -27,6 +62,11 @@ defmodule SheetCompInfo do
 end
 
 
+defmodule WorkbookCompInfo do
+  defstruct sheet_info: nil, stringdb: nil, next_free_xl_rid: nil
+end
+
+
 defmodule Sheet do
   defstruct name: "", rows: [], sheetCompInfo: nil
   @type t :: %Sheet {
@@ -35,8 +75,8 @@ defmodule Sheet do
   }
 end
 
-defmodule Elixlsx do
 
+defmodule Elixlsx do
   alias Elixlsx.Util, as: U
   alias Elixlsx.XMLTemplates
   
@@ -56,6 +96,32 @@ defmodule Elixlsx do
     # TODO probably better to use a zip [1..] |> map instead of fold[l|r]/reverse
     {sheetCompInfos, _, nextrID} = List.foldl(sheets, {[], 1, init_rId}, add_sheet)
     {Enum.reverse(sheetCompInfos), nextrID}
+  end
+
+  def update_stringdb_from_rows stringdb, rows do
+    List.foldl rows, stringdb, fn (cols, stringdb) ->
+      List.foldl cols, stringdb, fn (col, stringdb) ->
+        cond do
+          is_binary(col) && String.valid?(col) -> StringDB.register_string(stringdb, col)
+          true -> stringdb
+        end
+      end
+    end
+  end
+
+  def make_stringdb sheets do
+    List.foldl sheets, %StringDB{}, fn (sheet, stringdb) ->
+      update_stringdb_from_rows stringdb, sheet.rows
+    end
+  end
+
+  @first_free_rid 2
+  def make_workbook_comp_info workbook do
+    {sci, next_rId} = make_sheet_info(workbook.sheets, @first_free_rid)
+    %WorkbookCompInfo{
+      sheet_info: sci,
+      next_free_xl_rid: next_rId,
+      stringdb: make_stringdb workbook.sheets}
   end
 
 
@@ -179,16 +245,9 @@ defmodule Elixlsx do
 		}
 	end
 
-	def get_xl_sharedStrings_xml(data) do
-		{'xl/sharedStrings.xml',
-			~S"""
-<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<sst xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" count="1" uniqueCount="1">
-  <si>
-    <t>Hi</t>
-  </si>
-</sst>
-"""
+	def get_xl_sharedStrings_xml(data, wci) do
+    {'xl/sharedStrings.xml',
+			XMLTemplates.make_xl_shared_strings(StringDB.sorted_id_string_tuples wci.stringdb)
 		}
 	end
 
@@ -199,16 +258,16 @@ defmodule Elixlsx do
   end
 
 
-	def get_xl_worksheets_dir(data, sheet_comp_infos) do
+	def get_xl_worksheets_dir(data, wci) do
     sheets = data.sheets
-    Enum.zip(sheets, sheet_comp_infos)
+    Enum.zip(sheets, wci.sheet_info)
     |> Enum.map fn ({s, sci}) ->
-                  {sheet_full_path(sci), XMLTemplates.make_sheet s}
+                  {sheet_full_path(sci), XMLTemplates.make_sheet(s, wci.stringdb)}
                 end
 	end
 
 
-	def get_contentTypes_xml(data, sheet_comp_infos) do
+	def get_contentTypes_xml(data, wci) do
 		{'[Content_Types].xml',
 			~S"""
 <?xml version="1.0" encoding="UTF-8"?>
@@ -219,7 +278,7 @@ defmodule Elixlsx do
   <Override PartName="/xl/_rels/workbook.xml.rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>
   <Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>
   <Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/>
-  """ <> XMLTemplates.make_content_types_xml_sheet_entries(sheet_comp_infos) <>
+  """ <> XMLTemplates.make_content_types_xml_sheet_entries(wci.sheet_info) <>
   ~S"""
   <Override PartName="/xl/sharedStrings.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sharedStrings+xml"/>
 </Types>
@@ -228,22 +287,25 @@ defmodule Elixlsx do
 	end
 
 
-	def get_xl_dir(data, sheet_comp_infos, next_rId) do
+	def get_xl_dir(data, wci) do
+    sheet_comp_infos = wci.sheet_info
+    next_free_xl_rid = wci.next_free_xl_rid
+
 		[ get_xl_styles_xml(data),
-			get_xl_sharedStrings_xml(data),
+			get_xl_sharedStrings_xml(data, wci),
 			get_xl_workbook_xml(data, sheet_comp_infos)] ++
-		get_xl_rels_dir(data, sheet_comp_infos, next_rId) ++
-		get_xl_worksheets_dir(data, sheet_comp_infos)
+		get_xl_rels_dir(data, sheet_comp_infos, next_free_xl_rid) ++
+		get_xl_worksheets_dir(data, wci)
 	end
 
 
   def write_to(workbook, filename) do
-    {sheet_comp_infos, next_rId} = make_sheet_info workbook.sheets, 2
+    wci = make_workbook_comp_info workbook
     :zip.create(filename,
 			get_docProps_dir(workbook) ++
       get__rels_dir(workbook) ++
-      get_xl_dir(workbook, sheet_comp_infos, next_rId) ++
-      [ get_contentTypes_xml(workbook, sheet_comp_infos) ])
+      get_xl_dir(workbook, wci) ++
+      [ get_contentTypes_xml(workbook, wci) ])
   end
 end
 

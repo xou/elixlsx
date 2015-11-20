@@ -1,6 +1,19 @@
 defmodule Elixlsx.XMLTemplates do
   alias Elixlsx.Util, as: U
 
+  @doc ~S"""
+  There are 5 characters that should be escaped in XML (<,>,",',&), but only
+  2 of them *must* be escaped. Saves a couple of CPU cycles, for the environment.
+
+  Example:
+    iex> Elixlsx.XMLTemplates.minimal_xml_text_escape "Only '&' and '<' are escaped here, '\"' & '>' & \"'\" are not."
+    "Only '&amp;' and '&lt;' are escaped here, '\"' &amp; '>' &amp; \"'\" are not."
+
+  """
+  def minimal_xml_text_escape(s) do
+    s |> String.replace("&", "&amp;") |> String.replace("<", "&lt;") 
+  end
+
   @docprops_app ~S"""
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <Properties xmlns="http://schemas.openxmlformats.org/officeDocument/2006/extended-properties" xmlns:vt="http://schemas.openxmlformats.org/officeDocument/2006/docPropsVTypes">
@@ -73,14 +86,16 @@ defmodule Elixlsx.XMLTemplates do
 
 
   ### Worksheets
-
-  defp xl_sheet_cols(row, rowidx) do
+  # TODO i know now about string interpolation, i should probably clean this up. ;)
+  defp xl_sheet_cols(row, rowidx, stringdb) do
     Enum.zip(row, 1 .. length row) |>
     Enum.map(
       fn {col, colidx} ->
         {type, value} = cond do
           is_number(col) -> {"n", to_string(col)}
-          true -> {"s", to_string(col)} # TODO this may throw.
+          String.valid?(col) -> {"s", to_string(StringDB.get_id(stringdb, col))} # TODO this may throw.
+          true -> raise %ArgumentError{message: "Column " <> U.to_excel_coords(rowidx, colidx) <>
+                                                "has invalid data: " <> inspect(col)}
         end
         List.foldr ["<c r=\"",
                      U.to_excel_coords(rowidx, colidx),
@@ -95,13 +110,13 @@ defmodule Elixlsx.XMLTemplates do
   end
 
 
-  defp xl_sheet_rows(data) do
+  defp xl_sheet_rows(data, stringdb) do
     Enum.zip(data, 1 .. length data) |>
     Enum.map(fn {row, rowidx} -> 
         List.foldr(["<row r=\"",
                      to_string(rowidx),
                      "\">\n",
-                     xl_sheet_cols(row, rowidx),
+                     xl_sheet_cols(row, rowidx, stringdb),
                      "</row>"], "", &<>/2) end) |>
     List.foldr("", &<>/2)
   end
@@ -109,7 +124,7 @@ defmodule Elixlsx.XMLTemplates do
   @doc ~S"""
   Returns the complete sheet XML data.
   """
-  def make_sheet sheet do
+  def make_sheet(sheet, stringdb) do
 			~S"""
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">
@@ -126,7 +141,7 @@ defmodule Elixlsx.XMLTemplates do
   <sheetData>
   """ 
   <>
-  xl_sheet_rows(sheet.rows)
+  xl_sheet_rows(sheet.rows, stringdb)
   <>
   ~S"""
   </sheetData>
@@ -134,4 +149,19 @@ defmodule Elixlsx.XMLTemplates do
 </worksheet>
 			"""
   end
+  
+  @spec make_xl_shared_strings(list({non_neg_integer, String.t})) :: String.t
+  def make_xl_shared_strings(stringlist) do
+    len = length stringlist
+  """
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<sst xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" count="#{len}" uniqueCount="#{len}">
+  """
+  <> Enum.map_join(stringlist, fn ({_, value}) ->
+    # the only two characters that *must* be replaced for safe XML encoding are & and <:
+    value_ = (value |> String.replace("&", "&amp;") |> String.replace("<", "&lt;"))
+    "<si><t>#{minimal_xml_text_escape value_}</t></si>"
+  end)
+  <> "</sst>"
+  end 
 end
