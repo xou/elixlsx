@@ -11,7 +11,7 @@ defmodule Elixlsx.XMLTemplates do
 
   """
   def minimal_xml_text_escape(s) do
-    s |> String.replace("&", "&amp;") |> String.replace("<", "&lt;") 
+    s |> String.replace("&", "&amp;") |> String.replace("<", "&lt;")
   end
 
   @docprops_app ~S"""
@@ -149,7 +149,7 @@ defmodule Elixlsx.XMLTemplates do
 </worksheet>
 			"""
   end
-  
+
   @spec make_xl_shared_strings(list({non_neg_integer, String.t})) :: String.t
   def make_xl_shared_strings(stringlist) do
     len = length stringlist
@@ -163,5 +163,5 @@ defmodule Elixlsx.XMLTemplates do
     "<si><t>#{minimal_xml_text_escape value_}</t></si>"
   end)
   <> "</sst>"
-  end 
+  end
 end

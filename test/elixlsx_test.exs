@@ -32,12 +32,12 @@ defmodule ElixlsxTest do
     xml = XMLTemplates.make_xl_shared_strings(StringDB.sorted_id_string_tuples sdb)
 
     {xmerl, []} = :xmerl_scan.string String.to_char_list(xml)
-    
+
     strings = :xmerl_xpath.string('/sst/si/t/text()', xmerl)
 
     assert length(strings) == 2
     [sis1, sis2] = strings
-    
+
     assert to_text(sis1) == "Hello"
     assert to_text(sis2) == "World"
   end
