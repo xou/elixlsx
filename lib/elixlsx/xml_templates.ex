@@ -193,4 +193,55 @@ defmodule Elixlsx.XMLTemplates do
   end)
   <> "</sst>"
   end
+
+  defp font_to_xml_entry(font) do
+    bold = if font.bold do "<b val=\"1\"/>" else "" end
+
+    "<font>#{bold}</font>"
+  end
+
+  def make_font_list(ordered_font_list) do
+    Enum.map_join(ordered_font_list, "\n", &(font_to_xml_entry &1))
+  end
+
+  defp style_to_xml_entry(style, wci) do
+    fontid = FontDB.get_id wci.fontdb, style.font
+    "<xf fontId=\"#{fontid}\" />"
+  end
+
+  def make_cellxfs(ordered_style_list, wci) do
+    Enum.map_join(ordered_style_list, "\n", &(style_to_xml_entry &1, wci))
+  end
+
+  def make_xl_styles(wci) do
+    font_list = FontDB.id_sorted_fonts wci.fontdb
+    cellXfs = CellStyleDB.id_sorted_styles wci.cellstyledb
+
+		"""
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">
+  <fonts count="#{1 + length font_list}">
+    <font />
+    #{make_font_list(font_list)}
+  </fonts>
+  <fills count="1">
+    <fill />
+  </fills>
+  <borders count="1">
+    <border />
+  </borders>
+  <cellStyleXfs count="1">
+    <xf borderId="0" fillId="0" fontId="0"/>
+  </cellStyleXfs>
+  <cellXfs count="#{1 + length cellXfs}">
+    <xf borderId="0" fillId="0" fontId="0" xfId="0"/>
+    #{make_cellxfs cellXfs, wci}
+  </cellXfs>
+  </styleSheet>
+  """
+
+#  <cellStyles count="1">
+#    <cellStyle builtinId="0" name="Normal" xfId="0"/>
+#  </cellStyles>
+	end
 end

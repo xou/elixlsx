@@ -55,14 +55,14 @@ defmodule FontDB do
   defstruct fonts: %{}, element_count: 0
 
   @type t :: %FontDB {
-    fonts: %{Font.t => non_neg_integer},
+    fonts: %{Font.t => pos_integer},
     element_count: non_neg_integer
   }
 
   @spec register_font(FontDB.t, Font.t) :: FontDB.t
   def register_font(fontdb, font) do
     case Dict.fetch(fontdb.fonts, font) do
-      :error -> %FontDB{fonts: Dict.put(fontdb.fonts, font, fontdb.element_count),
+      :error -> %FontDB{fonts: Dict.put(fontdb.fonts, font, fontdb.element_count + 1),
                        element_count: fontdb.element_count + 1}
       {:ok, _} -> fontdb
     end
@@ -71,14 +71,17 @@ defmodule FontDB do
   def get_id(fontdb, font) do
     case Dict.fetch(fontdb.fonts, font) do
       :error ->
-        raise %ArgumentError{message: "Invalid key provided for FontDB.get_font: " <> inspect(font)}
+        raise %ArgumentError{message: "Invalid key provided for FontDB.get_id: " <> inspect(font)}
       {:ok, id} ->
         id
     end
   end
 
-  def sorted_id_font_tuples(fontdb) do
-    Enum.map(fontdb.fonts, fn ({k, v}) -> {v, k} end) |> Enum.sort
+  def id_sorted_fonts(fontdb) do
+    fontdb.fonts
+    |> Enum.map(fn ({k, v}) -> {v, k} end)
+    |> Enum.sort
+    |> Dict.values
   end
 end
 
@@ -126,6 +129,13 @@ defmodule CellStyleDB do
       {:ok, key} ->
         key
     end
+  end
+
+  def id_sorted_styles(cellstyledb) do
+    cellstyledb.cellstyles
+    |> Enum.map(fn ({k, v}) -> {v, k} end)
+    |> Enum.sort
+    |> Dict.values
   end
 
   @doc ~S"""
@@ -320,51 +330,10 @@ defmodule Elixlsx do
 		}]
 	end
 
-	def get_xl_styles_xml(data) do
+	def get_xl_styles_xml(wci) do
 		{'xl/styles.xml',
-			~S"""
-<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">
-  <numFmts count="1">
-    <numFmt numFmtId="164" formatCode="GENERAL"/>
-  </numFmts>
-  <fonts count="1">
-    <font>
-      <sz val="10"/>
-      <name val="Arial"/>
-      <family val="2"/>
-    </font>
-  </fonts>
-  <fills count="2">
-    <fill>
-      <patternFill patternType="none"/>
-    </fill>
-    <fill>
-      <patternFill patternType="gray125"/>
-    </fill>
-  </fills>
-  <borders count="1">
-    <border>
-      <left/>
-      <right/>
-      <top/>
-      <bottom/>
-      <diagonal/>
-    </border>
-  </borders>
-  <cellStyleXfs count="1">
-    <xf borderId="0" fillId="0" fontId="0" numFmtId="0"/>
-  </cellStyleXfs>
-  <cellXfs count="1">
-    <xf borderId="0" fillId="0" fontId="0" numFmtId="0" xfId="0"/>
-  </cellXfs>
-  <cellStyles count="1">
-    <cellStyle builtinId="0" name="Normal" xfId="0"/>
-  </cellStyles>
-</styleSheet>
-"""
-		}
-	end
+     XMLTemplates.make_xl_styles wci}
+  end
 
 	def get_xl_workbook_xml(data, sheetCompInfos) do
 		{'xl/workbook.xml',
@@ -432,7 +401,7 @@ defmodule Elixlsx do
     sheet_comp_infos = wci.sheet_info
     next_free_xl_rid = wci.next_free_xl_rid
 
-		[ get_xl_styles_xml(data),
+		[ get_xl_styles_xml(wci),
 			get_xl_sharedStrings_xml(data, wci),
 			get_xl_workbook_xml(data, sheet_comp_infos)] ++
 		get_xl_rels_dir(data, sheet_comp_infos, next_free_xl_rid) ++
