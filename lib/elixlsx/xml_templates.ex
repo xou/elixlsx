@@ -84,39 +84,68 @@ defmodule Elixlsx.XMLTemplates do
     Enum.map_join sheet_comp_infos, &make_content_types_xml_sheet_entry/1
   end
 
+  defp split_into_content_style(cell, wci) do
+    cond do
+      is_list(cell) ->
+        {
+          hd(cell),
+          CellStyleDB.get_id(wci.cellstyledb, (CellStyle.from_props (tl cell)))
+        }
+      true ->
+        {
+          cell,
+          0
+        }
+    end
+  end
+
+  defp get_content_type_value(content, wci) do
+    cond do
+      is_number content ->
+        {"n", to_string(content)}
+      String.valid? content ->
+        {"s", to_string(StringDB.get_id wci.stringdb, content)}
+      true ->
+        :error
+    end
+  end
 
   ### Worksheets
   # TODO i know now about string interpolation, i should probably clean this up. ;)
-  defp xl_sheet_cols(row, rowidx, stringdb) do
+  defp xl_sheet_cols(row, rowidx, wci) do
     Enum.zip(row, 1 .. length row) |>
     Enum.map(
-      fn {col, colidx} ->
-        {type, value} = cond do
-          is_number(col) -> {"n", to_string(col)}
-          String.valid?(col) -> {"s", to_string(StringDB.get_id(stringdb, col))} # TODO this may throw.
-          true -> raise %ArgumentError{message: "Column " <> U.to_excel_coords(rowidx, colidx) <>
-                                                "has invalid data: " <> inspect(col)}
-        end
-        List.foldr ["<c r=\"",
-                     U.to_excel_coords(rowidx, colidx),
-                     "\" s=\"0\" t=\"",
-                     type,
-                     "\">",
-                     "<v>",
-                     value,
-                     "</v></c>"], "", &<>/2
+      fn {cell, colidx} ->
+        {content, styleID} = split_into_content_style(cell, wci)
+        cv = get_content_type_value(content, wci)
+        {contentType, contentValue} =
+          case cv do
+            {t, v} -> {t, v}
+            :error -> raise %ArgumentError{
+                           message: "Invalid column content at " <>
+                                    U.to_excel_coords(rowidx, colidx) <> ": "
+                                    <> (inspect content)
+                                     }
+          end
+
+        """
+        <c r="#{U.to_excel_coords(rowidx, colidx)}"
+           s="#{styleID}" t="#{contentType}">
+          <v>#{contentValue}</v>
+        </c>
+        """
         end) |>
     List.foldr "", &<>/2
   end
 
 
-  defp xl_sheet_rows(data, stringdb) do
+  defp xl_sheet_rows(data, wci) do
     Enum.zip(data, 1 .. length data) |>
     Enum.map(fn {row, rowidx} -> 
         List.foldr(["<row r=\"",
                      to_string(rowidx),
                      "\">\n",
-                     xl_sheet_cols(row, rowidx, stringdb),
+                     xl_sheet_cols(row, rowidx, wci),
                      "</row>"], "", &<>/2) end) |>
     List.foldr("", &<>/2)
   end
@@ -124,7 +153,7 @@ defmodule Elixlsx.XMLTemplates do
   @doc ~S"""
   Returns the complete sheet XML data.
   """
-  def make_sheet(sheet, stringdb) do
+  def make_sheet(sheet, wci) do
 			~S"""
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">
@@ -141,7 +170,7 @@ defmodule Elixlsx.XMLTemplates do
   <sheetData>
   """ 
   <>
-  xl_sheet_rows(sheet.rows, stringdb)
+  xl_sheet_rows(sheet.rows, wci)
   <>
   ~S"""
   </sheetData>

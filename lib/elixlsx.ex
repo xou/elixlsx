@@ -30,7 +30,8 @@ defmodule StringDB do
   def get_id(stringdb, s) do
     case Dict.fetch(stringdb.strings, s) do
       :error ->
-        raise %ArgumentError{message: "Invalid key provided for StringDB.get_id: " <> inspect(s)}
+        raise %ArgumentError{
+          message: "Invalid key provided for StringDB.get_id: " <> inspect(s)}
       {:ok, id} ->
         id
     end
@@ -40,6 +41,106 @@ defmodule StringDB do
     Enum.map(stringdb.strings, fn ({k, v}) -> {v, k} end) |> Enum.sort
   end
 end
+
+defmodule Font do
+  defstruct bold: false
+
+  def from_props props do
+    %Font{bold: !!props[:bold]}
+  end
+end
+
+
+defmodule FontDB do
+  defstruct fonts: %{}, element_count: 0
+
+  @type t :: %FontDB {
+    fonts: %{Font.t => non_neg_integer},
+    element_count: non_neg_integer
+  }
+
+  @spec register_font(FontDB.t, Font.t) :: FontDB.t
+  def register_font(fontdb, font) do
+    case Dict.fetch(fontdb.fonts, font) do
+      :error -> %FontDB{fonts: Dict.put(fontdb.fonts, font, fontdb.element_count),
+                       element_count: fontdb.element_count + 1}
+      {:ok, _} -> fontdb
+    end
+  end
+
+  def get_id(fontdb, font) do
+    case Dict.fetch(fontdb.fonts, font) do
+      :error ->
+        raise %ArgumentError{message: "Invalid key provided for FontDB.get_font: " <> inspect(font)}
+      {:ok, id} ->
+        id
+    end
+  end
+
+  def sorted_id_font_tuples(fontdb) do
+    Enum.map(fontdb.fonts, fn ({k, v}) -> {v, k} end) |> Enum.sort
+  end
+end
+
+
+defmodule CellStyle do
+  defstruct font: nil
+
+  @type t :: %CellStyle{
+    font: Font.t
+  }
+
+
+  def from_props props do
+    font = Font.from_props props
+    %CellStyle{font: font}
+  end
+end
+
+
+defmodule CellStyleDB do
+  defstruct cellstyles: %{}, element_count: 0
+
+  @type t :: %CellStyleDB {
+    cellstyles: %{CellStyle.t => non_neg_integer},
+    element_count: non_neg_integer
+  }
+
+
+  def register_style(cellstyledb, style) do
+    case Dict.fetch(cellstyledb.cellstyles, style) do
+      :error ->
+        # add +1 here already since "0" refers to the default style
+        csdb = update_in cellstyledb.cellstyles,
+                  &(Dict.put &1, style, (cellstyledb.element_count + 1))
+        update_in csdb.element_count, &(&1 + 1)
+      {:ok, _} ->
+        cellstyledb
+    end
+  end
+
+  def get_id(cellstyledb, style) do
+    case Dict.fetch(cellstyledb.cellstyles, style) do
+      :error ->
+        raise %ArgumentError{message: "Could not find key in styledb: " <> inspect(style)}
+      {:ok, key} ->
+        key
+    end
+  end
+
+  @doc ~S"""
+  Recursively register all fonts, border* and fill* properties (*=TBD)
+  in the WorkbookCompInfo structure.
+  """
+  @spec register_all(WorkbookCompInfo.t) :: WorkbookCompInfo.t
+  def register_all(wci) do
+    Enum.reduce wci.cellstyledb.cellstyles, wci, fn ({style, _}, wci) ->
+      update_in wci.fontdb, &(FontDB.register_font &1, style.font)
+      # TODO: update_in wci.borderstyledb ...; wci.fillstyledb...
+    end
+  end
+end
+
 
 defmodule SheetCompInfo do
   @moduledoc ~S"""
@@ -63,7 +164,18 @@ end
 
 
 defmodule WorkbookCompInfo do
-  defstruct sheet_info: nil, stringdb: nil, next_free_xl_rid: nil
+  @moduledoc ~S"""
+  This module aggregates information about the metainformation
+  required to generate the XML file.
+
+  It is used as the aggregator when folding over the individual
+  cells.
+  """
+  defstruct sheet_info: nil,
+            stringdb: %StringDB{},
+            fontdb: %FontDB{},
+            cellstyledb: %CellStyleDB{},
+            next_free_xl_rid: nil
 end
 
 
@@ -79,14 +191,14 @@ end
 defmodule Elixlsx do
   alias Elixlsx.Util, as: U
   alias Elixlsx.XMLTemplates
-  
+
   @doc ~S"""
   Accepts a list of Sheets and the next free relationship ID.
   Returns a tuple containing a list of SheetCompInfo's and the next free
   relationship ID.
   """
   @spec make_sheet_info(nonempty_list(Sheet.t), non_neg_integer) :: {list(SheetCompInfo.t), non_neg_integer}
-  def make_sheet_info sheets, init_rId do
+  def make_sheet_info(sheets, init_rId) do
     # fold helper. aggregator holds {list(SheetCompInfo), sheetidx, rId}.
     add_sheet =
       fn (_, {sci, idx, rId}) ->
@@ -98,30 +210,59 @@ defmodule Elixlsx do
     {Enum.reverse(sheetCompInfos), nextrID}
   end
 
-  def update_stringdb_from_rows stringdb, rows do
-    List.foldl rows, stringdb, fn (cols, stringdb) ->
-      List.foldl cols, stringdb, fn (col, stringdb) ->
-        cond do
-          is_binary(col) && String.valid?(col) -> StringDB.register_string(stringdb, col)
-          true -> stringdb
-        end
+  def compinfo_cell_pass_value wci, value do
+    cond do
+      is_binary(value) && String.valid?(value)
+        -> update_in wci.stringdb, &StringDB.register_string(&1, value)
+      true -> wci
+    end
+  end
+
+
+  def compinfo_cell_pass_style wci, props do
+    update_in wci.cellstyledb, &CellStyleDB.register_style(&1, CellStyle.from_props(props))
+  end
+
+
+  @spec compinfo_cell_pass(WorkbookCompInfo.t, any) :: WorkbookCompInfo.t
+  def compinfo_cell_pass wci, cell do
+    cond do
+      is_list(cell) ->
+        wci
+        |> compinfo_cell_pass_value(hd cell)
+        |> compinfo_cell_pass_style(tl cell)
+      true ->
+        compinfo_cell_pass_value wci, cell
+    end
+  end
+
+
+  @spec compinfo_from_rows(WorkbookCompInfo.t, list(list(any()))) :: WorkbookCompInfo.t
+  def compinfo_from_rows wci, rows do
+    List.foldl rows, wci, fn (cols, wci) ->
+      List.foldl cols, wci, fn (cell, wci) ->
+        compinfo_cell_pass wci, cell
       end
     end
   end
 
-  def make_stringdb sheets do
-    List.foldl sheets, %StringDB{}, fn (sheet, stringdb) ->
-      update_stringdb_from_rows stringdb, sheet.rows
+  @spec compinfo_from_sheets(WorkbookCompInfo.t, list(Sheet.t)) :: WorkbookCompInfo.t
+  def compinfo_from_sheets wci, sheets do
+    List.foldl sheets, wci, fn (sheet, wci) ->
+      compinfo_from_rows wci, sheet.rows
     end
   end
 
   @first_free_rid 2
   def make_workbook_comp_info workbook do
     {sci, next_rId} = make_sheet_info(workbook.sheets, @first_free_rid)
+
     %WorkbookCompInfo{
       sheet_info: sci,
       next_free_xl_rid: next_rId,
-      stringdb: make_stringdb workbook.sheets}
+    }
+    |> compinfo_from_sheets(workbook.sheets)
+    |> CellStyleDB.register_all
   end
 
 
@@ -221,7 +362,7 @@ defmodule Elixlsx do
     <cellStyle builtinId="0" name="Normal" xfId="0"/>
   </cellStyles>
 </styleSheet>
-"""	
+"""
 		}
 	end
 
@@ -262,7 +403,7 @@ defmodule Elixlsx do
     sheets = data.sheets
     Enum.zip(sheets, wci.sheet_info)
     |> Enum.map fn ({s, sci}) ->
-                  {sheet_full_path(sci), XMLTemplates.make_sheet(s, wci.stringdb)}
+                  {sheet_full_path(sci), XMLTemplates.make_sheet(s, wci)}
                 end
 	end
 
@@ -301,6 +442,7 @@ defmodule Elixlsx do
 
   def write_to(workbook, filename) do
     wci = make_workbook_comp_info workbook
+    IO.inspect wci
     :zip.create(filename,
 			get_docProps_dir(workbook) ++
       get__rels_dir(workbook) ++
