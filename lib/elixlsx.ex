@@ -43,11 +43,19 @@ defmodule StringDB do
 end
 
 defmodule Font do
-  defstruct bold: false
+  defstruct bold: false, italic: false, underline: false,
+            strike: false, size: nil
 
   def from_props props do
-    %Font{bold: !!props[:bold]}
+    %Font{bold: !!props[:bold],
+          italic: !!props[:italic],
+          underline: !!props[:underline],
+          strike: !!props[:strike],
+          size: props[:size]
+         }
   end
+
+
 end
 
 

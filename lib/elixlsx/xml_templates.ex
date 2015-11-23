@@ -196,8 +196,21 @@ defmodule Elixlsx.XMLTemplates do
 
   defp font_to_xml_entry(font) do
     bold = if font.bold do "<b val=\"1\"/>" else "" end
+    italic = if font.italic do "<i val=\"1\"/>" else "" end
+    underline = if font.underline do "<u val=\"1\"/>" else "" end
+    strike = if font.strike do "<strike val=\"1\"/>" else "" end
+    size = if font.size do
+      case is_number(font.size) do
+        true ->
+          "<sz val=\"#{font.size}\"/>"
+        false ->
+          raise %ArgumentError{message: "Invalid font size: " <> (inspect font.size)}
+      end
+    else
+      ""
+    end
 
-    "<font>#{bold}</font>"
+    "<font>#{bold}#{italic}#{underline}#{strike}#{size}</font>"
   end
 
   def make_font_list(ordered_font_list) do
