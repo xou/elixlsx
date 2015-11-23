@@ -206,7 +206,13 @@ defmodule Elixlsx.XMLTemplates do
 
   defp style_to_xml_entry(style, wci) do
     fontid = FontDB.get_id wci.fontdb, style.font
-    "<xf fontId=\"#{fontid}\" />"
+    """
+    <xf borderId="0"
+           fillId="0"
+           fontId=\"#{fontid}\"
+           numFmtId="0"
+           xfId="0" />
+    """
   end
 
   def make_cellxfs(ordered_style_list, wci) do
