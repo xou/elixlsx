@@ -9,6 +9,7 @@ defmodule ElixlsxTest do
   doctest Elixlsx.XMLTemplates
 
   alias Elixlsx.XMLTemplates
+  alias Elixlsx.Compiler.StringDB
 
   test "the truth" do
     assert 1 + 1 == 2
