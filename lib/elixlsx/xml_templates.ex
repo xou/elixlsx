@@ -80,7 +80,7 @@ defmodule Elixlsx.XMLTemplates do
   end
 
   def make_contenttypes_xml(wci) do
-			~S"""
+    ~S"""
 <?xml version="1.0" encoding="UTF-8"?>
 <Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">
   <Override PartName="/_rels/.rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>
@@ -89,8 +89,8 @@ defmodule Elixlsx.XMLTemplates do
   <Override PartName="/xl/_rels/workbook.xml.rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>
   <Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>
   <Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/>
-  """ <> contenttypes_sheet_entries(wci.sheet_info) <>
-  ~S"""
+    """ <> contenttypes_sheet_entries(wci.sheet_info) <>
+    ~S"""
   <Override PartName="/xl/sharedStrings.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sharedStrings+xml"/>
 </Types>
 """
@@ -125,6 +125,8 @@ defmodule Elixlsx.XMLTemplates do
         :error
     end
   end
+
+
   # TODO i know now about string interpolation, i should probably clean this up. ;)
   defp xl_sheet_cols(row, rowidx, wci) do
     Enum.zip(row, 1 .. length row) |>
@@ -135,7 +137,7 @@ defmodule Elixlsx.XMLTemplates do
           ""
         else
           cv = get_content_type_value(content, wci)
-          {contentType, contentValue} =
+          {content_type, content_value} =
           case cv do
             {t, v} -> {t, v}
             :error -> raise %ArgumentError{
@@ -147,8 +149,8 @@ defmodule Elixlsx.XMLTemplates do
 
           """
           <c r="#{U.to_excel_coords(rowidx, colidx)}"
-          s="#{styleID}" t="#{contentType}">
-          <v>#{contentValue}</v>
+          s="#{styleID}" t="#{content_type}">
+          <v>#{content_value}</v>
           </c>
           """
           end
@@ -173,7 +175,7 @@ defmodule Elixlsx.XMLTemplates do
   Returns the XML content for single sheet.
   """
   def make_sheet(sheet, wci) do
-			~S"""
+    ~S"""
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">
   <sheetPr filterMode="false">
@@ -195,7 +197,7 @@ defmodule Elixlsx.XMLTemplates do
   </sheetData>
   <pageMargins left="0.75" right="0.75" top="1" bottom="1.0" header="0.5" footer="0.5"/>
 </worksheet>
-			"""
+    """
   end
 
   ###
@@ -275,6 +277,7 @@ defmodule Elixlsx.XMLTemplates do
     Enum.map_join(ordered_style_list, "\n", &(style_to_xml_entry &1, wci))
   end
 
+
   @spec make_xl_styles(WorkbookCompInfo.t) :: String.t
   @doc ~S"""
   get the content of the styles.xml file.
@@ -283,9 +286,9 @@ defmodule Elixlsx.XMLTemplates do
   """
   def make_xl_styles(wci) do
     font_list = FontDB.id_sorted_fonts wci.fontdb
-    cellXfs = CellStyleDB.id_sorted_styles wci.cellstyledb
+    cell_xfs = CellStyleDB.id_sorted_styles wci.cellstyledb
 
-		"""
+    """
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">
   <fonts count="#{1 + length font_list}">
@@ -303,11 +306,11 @@ defmodule Elixlsx.XMLTemplates do
   </cellStyleXfs>
   <cellXfs count="#{1 + length cellXfs}">
     <xf borderId="0" fillId="0" fontId="0" xfId="0"/>
-    #{make_cellxfs cellXfs, wci}
+    #{make_cellxfs cell_xfs, wci}
   </cellXfs>
   </styleSheet>
   """
-	end
+  end
 
   ###
   ### _rels/.rels
@@ -348,7 +351,7 @@ defmodule Elixlsx.XMLTemplates do
   """
   <> workbook_sheet_entries(data.sheets, sci)
   <> ~S"""
-    </sheets>
+  </sheets>
   <calcPr iterateCount="100" refMode="A1" iterate="false" iterateDelta="0.001"/>
   </workbook>
   """
