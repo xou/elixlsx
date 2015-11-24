@@ -56,16 +56,7 @@ defmodule Elixlsx.Writer do
   Returns the filename '_rels/.rels' and it's content as a tuple
   """
 	def get__rels_dotrels(_) do
-		{'_rels/.rels',
-			~S"""
-<?xml version="1.0" encoding="UTF-8"?>
-<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
-  <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/>
-  <Relationship Id="rId2" Type="http://schemas.openxmlformats.org/package/2006/relationships/metadata/core-properties" Target="docProps/core.xml"/>
-  <Relationship Id="rId3" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/extended-properties" Target="docProps/app.xml"/>
-</Relationships>
-"""
-		}
+		{'_rels/.rels', XMLTemplates.rels_dotrels}
 	end
 
 
@@ -102,25 +93,10 @@ defmodule Elixlsx.Writer do
      XMLTemplates.make_xl_styles wci}
   end
 
-  @spec get_xl_workbook_xml(Workbook.t, WorkbookCompInfo.t) :: zip_tuple
+  @spec get_xl_workbook_xml(Workbook.t, SheetCompInfos.t) :: zip_tuple
 	def get_xl_workbook_xml(data, sheetCompInfos) do
 		{'xl/workbook.xml',
-			~S"""
-<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">
-  <fileVersion appName="Calc"/>
-  <bookViews>
-    <workbookView activeTab="0"/>
-  </bookViews>
-  <sheets>
-  """ 
-  <> XMLTemplates.make_xl_workbook_xml_sheet_entries(data.sheets, sheetCompInfos)
-  <> ~S"""
-  </sheets>
-  <calcPr iterateCount="100" refMode="A1" iterate="false" iterateDelta="0.001"/>
-</workbook>
-"""
-		}
+     XMLTemplates.make_workbook_xml(data, sheetCompInfos)}
 	end
 
   @spec get_xl_sharedStrings_xml(any, WorkbookCompInfo.t) :: zip_tuple
@@ -130,13 +106,13 @@ defmodule Elixlsx.Writer do
 		}
 	end
 
-
   @spec sheet_full_path(SheetCompInfo.t) :: list(char)
   defp sheet_full_path sci do
     String.to_char_list "xl/worksheets/#{sci.filename}"
   end
 
-
+  @spec get_xl_worksheets_dir(Workbook.t, WorkbookCompInfo.t)
+        :: list(zip_tuple)
 	def get_xl_worksheets_dir(data, wci) do
     sheets = data.sheets
     Enum.zip(sheets, wci.sheet_info)
@@ -147,22 +123,7 @@ defmodule Elixlsx.Writer do
 
 
 	def get_contentTypes_xml(_, wci) do
-		{'[Content_Types].xml',
-			~S"""
-<?xml version="1.0" encoding="UTF-8"?>
-<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">
-  <Override PartName="/_rels/.rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>
-  <Override PartName="/docProps/app.xml" ContentType="application/vnd.openxmlformats-officedocument.extended-properties+xml"/>
-  <Override PartName="/docProps/core.xml" ContentType="application/vnd.openxmlformats-package.core-properties+xml"/>
-  <Override PartName="/xl/_rels/workbook.xml.rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>
-  <Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>
-  <Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/>
-  """ <> XMLTemplates.make_content_types_xml_sheet_entries(wci.sheet_info) <>
-  ~S"""
-  <Override PartName="/xl/sharedStrings.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sharedStrings+xml"/>
-</Types>
-"""
-		}
+		{'[Content_Types].xml', XMLTemplates.make_contenttypes_xml(wci)}
 	end
 
 

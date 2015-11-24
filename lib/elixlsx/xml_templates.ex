@@ -68,25 +68,37 @@ defmodule Elixlsx.XMLTemplates do
     """
   end
   
-  @spec make_xl_workbook_xml_sheet_entries(nonempty_list(Sheet.t), nonempty_list(SheetCompInfo.t)) :: String.t
-  def make_xl_workbook_xml_sheet_entries sheet_infos, sheet_comp_infos do
-    # Yes, the parens here are 100% required, otherwise |> takes precedence,
-    # and you'll be spending quite a while debugging why there is no matching
-    # function clause for make_xl_workbook_xml_sheet_entry.
-    Enum.zip(sheet_infos, sheet_comp_infos)
-    |> Enum.map_join &make_xl_workbook_xml_sheet_entry/1
-  end
-
   ### [Content_Types].xml
-  def make_content_types_xml_sheet_entry sheet_comp_info do
+  defp contenttypes_sheet_entry sheet_comp_info do
     """
     <Override PartName="/xl/worksheets/#{sheet_comp_info.filename}" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>
     """
   end
 
-  def make_content_types_xml_sheet_entries sheet_comp_infos do
-    Enum.map_join sheet_comp_infos, &make_content_types_xml_sheet_entry/1
+  defp contenttypes_sheet_entries sheet_comp_infos do
+    Enum.map_join sheet_comp_infos, &contenttypes_sheet_entry/1
   end
+
+  def make_contenttypes_xml(wci) do
+			~S"""
+<?xml version="1.0" encoding="UTF-8"?>
+<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">
+  <Override PartName="/_rels/.rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>
+  <Override PartName="/docProps/app.xml" ContentType="application/vnd.openxmlformats-officedocument.extended-properties+xml"/>
+  <Override PartName="/docProps/core.xml" ContentType="application/vnd.openxmlformats-package.core-properties+xml"/>
+  <Override PartName="/xl/_rels/workbook.xml.rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>
+  <Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>
+  <Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/>
+  """ <> contenttypes_sheet_entries(wci.sheet_info) <>
+  ~S"""
+  <Override PartName="/xl/sharedStrings.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sharedStrings+xml"/>
+</Types>
+"""
+  end
+
+  ###
+  ### xl/worksheet/sheet*.xml
+  ###
 
   defp split_into_content_style(cell, wci) do
     cond do
@@ -113,8 +125,6 @@ defmodule Elixlsx.XMLTemplates do
         :error
     end
   end
-
-  ### Worksheets
   # TODO i know now about string interpolation, i should probably clean this up. ;)
   defp xl_sheet_cols(row, rowidx, wci) do
     Enum.zip(row, 1 .. length row) |>
@@ -158,8 +168,9 @@ defmodule Elixlsx.XMLTemplates do
     List.foldr("", &<>/2)
   end
 
+  @spec make_sheet(Sheet.t, WorkbookCompInfo.t) :: String.t
   @doc ~S"""
-  Returns the complete sheet XML data.
+  Returns the XML content for single sheet.
   """
   def make_sheet(sheet, wci) do
 			~S"""
@@ -187,6 +198,10 @@ defmodule Elixlsx.XMLTemplates do
 			"""
   end
 
+  ###
+  ### xl/sharedStrings.xml
+  ###
+
   @spec make_xl_shared_strings(list({non_neg_integer, String.t})) :: String.t
   def make_xl_shared_strings(stringlist) do
     len = length stringlist
@@ -202,6 +217,15 @@ defmodule Elixlsx.XMLTemplates do
   <> "</sst>"
   end
 
+
+  ###
+  ### xl/styles.xml
+  ###
+  @spec font_to_xml_entry(Font.t) :: String.t
+  @doc ~S"""
+  Create a <font /> entry from a Font struct.
+  TODO: This should maybe be moved to the font struct itself.
+  """
   defp font_to_xml_entry(font) do
     bold = if font.bold do "<b val=\"1\"/>" else "" end
     italic = if font.italic do "<i val=\"1\"/>" else "" end
@@ -221,10 +245,17 @@ defmodule Elixlsx.XMLTemplates do
     "<font>#{bold}#{italic}#{underline}#{strike}#{size}</font>"
   end
 
-  def make_font_list(ordered_font_list) do
+  @spec make_font_list(list(Font.t)) :: String.t
+  defp make_font_list(ordered_font_list) do
     Enum.map_join(ordered_font_list, "\n", &(font_to_xml_entry &1))
   end
 
+  @spec style_to_xml_entry(CellStyle.t, WorkbookCompInfo.t) :: String.t
+  @doc ~S"""
+  Turn a CellStyle struct into the styles.xml <xf /> representation.
+
+  TODO: This could be moved into the CellStyle struct.
+  """
   defp style_to_xml_entry(style, wci) do
     fontid = FontDB.get_id wci.fontdb, style.font
     """
@@ -236,10 +267,20 @@ defmodule Elixlsx.XMLTemplates do
     """
   end
 
-  def make_cellxfs(ordered_style_list, wci) do
+  @spec make_cellxfs(list(CellStyle.t), WorkbookCompInfo.t) :: String.t
+  @doc ~S"""
+  return the inner content of the <CellXfs> block.
+  """
+  defp make_cellxfs(ordered_style_list, wci) do
     Enum.map_join(ordered_style_list, "\n", &(style_to_xml_entry &1, wci))
   end
 
+  @spec make_xl_styles(WorkbookCompInfo.t) :: String.t
+  @doc ~S"""
+  get the content of the styles.xml file.
+  the WorkbookCompInfo struct must be computed before calling this,
+  (especially CellStyleDB.register_all)
+  """
   def make_xl_styles(wci) do
     font_list = FontDB.id_sorted_fonts wci.fontdb
     cellXfs = CellStyleDB.id_sorted_styles wci.cellstyledb
@@ -266,9 +307,50 @@ defmodule Elixlsx.XMLTemplates do
   </cellXfs>
   </styleSheet>
   """
-
-#  <cellStyles count="1">
-#    <cellStyle builtinId="0" name="Normal" xfId="0"/>
-#  </cellStyles>
 	end
+
+  ###
+  ### _rels/.rels
+  ###
+
+  @rels_dotrels ~S"""
+  <?xml version="1.0" encoding="UTF-8"?>
+  <Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
+  <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/>
+  <Relationship Id="rId2" Type="http://schemas.openxmlformats.org/package/2006/relationships/metadata/core-properties" Target="docProps/core.xml"/>
+  <Relationship Id="rId3" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/extended-properties" Target="docProps/app.xml"/>
+  </Relationships>
+  """
+  def rels_dotrels, do: @rels_dotrels
+
+  ####
+  #### xl/workbook.xml
+  ####
+
+  @spec workbook_sheet_entries(nonempty_list(Sheet.t), nonempty_list(SheetCompInfo.t)) :: String.t
+  defp workbook_sheet_entries sheet_infos, sheet_comp_infos do
+    Enum.zip(sheet_infos, sheet_comp_infos)
+    |> Enum.map_join &make_xl_workbook_xml_sheet_entry/1
+  end
+
+  @doc ~S"""
+  Return the data for /xl/workbook.xml
+  """
+  def make_workbook_xml(data, sci) do
+    ~S"""
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+  <workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">
+  <fileVersion appName="Calc"/>
+  <bookViews>
+  <workbookView activeTab="0"/>
+  </bookViews>
+  <sheets>
+  """
+  <> workbook_sheet_entries(data.sheets, sci)
+  <> ~S"""
+    </sheets>
+  <calcPr iterateCount="100" refMode="A1" iterate="false" iterateDelta="0.001"/>
+  </workbook>
+  """
+  end
 end
