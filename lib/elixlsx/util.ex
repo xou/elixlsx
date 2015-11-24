@@ -72,6 +72,36 @@ defmodule Elixlsx.Util do
     encode_col(col) <> to_string(row)
   end
 
+  @spec from_excel_coords(String.t) :: {pos_integer, pos_integer}
+  @doc ~S"""
+  returns a tuple {row, col} corresponding to the input.
+  row and col are 1-indexed, use from_excel_coords0 for zero-indexing.
+
+  Example:
+    iex> Elixlsx.Util.from_excel_coords("C2")
+    {2, 3}
+
+    iex> Elixlsx.Util.from_excel_coords0("C2")
+    {1, 2}
+  """
+  def from_excel_coords(input) do
+    case Regex.run(~r/^([A-Z]+)([0-9]+)$/, input, capture: :all_but_first) do
+      nil -> raise %ArgumentError{
+                    message: "Invalid excel coordinates: " <>
+                            (inspect input)}
+      [colS, rowS] ->
+        {row, _} = Integer.parse rowS
+        {row, decode_col(colS)}
+    end
+  end
+
+  @spec from_excel_coords0(String.t) :: {non_neg_integer, non_neg_integer}
+  @doc ~S"See from_excel_coords/1"
+  def from_excel_coords0(input) do
+    {row, col} = from_excel_coords(input)
+    {row - 1, col - 1}
+  end
+
 
   @doc ~S"""
   Returns the ISO String representation (in UTC) for a erlang datetime() or datetime1970()

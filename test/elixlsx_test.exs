@@ -5,6 +5,7 @@ defmodule ElixlsxTest do
 
   use ExUnit.Case
   doctest Elixlsx
+  doctest Sheet
   doctest Elixlsx.Util
   doctest Elixlsx.XMLTemplates
 

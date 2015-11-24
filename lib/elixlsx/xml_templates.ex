@@ -121,23 +121,27 @@ defmodule Elixlsx.XMLTemplates do
     Enum.map(
       fn {cell, colidx} ->
         {content, styleID} = split_into_content_style(cell, wci)
-        cv = get_content_type_value(content, wci)
-        {contentType, contentValue} =
+        if is_nil(content) do
+          ""
+        else
+          cv = get_content_type_value(content, wci)
+          {contentType, contentValue} =
           case cv do
             {t, v} -> {t, v}
             :error -> raise %ArgumentError{
-                           message: "Invalid column content at " <>
+                        message: "Invalid column content at " <>
                                     U.to_excel_coords(rowidx, colidx) <> ": "
                                     <> (inspect content)
-                                     }
+                                    }
           end
 
-        """
-        <c r="#{U.to_excel_coords(rowidx, colidx)}"
-           s="#{styleID}" t="#{contentType}">
+          """
+          <c r="#{U.to_excel_coords(rowidx, colidx)}"
+          s="#{styleID}" t="#{contentType}">
           <v>#{contentValue}</v>
-        </c>
-        """
+          </c>
+          """
+          end
         end) |>
     List.foldr "", &<>/2
   end

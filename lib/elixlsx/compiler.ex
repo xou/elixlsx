@@ -56,8 +56,6 @@ defmodule Font do
           size: props[:size]
          }
   end
-
-
 end
 
 
