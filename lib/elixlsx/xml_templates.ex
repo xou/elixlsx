@@ -304,7 +304,7 @@ defmodule Elixlsx.XMLTemplates do
   <cellStyleXfs count="1">
     <xf borderId="0" fillId="0" fontId="0"/>
   </cellStyleXfs>
-  <cellXfs count="#{1 + length cellXfs}">
+  <cellXfs count="#{1 + length cell_xfs}">
     <xf borderId="0" fillId="0" fontId="0" xfId="0"/>
     #{make_cellxfs cell_xfs, wci}
   </cellXfs>

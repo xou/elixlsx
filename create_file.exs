@@ -10,5 +10,7 @@ sheet = %Sheet{name: 'First', rows:
    [["Müłti", bold: true, italic: true, underline: true, strike: true]]
   ]}
 sheet2 = %Sheet{name: 'Second', rows: [[1,2,3,4,5],[1,2], ["hello", "goat", "world"]]}
-workbook = %Workbook{sheets: [sheet, sheet2]}
+sheet3 = Sheet.with_name("Third") |>
+Sheet.set_cell("B3", "Hello World", bold: true, underline: true)
+workbook = %Workbook{sheets: [sheet, sheet2, sheet3]}
 Elixlsx.write_to(workbook, "empty.xlsx")

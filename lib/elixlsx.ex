@@ -102,15 +102,17 @@ defmodule Sheet do
         # append new rows, call self again with new sheet
         n_new_rows = rowidx - length(sheet.rows)
         new_rows = 0..n_new_rows |> Enum.map fn _ -> [] end
-        set_at (update_in sheet.rows, &(&1 ++ new_rows)),
-                rowidx, colidx, content, opts
+
+        update_in(sheet.rows, &(&1 ++ new_rows)) |>
+          set_at(rowidx, colidx, content, opts)
+
       length(Enum.at(sheet.rows, rowidx)) <= colidx ->
         n_new_cols = colidx - length(Enum.at(sheet.rows, rowidx))
         new_cols = 0..n_new_cols |> Enum.map fn _ -> nil end
         new_row = Enum.at(sheet.rows, rowidx) ++ new_cols
-        set_at (update_in sheet.rows,
-                            &(List.replace_at &1, rowidx, new_row)),
-                 rowidx, colidx, content, opts
+
+        update_in(sheet.rows, &(List.replace_at &1, rowidx, new_row)) |>
+        set_at(rowidx, colidx, content, opts)
       true ->
           update_in sheet.rows, fn rows ->
             List.update_at rows, rowidx, fn cols ->

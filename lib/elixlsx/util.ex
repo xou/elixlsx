@@ -59,7 +59,7 @@ defmodule Elixlsx.Util do
   Indizes start with 1.
 
   ## Examples
-  
+
     iex> Elixlsx.Util.to_excel_coords(1, 1)
     "A1"
 
@@ -108,7 +108,7 @@ defmodule Elixlsx.Util do
   object.
 
   Example:
-    
+
     iex> Elixlsx.Util.iso_from_datetime {{2000, 12, 30}, {23, 59, 59}}
     "2000-12-30T23:59:59Z"
 
@@ -151,7 +151,7 @@ defmodule Elixlsx.Util do
       # TODO also prominently absent: [char].
       String.valid? input ->
         input
-      true -> raise "Invalid input to iso_timestamp." <> (IO.inspect input)
+      true -> raise "Invalid input to iso_timestamp." <> (inspect input)
     end
   end
 
