@@ -40,6 +40,14 @@ defmodule Font do
   defstruct bold: false, italic: false, underline: false,
             strike: false, size: nil
 
+  @type t :: %Font{
+    bold: boolean,
+    italic: boolean,
+    underline: boolean,
+    strike: boolean,
+    size: pos_integer
+  }
+
   def from_props props do
     %Font{bold: !!props[:bold],
           italic: !!props[:italic],
@@ -107,6 +115,7 @@ end
 defmodule Elixlsx.Compiler.CellStyleDB do
   alias Elixlsx.Compiler.CellStyleDB
   alias Elixlsx.Compiler.FontDB
+  alias Elixlsx.Compiler.WorkbookCompInfo
 
   defstruct cellstyles: %{}, element_count: 0
 
@@ -159,20 +168,21 @@ end
 
 
 defmodule Elixlsx.Compiler.SheetCompInfo do
+  alias Elixlsx.Compiler
   @moduledoc ~S"""
   Compilation info for a sheet, to be filled during the actual
   write process.
   """
   defstruct rId: "", filename: "sheet1.xml", sheetId: 0
-  @type t :: %Elixlsx.Compiler.SheetCompInfo{
+  @type t :: %Compiler.SheetCompInfo{
     rId: String.t,
     filename: String.t,
     sheetId: non_neg_integer
   }
 
-  @spec make(non_neg_integer, non_neg_integer) :: SheetCompInfo.t
+  @spec make(non_neg_integer, non_neg_integer) :: Compiler.SheetCompInfo.t
   def make sheetidx, rId do
-    %Elixlsx.Compiler.SheetCompInfo{rId: "rId" <> to_string(rId),
+    %Compiler.SheetCompInfo{rId: "rId" <> to_string(rId),
                    filename: "sheet" <> to_string(sheetidx) <> ".xml",
                    sheetId: sheetidx}
   end
@@ -180,6 +190,7 @@ end
 
 
 defmodule Elixlsx.Compiler.WorkbookCompInfo do
+  alias Elixlsx.Compiler
   @moduledoc ~S"""
   This module aggregates information about the metainformation
   required to generate the XML file.
@@ -188,10 +199,18 @@ defmodule Elixlsx.Compiler.WorkbookCompInfo do
   cells.
   """
   defstruct sheet_info: nil,
-            stringdb: %Elixlsx.Compiler.StringDB{},
-            fontdb: %Elixlsx.Compiler.FontDB{},
-            cellstyledb: %Elixlsx.Compiler.CellStyleDB{},
+            stringdb: %Compiler.StringDB{},
+            fontdb: %Compiler.FontDB{},
+            cellstyledb: %Compiler.CellStyleDB{},
             next_free_xl_rid: nil
+
+  @type t :: %Compiler.WorkbookCompInfo{
+      sheet_info: Compiler.SheetCompInfo.t,
+      stringdb: Compiler.StringDB.t,
+      fontdb: Compiler.FontDB.t,
+      cellstyledb: Compiler.CellStyleDB.t,
+      next_free_xl_rid: non_neg_integer
+  }
 end
 
 

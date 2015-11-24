@@ -1,46 +1,61 @@
 defmodule Elixlsx.Writer do
   alias Elixlsx.Util, as: U
   alias Elixlsx.XMLTemplates
-  alias Elixlsx.Compiler
   alias Elixlsx.Compiler.StringDB
+  alias Elixlsx.Compiler.WorkbookCompInfo
+  alias Elixlsx.Compiler.SheetCompInfo
+
+  @type zip_tuple :: {char_list, String.t}
 
   @moduledoc ~S"""
   Contains functions to generate the individual files
   in the XLSX zip package.
   """
 
-  @spec create_files(Workbook.t, WorkbookCompInfo.t) :: list({char_list, char_list})
+  @spec create_files(Workbook.t, WorkbookCompInfo.t) :: list(zip_tuple)
   @doc ~S"""
   Returns a list of tuples {filename, filecontent}. Both
   filename and filecontent are represented as charlists
   (so that they can be used with the OTP :zip module.)
   """
   def create_files(workbook, wci) do
-    
+		get_docProps_dir(workbook) ++
+      get__rels_dir(workbook) ++
+      get_xl_dir(workbook, wci) ++
+      [ get_contentTypes_xml(workbook, wci) ]
   end
 
 
+  @spec get_docProps_app_xml(Workbook.t) :: zip_tuple
   @doc ~S"""
   returns a tuple {'docProps/app.xml', "XML Data"}
   """
-  def get_docProps_app_xml(data) do
+  def get_docProps_app_xml(_) do
     {'docProps/app.xml', XMLTemplates.docprops_app}
   end
 
 
-  @spec get_docProps_core_xml(Workbook.t) :: String.t
+  @spec get_docProps_core_xml(Workbook.t) :: zip_tuple
   def get_docProps_core_xml(workbook) do
     timestamp = U.iso_timestamp(workbook.datetime)
     {'docProps/core.xml', XMLTemplates.docprops_core(timestamp)}
   end
 
 
+  @spec get_docProps_dir(Workbook.t) :: list(zip_tuple)
+  @doc ~S"""
+  Returns files in the docProps directory.
+  """
 	def get_docProps_dir(data) do
 		[get_docProps_app_xml(data), get_docProps_core_xml(data)]
 	end
 
 
-	def get__rels_dotrels(data) do
+  @spec get__rels_dotrels(Workbook.t) :: zip_tuple
+  @doc ~S"""
+  Returns the filename '_rels/.rels' and it's content as a tuple
+  """
+	def get__rels_dotrels(_) do
 		{'_rels/.rels',
 			~S"""
 <?xml version="1.0" encoding="UTF-8"?>
@@ -53,11 +68,18 @@ defmodule Elixlsx.Writer do
 		}
 	end
 
+
+  @spec get__rels_dir(Workbook.t) :: list(zip_tuple)
+  @doc ~S"""
+  Returns files in the _rels/ directory.
+  """
 	def get__rels_dir(data) do
 		[get__rels_dotrels(data)]
 	end
 
-	def get_xl_rels_dir(data, sheetCompInfos, next_rId) do
+
+  @spec get_xl_rels_dir(any, SheetCompInfo.t, non_neg_integer) :: list(zip_tuple)
+	def get_xl_rels_dir(_, sheetCompInfos, next_rId) do
 		[{'xl/_rels/workbook.xml.rels',
 			~S"""
 <?xml version="1.0" encoding="UTF-8"?>
@@ -74,11 +96,13 @@ defmodule Elixlsx.Writer do
 		}]
 	end
 
+  @spec get_xl_styles_xml(WorkbookCompInfo.t) :: zip_tuple
 	def get_xl_styles_xml(wci) do
 		{'xl/styles.xml',
      XMLTemplates.make_xl_styles wci}
   end
 
+  @spec get_xl_workbook_xml(Workbook.t, WorkbookCompInfo.t) :: zip_tuple
 	def get_xl_workbook_xml(data, sheetCompInfos) do
 		{'xl/workbook.xml',
 			~S"""
@@ -99,7 +123,8 @@ defmodule Elixlsx.Writer do
 		}
 	end
 
-	def get_xl_sharedStrings_xml(data, wci) do
+  @spec get_xl_sharedStrings_xml(any, WorkbookCompInfo.t) :: zip_tuple
+	def get_xl_sharedStrings_xml(_, wci) do
     {'xl/sharedStrings.xml',
 			XMLTemplates.make_xl_shared_strings(StringDB.sorted_id_string_tuples wci.stringdb)
 		}
@@ -121,7 +146,7 @@ defmodule Elixlsx.Writer do
 	end
 
 
-	def get_contentTypes_xml(data, wci) do
+	def get_contentTypes_xml(_, wci) do
 		{'[Content_Types].xml',
 			~S"""
 <?xml version="1.0" encoding="UTF-8"?>

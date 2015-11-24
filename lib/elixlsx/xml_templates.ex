@@ -1,8 +1,9 @@
 defmodule Elixlsx.XMLTemplates do
   alias Elixlsx.Util, as: U
   alias Elixlsx.Compiler.CellStyleDB
-  alias Elixlsx.Compiler.FontDB
   alias Elixlsx.Compiler.StringDB
+  alias Elixlsx.Compiler.FontDB
+  alias Elixlsx.Compiler.SheetCompInfo
 
   @doc ~S"""
   There are 5 characters that should be escaped in XML (<,>,",',&), but only
@@ -221,7 +222,7 @@ defmodule Elixlsx.XMLTemplates do
   end
 
   defp style_to_xml_entry(style, wci) do
-    fontid = Elixlsx.Compiler.FontDB.get_id wci.fontdb, style.font
+    fontid = FontDB.get_id wci.fontdb, style.font
     """
     <xf borderId="0"
            fillId="0"
@@ -236,7 +237,7 @@ defmodule Elixlsx.XMLTemplates do
   end
 
   def make_xl_styles(wci) do
-    font_list = Elixlsx.Compiler.FontDB.id_sorted_fonts wci.fontdb
+    font_list = FontDB.id_sorted_fonts wci.fontdb
     cellXfs = CellStyleDB.id_sorted_styles wci.cellstyledb
 
 		"""
