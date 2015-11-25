@@ -161,13 +161,12 @@ defmodule Elixlsx.XMLTemplates do
 
   defp xl_sheet_rows(data, wci) do
     Enum.zip(data, 1 .. length data) |>
-    Enum.map(fn {row, rowidx} -> 
-        List.foldr(["<row r=\"",
-                     to_string(rowidx),
-                     "\">\n",
-                     xl_sheet_cols(row, rowidx, wci),
-                     "</row>"], "", &<>/2) end) |>
-    List.foldr("", &<>/2)
+    Enum.map_join(fn {row, rowidx} ->
+              """
+              <row r="#{rowidx}">
+                #{xl_sheet_cols(row, rowidx, wci)}
+              </row>
+              """ end)
   end
 
   @spec make_sheet(Sheet.t, WorkbookCompInfo.t) :: String.t
