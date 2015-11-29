@@ -1,4 +1,3 @@
-
 defmodule Elixlsx.Compiler.StringDB do
   alias Elixlsx.Compiler.StringDB
   @moduledoc ~S"""
@@ -36,6 +35,101 @@ defmodule Elixlsx.Compiler.StringDB do
   end
 end
 
+defmodule Elixlsx.Compiler.DBUtil do
+
+  @type object_type :: any
+  @type gen_db_datatype :: %{object_type => non_neg_integer}
+  @type gen_db_type :: {gen_db_datatype, non_neg_integer}
+
+  @doc ~S"""
+  If the value does not exist in the database, return
+  the tuple {dict, nextid} unmodified. Otherwise,
+  returns a tuple {dict', nextid+1}, where dict'
+  is the dictionary with the new element inserted
+  (with id `nextid`)
+  """
+  @spec register(gen_db_type, object_type) :: gen_db_type
+  def register({dict, nextid}, value) do
+    # Note that the parameter "value" in the API
+    # refers to the *key* in the dictionary
+    case Dict.fetch(dict, value) do
+      :error -> { Dict.put(dict, value, nextid),
+                  nextid + 1
+                }
+      {:ok, _} -> {dict, nextid}
+    end
+  end
+
+  @doc ~S"""
+  return the ID for an object in the database
+  """
+  @spec get_id(gen_db_datatype, object_type) :: non_neg_integer
+  def get_id(dict, value) do
+    case Dict.fetch(dict, value) do
+      :error -> raise %ArgumentError{message: "Unable to find element: " <> (inspect value)}
+      {:ok, id} -> id
+    end
+  end
+
+
+  @spec id_sorted_values(gen_db_datatype) :: list(object_type)
+  def id_sorted_values(dict) do
+    dict
+    |> Enum.map(fn ({k, v}) -> {v, k} end)
+    |> Enum.sort
+    |> Dict.values
+  end
+end
+
+
+defmodule Elixlsx.Compiler.NumFmtDB do
+  alias __MODULE__
+  alias Elixlsx.Style.NumFmt
+  alias Elixlsx.Compiler.DBUtil
+  defstruct numfmts: %{}, nextid: 164
+
+  @type t :: %NumFmtDB {
+    numfmts: %{NumFmt.t => pos_integer},
+    nextid: non_neg_integer
+  }
+
+  def register_numfmt(db, value) do
+    {dict, ec} = DBUtil.register({db.numfmts, db.nextid}, value)
+    %NumFmtDB{numfmts: dict, nextid: ec}
+  end
+
+  @doc ~S"""
+  register an ID for a built-in NumFmt object.
+
+  built-in refers to the 164 objects (ids 0-163) that are
+  defined or reserved in the XLSX standard. A NumFmt object
+  mimicking the behaviour of such a built-in style can be
+  associated with the built-in id using this function, which
+  should save a couple of bytes in the resulting XLSX file.
+  """
+  def register_builtin(db, value, id) do
+    update_in db.numfmts, &(Dict.put &1, value, id)
+  end
+
+  def get_id(db, value), do: DBUtil.get_id(db.numfmts, value)
+
+  @spec id_sorted_numfmts(NumFmtDB.t) :: list(NumFmt.t)
+  def id_sorted_numfmts(db), do: DBUtil.id_sorted_values(db.numfmts)
+
+  @doc ~S"""
+  Return a list of tuples {id, NumFmt.t} for all custom (id >= 164)
+  NumFmts.
+  """
+  @spec custom_numfmt_id_tuples(NumFmtDB.t) :: list({non_neg_integer, NumFmt.t})
+  def custom_numfmt_id_tuples(db) do
+    db.numfmts
+    |> Enum.map(fn ({k, v}) -> {v, k} end)
+    |> Enum.sort
+    |> Enum.filter (fn ({id, _}) -> id >= 164 end)
+  end
+end
+
+
 defmodule Font do
   defstruct bold: false, italic: false, underline: false,
             strike: false, size: nil
@@ -49,12 +143,14 @@ defmodule Font do
   }
 
   def from_props props do
-    %Font{bold: !!props[:bold],
+    ft = %Font{bold: !!props[:bold],
           italic: !!props[:italic],
           underline: !!props[:underline],
           strike: !!props[:strike],
           size: props[:size]
          }
+
+    if ft == %Font{}, do: nil, else: ft
   end
 end
 
@@ -96,7 +192,9 @@ end
 
 
 defmodule CellStyle do
-  defstruct font: nil
+  alias Elixlsx.Style.NumFmt
+
+  defstruct font: nil, numfmt: nil
 
   @type t :: %CellStyle{
     font: Font.t
@@ -105,14 +203,19 @@ defmodule CellStyle do
 
   def from_props props do
     font = Font.from_props props
-    %CellStyle{font: font}
+    numfmt = NumFmt.from_props props
+
+    %CellStyle{font: font,
+               numfmt: numfmt}
   end
 end
 
 
 defmodule Elixlsx.Compiler.CellStyleDB do
+
   alias Elixlsx.Compiler.CellStyleDB
   alias Elixlsx.Compiler.FontDB
+  alias Elixlsx.Compiler.NumFmtDB
   alias Elixlsx.Compiler.WorkbookCompInfo
 
   defstruct cellstyles: %{}, element_count: 0
@@ -152,13 +255,25 @@ defmodule Elixlsx.Compiler.CellStyleDB do
   end
 
   @doc ~S"""
-  Recursively register all fonts, border* and fill* properties (*=TBD)
+  Recursively register all fonts, numberformat,
+  border* and fill* properties (*=TBD)
   in the WorkbookCompInfo structure.
   """
   @spec register_all(WorkbookCompInfo.t) :: WorkbookCompInfo.t
   def register_all(wci) do
     Enum.reduce wci.cellstyledb.cellstyles, wci, fn ({style, _}, wci) ->
-      update_in wci.fontdb, &(FontDB.register_font &1, style.font)
+      wci = if is_nil(style.font) do
+        wci
+      else
+        update_in(wci.fontdb, &(FontDB.register_font &1, style.font))
+      end
+      wci = if is_nil(style.numfmt) do
+        wci
+      else
+        update_in(wci.numfmtdb, &(NumFmtDB.register_numfmt &1, style.numfmt))
+      end
+
+      wci
       # TODO: update_in wci.borderstyledb ...; wci.fillstyledb...
     end
   end
@@ -200,6 +315,7 @@ defmodule Elixlsx.Compiler.WorkbookCompInfo do
             stringdb: %Compiler.StringDB{},
             fontdb: %Compiler.FontDB{},
             cellstyledb: %Compiler.CellStyleDB{},
+            numfmtdb: %Compiler.NumFmtDB{},
             next_free_xl_rid: nil
 
   @type t :: %Compiler.WorkbookCompInfo{
@@ -207,6 +323,7 @@ defmodule Elixlsx.Compiler.WorkbookCompInfo do
       stringdb: Compiler.StringDB.t,
       fontdb: Compiler.FontDB.t,
       cellstyledb: Compiler.CellStyleDB.t,
+      numfmtdb: Compiler.NumFmtDB.t,
       next_free_xl_rid: non_neg_integer
   }
 end
@@ -258,6 +375,7 @@ defmodule Elixlsx.Compiler do
         |> compinfo_cell_pass_value(hd cell)
         |> compinfo_cell_pass_style(tl cell)
       true ->
+        # no style information attached in this cell
         compinfo_cell_pass_value wci, cell
     end
   end

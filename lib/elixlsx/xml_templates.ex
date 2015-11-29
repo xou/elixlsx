@@ -4,6 +4,7 @@ defmodule Elixlsx.XMLTemplates do
   alias Elixlsx.Compiler.StringDB
   alias Elixlsx.Compiler.FontDB
   alias Elixlsx.Compiler.SheetCompInfo
+  alias Elixlsx.Compiler.NumFmtDB
 
   @doc ~S"""
   There are 5 characters that should be escaped in XML (<,>,",',&), but only
@@ -258,12 +259,19 @@ defmodule Elixlsx.XMLTemplates do
   TODO: This could be moved into the CellStyle struct.
   """
   defp style_to_xml_entry(style, wci) do
-    fontid = FontDB.get_id wci.fontdb, style.font
+    fontid = if is_nil(style.font),
+      do: 0,
+      else: FontDB.get_id wci.fontdb, style.font
+
+    numfmtid = if is_nil(style.numfmt),
+      do: 0,
+      else: NumFmtDB.get_id wci.numfmtdb, style.numfmt
+
     """
     <xf borderId="0"
            fillId="0"
-           fontId=\"#{fontid}\"
-           numFmtId="0"
+           fontId="#{fontid}"
+           numFmtId="#{numfmtid}"
            xfId="0" />
     """
   end
@@ -276,6 +284,21 @@ defmodule Elixlsx.XMLTemplates do
     Enum.map_join(ordered_style_list, "\n", &(style_to_xml_entry &1, wci))
   end
 
+  alias Elixlsx.Style.NumFmt
+  defp make_numfmts_inner(id_numfmt_tuples) do
+    Enum.map_join(id_numfmt_tuples, "\n",
+      (fn ({id, numfmt}) ->
+        NumFmt.get_stylexml_entry numfmt, id
+       end))
+  end
+
+  defp make_numfmts(id_numfmt_tuples) do
+    case length(id_numfmt_tuples) do
+      0 -> ""
+      n -> "<numFmts count=\"#{n}\">#{make_numfmts_inner(id_numfmt_tuples)}</numFmts>"
+    end
+  end
+
 
   @spec make_xl_styles(WorkbookCompInfo.t) :: String.t
   @doc ~S"""
@@ -286,10 +309,12 @@ defmodule Elixlsx.XMLTemplates do
   def make_xl_styles(wci) do
     font_list = FontDB.id_sorted_fonts wci.fontdb
     cell_xfs = CellStyleDB.id_sorted_styles wci.cellstyledb
+    numfmts_list = NumFmtDB.custom_numfmt_id_tuples wci.numfmtdb
 
     """
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">
+  #{make_numfmts(numfmts_list)}
   <fonts count="#{1 + length font_list}">
     <font />
     #{make_font_list(font_list)}
