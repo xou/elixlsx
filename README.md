@@ -21,3 +21,8 @@ iex(1)> Workbook.append_sheet(%Workbook{}, Sheet.with_name("Sheet 1") |> Sheet.s
 
 See Font.from_props in elixlsx/compiler.ex for a full list
 of currently supported formatting options.
+
+## Number formatting reference
+
+A quick introduction how nubmer formattings look like can be found [here](https://social.msdn.microsoft.com/Forums/office/en-US/e27aaf16-b900-4654-8210-83c5774a179c/xlsx-numfmtid-predefined-id-14-doesnt-match)
+
