@@ -15,6 +15,8 @@ sheet3 = Sheet.with_name("Third")
          |> Sheet.set_cell("A1", Elixlsx.Util.to_excel_datetime(1448882362), yyyymmdd: true)
          |> Sheet.set_cell("A2", Elixlsx.Util.to_excel_datetime({{2015, 11, 30}, {21, 20, 38}}), datetime: true)
          |> Sheet.set_cell("A3", 123.4, num_format: "0.00")
+         |> Sheet.set_cell("A4", {{2015, 11, 30}, {21, 20, 38}}, datetime: true)
+         |> Sheet.set_cell("A5", 1448882362, yyyymmdd: true)
 
 workbook = %Workbook{sheets: [sheet, sheet2, sheet3]}
 Elixlsx.write_to(workbook, "empty.xlsx")

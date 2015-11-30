@@ -179,7 +179,7 @@ defmodule Elixlsx.Util do
       t_diff
     end
 
-    t_diff
+    {:excelts, t_diff}
   end
 
 
@@ -192,5 +192,12 @@ defmodule Elixlsx.Util do
       :calendar.now_to_universal_time({div(input, 1000000), rem(input, 1000000), 0}))
   end
 
+  @doc ~S"""
+  Timestampts that are already in excel format are passed through
+  unmodified.
+  """
+  def to_excel_datetime({:excelts, value}) do
+    {:excelts, value}
+  end
 end
 

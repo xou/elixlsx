@@ -104,24 +104,29 @@ defmodule Elixlsx.XMLTemplates do
   defp split_into_content_style(cell, wci) do
     cond do
       is_list(cell) ->
+        cellstyle = CellStyle.from_props (tl cell)
         {
           hd(cell),
-          CellStyleDB.get_id(wci.cellstyledb, (CellStyle.from_props (tl cell)))
+          CellStyleDB.get_id(wci.cellstyledb, cellstyle),
+          cellstyle
         }
       true ->
         {
           cell,
-          0
+          0,
+          nil
         }
     end
   end
 
   defp get_content_type_value(content, wci) do
-    cond do
-      is_number content ->
-        {"n", to_string(content)}
-      String.valid? content ->
-        {"s", to_string(StringDB.get_id wci.stringdb, content)}
+    case content do
+      {:excelts, num} ->
+        {"n", to_string(num)}
+      x when is_number(x) ->
+        {"n", to_string(x)}
+      x when is_binary(x) ->
+        {"s", to_string(StringDB.get_id wci.stringdb, x)}
       true ->
         :error
     end
@@ -133,10 +138,16 @@ defmodule Elixlsx.XMLTemplates do
     Enum.zip(row, 1 .. length row) |>
     Enum.map(
       fn {cell, colidx} ->
-        {content, styleID} = split_into_content_style(cell, wci)
+        {content, styleID, cellstyle} = split_into_content_style(cell, wci)
         if is_nil(content) do
           ""
         else
+          content = if CellStyle.is_date? cellstyle do
+            U.to_excel_datetime content
+          else
+            content
+          end
+
           cv = get_content_type_value(content, wci)
           {content_type, content_value} =
           case cv do

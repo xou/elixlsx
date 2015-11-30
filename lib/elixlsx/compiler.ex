@@ -208,6 +208,14 @@ defmodule CellStyle do
     %CellStyle{font: font,
                numfmt: numfmt}
   end
+
+  def is_date?(cellstyle) do
+    cond do
+      is_nil(cellstyle) -> false
+      is_nil(cellstyle.numfmt) -> false
+      true -> NumFmt.is_date? cellstyle.numfmt
+    end
+  end
 end
 
 

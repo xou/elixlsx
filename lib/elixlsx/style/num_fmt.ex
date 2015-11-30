@@ -37,6 +37,11 @@ defmodule Elixlsx.Style.NumFmt do
     %NumFmt{format: "yyyy-mm-dd h:mm:ss"}
   end
 
+  def is_date?(numfmt) do
+    # TODO while this is probably reliable enough for 99% of cases...
+    String.contains? numfmt.format, "yy"
+  end
+
   @doc ~S"""
   in contrast to most (all?) other entries in styles.xml,
   numFmts actually carry their index in each element; probably
