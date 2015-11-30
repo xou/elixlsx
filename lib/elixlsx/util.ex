@@ -155,5 +155,42 @@ defmodule Elixlsx.Util do
     end
   end
 
+
+  @excel_epoch {{1899, 12, 31}, {0, 0, 0}}
+  @secs_per_day 86400
+
+  @doc ~S"""
+  Convert an erlang :calendar object to an excel timestamp.
+
+  TODO: Might be better to return a tuple {:excelts, <value>}
+  here to avoid confusion with unix timestmaps. Same below.
+  """
+  @spec to_excel_datetime(datetime_t) :: number
+  def to_excel_datetime({{yy, mm, dd}, {h, m, s}}) do
+    in_seconds = :calendar.datetime_to_gregorian_seconds {{yy, mm, dd}, {h, m, s}}
+    excel_epoch = :calendar.datetime_to_gregorian_seconds @excel_epoch
+
+    t_diff = (in_seconds - excel_epoch) / @secs_per_day
+
+    # Apply the "Lotus 123" bug - 1900 is considered a leap year.
+    t_diff = if t_diff > 59 do
+      t_diff + 1
+    else
+      t_diff
+    end
+
+    t_diff
+  end
+
+
+  @doc ~S"""
+  Convert a unix timestamp to excel time.
+  """
+  @spec to_excel_datetime(number) :: number
+  def to_excel_datetime(input) when is_number(input) do
+    to_excel_datetime(
+      :calendar.now_to_universal_time({div(input, 1000000), rem(input, 1000000), 0}))
+  end
+
 end
 
