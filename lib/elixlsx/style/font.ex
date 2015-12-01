@@ -45,8 +45,9 @@ defmodule Elixlsx.Style.Font do
   def get_stylexml_entry(font) do
     bold = if font.bold do "<b val=\"1\"/>" else "" end
     italic = if font.italic do "<i val=\"1\"/>" else "" end
-    # TODO underline doesn't work.
-    underline = if font.underline do "<u val=\"1\"/>" else "" end
+    # TODO: Add more underline properties, see here:
+    # http://webapp.docx4java.org/OnlineDemo/ecma376/SpreadsheetML/ST_UnderlineValues.html
+    underline = if font.underline do "<u val=\"single\"/>" else "" end
     strike = if font.strike do "<strike val=\"1\"/>" else "" end
     size = if font.size do
       case is_number(font.size) do
