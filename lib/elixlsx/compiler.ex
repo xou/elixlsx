@@ -130,33 +130,11 @@ defmodule Elixlsx.Compiler.NumFmtDB do
 end
 
 
-defmodule Font do
-  defstruct bold: false, italic: false, underline: false,
-            strike: false, size: nil
-
-  @type t :: %Font{
-    bold: boolean,
-    italic: boolean,
-    underline: boolean,
-    strike: boolean,
-    size: pos_integer
-  }
-
-  def from_props props do
-    ft = %Font{bold: !!props[:bold],
-          italic: !!props[:italic],
-          underline: !!props[:underline],
-          strike: !!props[:strike],
-          size: props[:size]
-         }
-
-    if ft == %Font{}, do: nil, else: ft
-  end
-end
-
 
 defmodule Elixlsx.Compiler.FontDB do
-  alias Elixlsx.Compiler.FontDB
+  alias __MODULE__
+  alias Elixlsx.Style.Font
+
   defstruct fonts: %{}, element_count: 0
 
   @type t :: %FontDB {
@@ -193,6 +171,7 @@ end
 
 defmodule CellStyle do
   alias Elixlsx.Style.NumFmt
+  alias Elixlsx.Style.Font
 
   defstruct font: nil, numfmt: nil
 
@@ -220,7 +199,6 @@ end
 
 
 defmodule Elixlsx.Compiler.CellStyleDB do
-
   alias Elixlsx.Compiler.CellStyleDB
   alias Elixlsx.Compiler.FontDB
   alias Elixlsx.Compiler.NumFmtDB

@@ -255,33 +255,11 @@ defmodule Elixlsx.XMLTemplates do
   ###
   ### xl/styles.xml
   ###
-  @spec font_to_xml_entry(Font.t) :: String.t
-  @doc ~S"""
-  Create a <font /> entry from a Font struct.
-  TODO: This should maybe be moved to the font struct itself.
-  """
-  defp font_to_xml_entry(font) do
-    bold = if font.bold do "<b val=\"1\"/>" else "" end
-    italic = if font.italic do "<i val=\"1\"/>" else "" end
-    underline = if font.underline do "<u val=\"1\"/>" else "" end
-    strike = if font.strike do "<strike val=\"1\"/>" else "" end
-    size = if font.size do
-      case is_number(font.size) do
-        true ->
-          "<sz val=\"#{font.size}\"/>"
-        false ->
-          raise %ArgumentError{message: "Invalid font size: " <> (inspect font.size)}
-      end
-    else
-      ""
-    end
 
-    "<font>#{bold}#{italic}#{underline}#{strike}#{size}</font>"
-  end
-
-  @spec make_font_list(list(Font.t)) :: String.t
+  @spec make_font_list(list(Elixlsx.Style.Font.t)) :: String.t
   defp make_font_list(ordered_font_list) do
-    Enum.map_join(ordered_font_list, "\n", &(font_to_xml_entry &1))
+    Enum.map_join(ordered_font_list, "\n",
+                  &(Elixlsx.Style.Font.get_stylexml_entry &1))
   end
 
   @spec style_to_xml_entry(CellStyle.t, WorkbookCompInfo.t) :: String.t

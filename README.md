@@ -19,7 +19,7 @@ it is also my first Elixir project, feedback is very welcome.
 iex(1)> Workbook.append_sheet(%Workbook{}, Sheet.with_name("Sheet 1") |> Sheet.set_cell("A1", "Hello", bold: true)) |> Elixlsx.write_to("hello.xlsx")
 ```
 
-See Font.from_props in elixlsx/compiler.ex for a full list
+See Font.from_props in elixlsx/style/font.ex for a full list
 of currently supported formatting options.
 
 ## Number formatting reference
