@@ -22,6 +22,10 @@ defmodule Elixlsx.Sheet do
     rows: list(list(any())),
   }
 
+  @doc ~S"""
+  Create a sheet with a sheet name.
+  """
+  @spec with_name(String.t) :: Sheet.t
   def with_name(name) do
     %Sheet{name: name}
   end
@@ -55,12 +59,14 @@ defmodule Elixlsx.Sheet do
   @doc ~S"""
   Set a cell indexed by excel coordinates.
 
-  Example:
-  iex> %Elixlsx.Sheet{} |>
-  ...> Elixlsx.Sheet.set_cell("C1", "Hello World",
-  ...>                bold: true, underline: true) |>
-  ...> Elixlsx.Sheet.to_csv_string
-  ",,Hello World"
+  ## Example
+
+      iex> %Elixlsx.Sheet{} |>
+      ...> Elixlsx.Sheet.set_cell("C1", "Hello World",
+      ...>                bold: true, underline: true) |>
+      ...> Elixlsx.Sheet.to_csv_string
+      ",,Hello World"
+
   """
 
   def set_cell(sheet, index, content, opts \\ []) when is_binary(index) do
@@ -73,14 +79,15 @@ defmodule Elixlsx.Sheet do
   @doc ~S"""
   Set a cell at a given row/column index. Indizes start at 0.
 
-  Example:
-    iex> %Elixlsx.Sheet{} |>
-    ...> Elixlsx.Sheet.set_at(0, 2, "Hello World",
-    ...>                bold: true, underline: true) |>
-    ...> Elixlsx.Sheet.to_csv_string
-    ",,Hello World"
-  """
+  ## Example
 
+      iex> %Elixlsx.Sheet{} |>
+      ...> Elixlsx.Sheet.set_at(0, 2, "Hello World",
+      ...>                bold: true, underline: true) |>
+      ...> Elixlsx.Sheet.to_csv_string
+      ",,Hello World"
+
+  """
   def set_at(sheet, rowidx, colidx, content, opts \\ [])
                when is_number(rowidx) and is_number(colidx) do
     cond do

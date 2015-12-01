@@ -4,12 +4,14 @@ defmodule Elixlsx.Util do
   @doc ~S"""
   returns the column letter(s) associated with a column index. Col idx starts at 1.
 
-  Example:
-    iex> encode_col(1)
-    "A"
+  ## Example
 
-    iex> encode_col(28)
-    "AB"
+      iex> encode_col(1)
+      "A"
+
+      iex> encode_col(28)
+      "AB"
+
   """
   @spec encode_col(non_neg_integer) :: String.t
   def encode_col(0) do "" end
@@ -22,10 +24,11 @@ defmodule Elixlsx.Util do
   @doc ~S"""
   returns the column index associated with a given letter.
 
-  Example:
+  ## Example
 
-    iex> decode_col("AB")
-    28
+      iex> decode_col("AB")
+      28
+
   """
   @spec decode_col(list(char()) | String.t) :: non_neg_integer
   def decode_col s do
@@ -60,11 +63,11 @@ defmodule Elixlsx.Util do
 
   ## Examples
 
-    iex> to_excel_coords(1, 1)
-    "A1"
+      iex> to_excel_coords(1, 1)
+      "A1"
 
-    iex> to_excel_coords(10, 27)
-    "AA10"
+      iex> to_excel_coords(10, 27)
+      "AA10"
 
   """
   @spec to_excel_coords(number, number) :: String.t
@@ -78,11 +81,13 @@ defmodule Elixlsx.Util do
   row and col are 1-indexed, use from_excel_coords0 for zero-indexing.
 
   Example:
-    iex> from_excel_coords("C2")
-    {2, 3}
 
-    iex> from_excel_coords0("C2")
-    {1, 2}
+      iex> from_excel_coords("C2")
+      {2, 3}
+
+      iex> from_excel_coords0("C2")
+      {1, 2}
+
   """
   def from_excel_coords(input) do
     case Regex.run(~r/^([A-Z]+)([0-9]+)$/, input, capture: :all_but_first) do
@@ -107,10 +112,10 @@ defmodule Elixlsx.Util do
   Returns the ISO String representation (in UTC) for a erlang datetime() or datetime1970()
   object.
 
-  Example:
+  ## Example
 
-    iex> iso_from_datetime {{2000, 12, 30}, {23, 59, 59}}
-    "2000-12-30T23:59:59Z"
+      iex> iso_from_datetime {{2000, 12, 30}, {23, 59, 59}}
+      "2000-12-30T23:59:59Z"
 
   """
   @type datetime_t :: :calendar.datetime()
@@ -122,12 +127,14 @@ defmodule Elixlsx.Util do
 
 
   @doc ~S"""
-    returns
-    - the current current timestamp if input is nil,
-    - the UNIX-Timestamp interpretation when given an integer,
-    both in ISO-Repr.
+  returns
 
-    If input is a String, the string is returned.
+  - the current current timestamp if input is nil,
+  - the UNIX-Timestamp interpretation when given an integer,
+
+  both in ISO-Repr.
+
+  If input is a String, the string is returned.
 
       iex> iso_timestamp 0
       "1970-01-01T00:00:00Z"
@@ -135,7 +142,8 @@ defmodule Elixlsx.Util do
       iex> iso_timestamp 1447885907
       "2015-11-18T22:31:47Z"
 
-    It doesn't validate string inputs though:
+  It doesn't validate string inputs though:
+
       iex> iso_timestamp "goat"
       "goat"
 
@@ -204,10 +212,10 @@ defmodule Elixlsx.Util do
   @doc ~S"""
   replace_all(input, [{search, replace}])
 
-  Example:
+  ## Example
 
-    iex> replace_all("Hello World", [{"e", "E"}, {"o", "oO"}])
-    "HElloO WoOrld"
+      iex> replace_all("Hello World", [{"e", "E"}, {"o", "oO"}])
+      "HElloO WoOrld"
 
   """
   @spec replace_all(String.t, [{String.t, String.t}]) :: String.t

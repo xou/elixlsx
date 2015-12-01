@@ -14,9 +14,10 @@ defmodule Elixlsx.XMLTemplates do
   There are 5 characters that should be escaped in XML (<,>,",',&), but only
   2 of them *must* be escaped. Saves a couple of CPU cycles, for the environment.
 
-  Example:
-    iex> Elixlsx.XMLTemplates.minimal_xml_text_escape "Only '&' and '<' are escaped here, '\"' & '>' & \"'\" are not."
-    "Only '&amp;' and '&lt;' are escaped here, '\"' &amp; '>' &amp; \"'\" are not."
+  ## Example
+
+      iex> Elixlsx.XMLTemplates.minimal_xml_text_escape "Only '&' and '<' are escaped here, '\"' & '>' & \"'\" are not."
+      "Only '&amp;' and '&lt;' are escaped here, '\"' &amp; '>' &amp; \"'\" are not."
 
   """
   def minimal_xml_text_escape(s) do
@@ -29,9 +30,11 @@ defmodule Elixlsx.XMLTemplates do
   Escape characters for embedding in XML
   documents.
 
-  Example:
-    iex> Elixlsx.XMLTemplates.xml_escape "&\"'<>'"
-    "&amp;&quot;&apos;&lt;&gt;&apos;"
+  ## Example
+
+      iex> Elixlsx.XMLTemplates.xml_escape "&\"'<>'"
+      "&amp;&quot;&apos;&lt;&gt;&apos;"
+
   """
   def xml_escape(s) do
     U.replace_all(s, [ {"&", "&amp;"},
