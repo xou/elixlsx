@@ -49,8 +49,9 @@ defmodule Elixlsx.Style.NumFmt do
   get_stylexml_entry requires a second parameter here.
   """
   def get_stylexml_entry(numfmt, idx) do
+    fmt = Elixlsx.XMLTemplates.xml_escape(numfmt.format)
     """
-    <numFmt numFmtId="#{idx}" formatCode="#{numfmt.format}" />
+    <numFmt numFmtId="#{idx}" formatCode="#{fmt}" />
     """
   end
 end

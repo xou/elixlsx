@@ -6,6 +6,9 @@ defmodule Elixlsx.XMLTemplates do
   alias Elixlsx.Compiler.SheetCompInfo
   alias Elixlsx.Compiler.NumFmtDB
 
+
+  # TODO: the xml_text_exape functions belong into Elixlsx.Util,
+  # as they are/will be used by functions in Elixlsx.Style.*
   @doc ~S"""
   There are 5 characters that should be escaped in XML (<,>,",',&), but only
   2 of them *must* be escaped. Saves a couple of CPU cycles, for the environment.
@@ -16,7 +19,25 @@ defmodule Elixlsx.XMLTemplates do
 
   """
   def minimal_xml_text_escape(s) do
-    s |> String.replace("&", "&amp;") |> String.replace("<", "&lt;")
+    U.replace_all(s, [ {"&", "&amp;"},
+                       {"<", "&lt;"}
+                     ])
+  end
+
+  @doc ~S"""
+  Escape characters for embedding in XML
+  documents.
+
+  Example:
+    iex> Elixlsx.XMLTemplates.xml_escape "&\"'<>'"
+    "&amp;&quot;&apos;&lt;&gt;&apos;"
+  """
+  def xml_escape(s) do
+    U.replace_all(s, [ {"&", "&amp;"},
+                       {"'", "&apos;"},
+                       {"\"", "&quot;"},
+                       {"<", "&lt;"},
+                       {">", "&gt;"} ])
   end
 
   @docprops_app ~S"""
@@ -41,11 +62,11 @@ defmodule Elixlsx.XMLTemplates do
 """
 
   def docprops_core(timestamp, language \\ "en-US", revision \\ 1) do
-    @docprops_core |>
-    String.replace("__TIMESTAMP__", timestamp) |>
-    String.replace("__LANGUAGE__", language) |>
-    String.replace("__REVISION__", to_string(revision))
-  end 
+    U.replace_all(@docprops_core,
+                   [{"__TIMESTAMP__", xml_escape(timestamp)},
+                    {"__LANGUAGE__", language},
+                    {"__REVISION__", to_string(revision)}])
+  end
 
 
   @spec make_xl_rel_sheet(SheetCompInfo.t) :: String.t
@@ -68,7 +89,7 @@ defmodule Elixlsx.XMLTemplates do
 <sheet name="#{sheet_info.name}" sheetId="#{sheet_comp_info.sheetId}" state="visible" r:id="#{sheet_comp_info.rId}"/>
     """
   end
-  
+
   ### [Content_Types].xml
   defp contenttypes_sheet_entry sheet_comp_info do
     """

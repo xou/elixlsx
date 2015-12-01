@@ -5,10 +5,10 @@ defmodule Elixlsx.Util do
   returns the column letter(s) associated with a column index. Col idx starts at 1.
 
   Example:
-    iex> Elixlsx.Util.encode_col(1)
+    iex> encode_col(1)
     "A"
 
-    iex> Elixlsx.Util.encode_col(28)
+    iex> encode_col(28)
     "AB"
   """
   @spec encode_col(non_neg_integer) :: String.t
@@ -23,8 +23,8 @@ defmodule Elixlsx.Util do
   returns the column index associated with a given letter.
 
   Example:
-  
-    iex> Elixlsx.Util.decode_col("AB")
+
+    iex> decode_col("AB")
     28
   """
   @spec decode_col(list(char()) | String.t) :: non_neg_integer
@@ -46,7 +46,7 @@ defmodule Elixlsx.Util do
     if !String.match? s, ~r/^[A-Z]*$/ do
       raise %ArgumentError{message: "Invalid column string: " <> inspect s}
     end
-      
+
     # translate list of strings to the base-26 value they represent
     Enum.map(String.to_char_list(s), (fn x -> :string.chr(alphabet_list, x) end)) |>
     # multiply and aggregate them
@@ -60,10 +60,10 @@ defmodule Elixlsx.Util do
 
   ## Examples
 
-    iex> Elixlsx.Util.to_excel_coords(1, 1)
+    iex> to_excel_coords(1, 1)
     "A1"
 
-    iex> Elixlsx.Util.to_excel_coords(10, 27)
+    iex> to_excel_coords(10, 27)
     "AA10"
 
   """
@@ -78,10 +78,10 @@ defmodule Elixlsx.Util do
   row and col are 1-indexed, use from_excel_coords0 for zero-indexing.
 
   Example:
-    iex> Elixlsx.Util.from_excel_coords("C2")
+    iex> from_excel_coords("C2")
     {2, 3}
 
-    iex> Elixlsx.Util.from_excel_coords0("C2")
+    iex> from_excel_coords0("C2")
     {1, 2}
   """
   def from_excel_coords(input) do
@@ -109,7 +109,7 @@ defmodule Elixlsx.Util do
 
   Example:
 
-    iex> Elixlsx.Util.iso_from_datetime {{2000, 12, 30}, {23, 59, 59}}
+    iex> iso_from_datetime {{2000, 12, 30}, {23, 59, 59}}
     "2000-12-30T23:59:59Z"
 
   """
@@ -129,14 +129,14 @@ defmodule Elixlsx.Util do
 
     If input is a String, the string is returned.
 
-      iex> Elixlsx.Util.iso_timestamp 0
+      iex> iso_timestamp 0
       "1970-01-01T00:00:00Z"
 
-      iex> Elixlsx.Util.iso_timestamp 1447885907
+      iex> iso_timestamp 1447885907
       "2015-11-18T22:31:47Z"
 
     It doesn't validate string inputs though:
-      iex> Elixlsx.Util.iso_timestamp "goat"
+      iex> iso_timestamp "goat"
       "goat"
 
   """
@@ -198,6 +198,26 @@ defmodule Elixlsx.Util do
   """
   def to_excel_datetime({:excelts, value}) do
     {:excelts, value}
+  end
+
+
+  @doc ~S"""
+  replace_all(input, [{search, replace}])
+
+  Example:
+
+    iex> replace_all("Hello World", [{"e", "E"}, {"o", "oO"}])
+    "HElloO WoOrld"
+
+  """
+  @spec replace_all(String.t, [{String.t, String.t}]) :: String.t
+
+  def replace_all(input, [{s,r}|srx]) do
+    String.replace(input, s, r) |> replace_all(srx)
+  end
+
+  def replace_all(input, []) do
+    input
   end
 end
 
