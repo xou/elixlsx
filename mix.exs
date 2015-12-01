@@ -26,7 +26,7 @@ defmodule Elixlsx.Mixfile do
 
   defp package do
     [
-      maintainers: [],
+      maintainers: ["Nikolai Weh <niko.weh@gmail.com>"],
       licenses: ["MIT"],
       links: %{"GitHub" => "https://github.com/xou/elixlsx"}
     ]
