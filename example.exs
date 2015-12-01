@@ -19,6 +19,8 @@ sheet1 = Sheet.with_name("First")
          |> Sheet.set_cell("A3", 1448882362, datetime: true)
 # datetime: true ouputs date and time, yyyymmdd limits the output to just the date
          |> Sheet.set_cell("A4", 1448882362, yyyymmdd: true)
+# make some room in the first column, otherwise the date will only show up as ###
+         |> Sheet.set_col_width("A", 18.0)
 
 workbook = %Workbook{sheets: [sheet1]}
 

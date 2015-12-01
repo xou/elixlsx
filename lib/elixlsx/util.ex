@@ -29,6 +29,9 @@ defmodule Elixlsx.Util do
       iex> decode_col("AB")
       28
 
+      iex> decode_col("A")
+      1
+
   """
   @spec decode_col(list(char()) | String.t) :: non_neg_integer
   def decode_col s do

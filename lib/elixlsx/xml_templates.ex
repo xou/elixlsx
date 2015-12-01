@@ -206,6 +206,22 @@ defmodule Elixlsx.XMLTemplates do
               """ end)
   end
 
+  defp make_col_width({k, v}) do
+    '<col min="#{k}" max="#{k}" width="#{v}" customWidth="1" />'
+  end
+
+  defp make_col_widths(sheet) do
+    if Dict.size sheet.col_widths do
+      cols = Dict.to_list(sheet.col_widths)
+      |> Enum.sort
+      |> Enum.map_join &make_col_width/1
+
+      "<cols>#{cols}</cols>"
+    else
+      ""
+    end
+  end
+
   @spec make_sheet(Sheet.t, WorkbookCompInfo.t) :: String.t
   @doc ~S"""
   Returns the XML content for single sheet.
@@ -224,6 +240,8 @@ defmodule Elixlsx.XMLTemplates do
     </sheetView>
   </sheetViews>
   <sheetFormatPr defaultRowHeight="12.8"/>
+  """ <> make_col_widths(sheet) <>
+  """
   <sheetData>
   """ 
   <>

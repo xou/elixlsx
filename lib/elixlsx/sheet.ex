@@ -16,10 +16,11 @@ defmodule Elixlsx.Sheet do
   The property list describes formatting options for that
   cell. See Font.from_props/1 for a list of options.
   """
-  defstruct name: "", rows: []
+  defstruct name: "", rows: [], col_widths: %{}
   @type t :: %Sheet {
     name: String.t,
     rows: list(list(any())),
+    col_widths: %{pos_integer => number}
   }
 
   @doc ~S"""
@@ -115,4 +116,13 @@ defmodule Elixlsx.Sheet do
     end
   end
 
+  @spec set_col_width(Sheet.t, String.t, number) :: Sheet.t
+  @doc ~S"""
+  Set the column width for a given column. Column is indexed by
+  name ("A", ...)
+  """
+  def set_col_width(sheet, column, width) do
+    update_in sheet.col_widths,
+              &(Dict.put &1, Util.decode_col(column), width)
+  end
 end

@@ -25,5 +25,6 @@ See example.exs for a more complete example.
 
 ## Number and date formatting reference
 
-A quick introduction how nubmer formattings look like can be found [here](https://social.msdn.microsoft.com/Forums/office/en-US/e27aaf16-b900-4654-8210-83c5774a179c/xlsx-numfmtid-predefined-id-14-doesnt-match)
+A quick introduction how number formattings look like can be found
+[here](https://social.msdn.microsoft.com/Forums/office/en-US/e27aaf16-b900-4654-8210-83c5774a179c/xlsx-numfmtid-predefined-id-14-doesnt-match)
 
