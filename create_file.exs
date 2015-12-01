@@ -2,6 +2,9 @@
 
 require Elixlsx
 
+alias Elixlsx.Sheet
+alias Elixlsx.Workbook
+
 sheet = %Sheet{name: 'First', rows: 
   [[1,2,3],
    [4,5,6, ["goat", bold: true]],

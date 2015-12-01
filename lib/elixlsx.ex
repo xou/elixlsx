@@ -1,4 +1,7 @@
-defmodule Workbook do
+defmodule Elixlsx.Workbook do
+  alias __MODULE__
+  alias Elixlsx.Sheet
+
   defstruct sheets: [], datetime: nil
   @type t :: %Workbook{
       sheets: nonempty_list(Sheet.t),
@@ -14,7 +17,9 @@ defmodule Workbook do
   end
 end
 
-defmodule Sheet do
+defmodule Elixlsx.Sheet do
+  alias __MODULE__
+  alias Elixlsx.Sheet
   alias Elixlsx.Util
   @moduledoc ~S"""
   Describes a single sheet with a given name.
@@ -70,10 +75,10 @@ defmodule Sheet do
   Set a cell indexed by excel coordinates.
 
   Example:
-  iex> %Sheet{} |>
-  ...> Sheet.set_cell("C1", "Hello World",
+  iex> %Elixlsx.Sheet{} |>
+  ...> Elixlsx.Sheet.set_cell("C1", "Hello World",
   ...>                bold: true, underline: true) |>
-  ...> Sheet.to_csv_string
+  ...> Elixlsx.Sheet.to_csv_string
   ",,Hello World"
   """
 
@@ -88,10 +93,10 @@ defmodule Sheet do
   Set a cell at a given row/column index. Indizes start at 0.
 
   Example:
-    iex> %Sheet{} |>
-    ...> Sheet.set_at(0, 2, "Hello World",
+    iex> %Elixlsx.Sheet{} |>
+    ...> Elixlsx.Sheet.set_at(0, 2, "Hello World",
     ...>                bold: true, underline: true) |>
-    ...> Sheet.to_csv_string
+    ...> Elixlsx.Sheet.to_csv_string
     ",,Hello World"
   """
 
@@ -125,6 +130,10 @@ defmodule Sheet do
 end
 
 defmodule Elixlsx do
+  @doc ~S"""
+  Write a Workbook object to the given filename
+  """
+  @spec write_to(Workbook.t, String.t) :: {:ok, String.t} | {:error, any()}
   def write_to(workbook, filename) do
     wci = Elixlsx.Compiler.make_workbook_comp_info workbook
     :zip.create(filename, Elixlsx.Writer.create_files(workbook, wci))
