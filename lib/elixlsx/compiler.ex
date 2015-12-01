@@ -169,35 +169,6 @@ defmodule Elixlsx.Compiler.FontDB do
 end
 
 
-defmodule CellStyle do
-  alias Elixlsx.Style.NumFmt
-  alias Elixlsx.Style.Font
-
-  defstruct font: nil, numfmt: nil
-
-  @type t :: %CellStyle{
-    font: Font.t
-  }
-
-
-  def from_props props do
-    font = Font.from_props props
-    numfmt = NumFmt.from_props props
-
-    %CellStyle{font: font,
-               numfmt: numfmt}
-  end
-
-  def is_date?(cellstyle) do
-    cond do
-      is_nil(cellstyle) -> false
-      is_nil(cellstyle.numfmt) -> false
-      true -> NumFmt.is_date? cellstyle.numfmt
-    end
-  end
-end
-
-
 defmodule Elixlsx.Compiler.CellStyleDB do
   alias Elixlsx.Compiler.CellStyleDB
   alias Elixlsx.Compiler.FontDB
@@ -207,7 +178,7 @@ defmodule Elixlsx.Compiler.CellStyleDB do
   defstruct cellstyles: %{}, element_count: 0
 
   @type t :: %CellStyleDB {
-    cellstyles: %{CellStyle.t => non_neg_integer},
+    cellstyles: %{Elixlsx.Style.CellStyle.t => non_neg_integer},
     element_count: non_neg_integer
   }
 
@@ -349,7 +320,9 @@ defmodule Elixlsx.Compiler do
 
 
   def compinfo_cell_pass_style wci, props do
-    update_in wci.cellstyledb, &CellStyleDB.register_style(&1, CellStyle.from_props(props))
+    update_in wci.cellstyledb,
+            &CellStyleDB.register_style(&1,
+                                        Elixlsx.Style.CellStyle.from_props(props))
   end
 
 

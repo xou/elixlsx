@@ -5,6 +5,7 @@ defmodule Elixlsx.XMLTemplates do
   alias Elixlsx.Compiler.FontDB
   alias Elixlsx.Compiler.SheetCompInfo
   alias Elixlsx.Compiler.NumFmtDB
+  alias Elixlsx.Style.CellStyle
 
 
   # TODO: the xml_text_exape functions belong into Elixlsx.Util,
