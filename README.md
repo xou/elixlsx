@@ -4,24 +4,41 @@ A writer for XLSX files.
 
 Supports:
 
-- (Unicode-)strings, Numbers
+- (Unicode-)strings, Numbers, Dates
 - Font formatting (size, bold, italic, underline, strike)
-- Multiple (named) sheets.
+- Multiple (named) sheets with custom column widths.
 
 This library is currently more in a proof-of-concept state;
 it is also my first Elixir project, feedback is very welcome.
 
+## Installation
+
+Via hex, in mix.exs:
+
+```Elixir
+defp deps do
+  [{:elixlsx, "~> 0.0.1"}]
+end
+```
+
+Via github:
+
+```Elixir
+defp deps do
+  [{:elixlsx, git: "https://github.com/xou/elixlsx.git"}]
+end
+```
+
 ## Usage
 
 1-Line tutorial:
-
 
 ```Elixir
 (alias Elixlsx.Workbook, alias Elixlsx.Sheet)
 iex(1)> Workbook.append_sheet(%Workbook{}, Sheet.with_name("Sheet 1") |> Sheet.set_cell("A1", "Hello", bold: true)) |> Elixlsx.write_to("hello.xlsx")
 ```
 
-See example.exs for a more complete example.
+See [example.exs](example.exs) for a more complete example.
 
 ## Number and date formatting reference
 
