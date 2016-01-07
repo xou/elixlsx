@@ -10,7 +10,7 @@ sheet1 = Sheet.with_name("First")
 # Set cell B2 to the string "Hi". :)
          |> Sheet.set_cell("B2", "Hi")
 # Optionally, set font properties:
-         |> Sheet.set_cell("B3", "Hello World", bold: true, underline: true)
+         |> Sheet.set_cell("B3", "Hello World", bold: true, underline: true, color: "#ffaa00")
 # Number formatting can be applied like this:
          |> Sheet.set_cell("A1", 123.4, num_format: "0.00")
 # Two date formats are accepted, erlang's :calendar format and UNIX timestamps.

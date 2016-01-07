@@ -11,6 +11,7 @@ defmodule ElixlsxTest do
 
   alias Elixlsx.XMLTemplates
   alias Elixlsx.Compiler.StringDB
+  alias Elixlsx.Style.Font
 
   def xpath(el, path) do
     :xmerl_xpath.string(to_char_list(path), el)
@@ -40,4 +41,14 @@ defmodule ElixlsxTest do
     assert to_text(sis2) == "World"
   end
 
+  test "font color" do
+    xml = Font.from_props(color: "#012345") |>
+    Font.get_stylexml_entry
+
+    {xmerl, []} = :xmerl_scan.string String.to_char_list(xml)
+
+    [color] = :xmerl_xpath.string('/font/color/@rgb', xmerl)
+
+    assert xmlAttribute(color, :value) == 'FF012345'
+  end
 end

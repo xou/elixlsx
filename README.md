@@ -5,7 +5,7 @@ A writer for XLSX files.
 Supports:
 
 - (Unicode-)strings, Numbers, Dates
-- Font formatting (size, bold, italic, underline, strike)
+- Font formatting (size, bold, italic, underline, strike, color)
 - Multiple (named) sheets with custom column widths.
 
 This library is currently more in a proof-of-concept state;
