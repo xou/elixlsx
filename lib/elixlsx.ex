@@ -1,8 +1,8 @@
 defmodule Elixlsx do
   @moduledoc ~S"""
-  # Elixlsx
-
   Elixlsx is a writer for the MS Excel OpenXML format (.xlsx).
+
+  # Quick Overview
 
   The `write_to` function takes a `Elixlsx.Workbook` object
   and a filename. A Workbook is a collection of `Elixlsx.Sheet`s with
