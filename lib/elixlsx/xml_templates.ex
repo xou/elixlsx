@@ -196,14 +196,23 @@ defmodule Elixlsx.XMLTemplates do
   end
 
 
-  defp xl_sheet_rows(data, wci) do
+  defp xl_sheet_rows(data, row_heights, wci) do
     Enum.zip(data, 1 .. length data) |>
     Enum.map_join(fn {row, rowidx} ->
               """
-              <row r="#{rowidx}">
+              <row r="#{rowidx}" #{get_row_height_attr(row_heights, rowidx)}>
                 #{xl_sheet_cols(row, rowidx, wci)}
               </row>
               """ end)
+  end
+
+  defp get_row_height_attr(row_heights, rowidx) do
+    row_height = Dict.get(row_heights, rowidx)
+    if (row_height) do
+      "ht=\"#{row_height}\""
+    else
+    ""
+    end
   end
 
   defp make_col_width({k, v}) do
@@ -211,7 +220,7 @@ defmodule Elixlsx.XMLTemplates do
   end
 
   defp make_col_widths(sheet) do
-    if Dict.size sheet.col_widths do
+    if Dict.size(sheet.col_widths) != 0 do
       cols = Dict.to_list(sheet.col_widths)
       |> Enum.sort
       |> Enum.map_join &make_col_width/1
@@ -245,7 +254,7 @@ defmodule Elixlsx.XMLTemplates do
   <sheetData>
   """ 
   <>
-  xl_sheet_rows(sheet.rows, wci)
+  xl_sheet_rows(sheet.rows, sheet.row_heights, wci)
   <>
   ~S"""
   </sheetData>

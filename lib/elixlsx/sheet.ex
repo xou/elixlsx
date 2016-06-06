@@ -16,11 +16,12 @@ defmodule Elixlsx.Sheet do
   The property list describes formatting options for that
   cell. See Font.from_props/1 for a list of options.
   """
-  defstruct name: "", rows: [], col_widths: %{}
+  defstruct name: "", rows: [], col_widths: %{}, row_heights: %{}
   @type t :: %Sheet {
     name: String.t,
     rows: list(list(any())),
-    col_widths: %{pos_integer => number}
+    col_widths: %{pos_integer => number},
+    row_heights: %{pos_integer => number}
   }
 
   @doc ~S"""
@@ -124,5 +125,14 @@ defmodule Elixlsx.Sheet do
   def set_col_width(sheet, column, width) do
     update_in sheet.col_widths,
               &(Dict.put &1, Util.decode_col(column), width)
+  end
+
+  @spec set_row_height(Sheet.t, number, number) :: Sheet.t
+  @doc ~S"""
+  Set the row height for a given row. Row is indexed starting from 1
+  """
+  def set_row_height(sheet, row_idx, height) do
+    update_in sheet.row_heights,
+              &(Dict.put &1, row_idx, height)
   end
 end
