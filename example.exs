@@ -32,7 +32,10 @@ workbook = %Workbook{workbook | datetime: "2015-12-01T13:40:59Z"}
 # It is also possible to create a sheet as a list of rows:
 sheet2 = %Sheet{name: 'Third', rows: [[1,2,3,4,5],
                                        [1,2],
+                                       ["increased row height"],
                                        ["hello", "world"]]}
+         |> Sheet.set_row_height(3, 40)
+
 workbook = Workbook.append_sheet(workbook, sheet2)
 
 # For the list of rows approach, cells with properties can be encoded by using a
