@@ -96,14 +96,14 @@ defmodule Elixlsx.Sheet do
       length(sheet.rows) <= rowidx ->
         # append new rows, call self again with new sheet
         n_new_rows = rowidx - length(sheet.rows)
-        new_rows = 0..n_new_rows |> Enum.map fn _ -> [] end
+        new_rows = 0..n_new_rows |> Enum.map(fn _ -> [] end)
 
         update_in(sheet.rows, &(&1 ++ new_rows)) |>
           set_at(rowidx, colidx, content, opts)
 
       length(Enum.at(sheet.rows, rowidx)) <= colidx ->
         n_new_cols = colidx - length(Enum.at(sheet.rows, rowidx))
-        new_cols = 0..n_new_cols |> Enum.map fn _ -> nil end
+        new_cols = 0..n_new_cols |> Enum.map(fn _ -> nil end)
         new_row = Enum.at(sheet.rows, rowidx) ++ new_cols
 
         update_in(sheet.rows, &(List.replace_at &1, rowidx, new_row)) |>

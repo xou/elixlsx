@@ -116,9 +116,9 @@ defmodule Elixlsx.Writer do
   def get_xl_worksheets_dir(data, wci) do
     sheets = data.sheets
     Enum.zip(sheets, wci.sheet_info)
-    |> Enum.map fn ({s, sci}) ->
+    |> Enum.map(fn ({s, sci}) ->
                   {sheet_full_path(sci), XMLTemplates.make_sheet(s, wci)}
-                end
+                end)
   end
 
 

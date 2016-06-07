@@ -56,7 +56,7 @@ defmodule Elixlsx.Util do
     # translate list of strings to the base-26 value they represent
     Enum.map(String.to_char_list(s), (fn x -> :string.chr(alphabet_list, x) end)) |>
     # multiply and aggregate them
-    List.foldl 0, (fn (x, acc) -> x + 26 * acc end) 
+    List.foldl(0, (fn (x, acc) -> x + 26 * acc end))
   end
 
 

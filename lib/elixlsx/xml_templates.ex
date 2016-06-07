@@ -192,7 +192,7 @@ defmodule Elixlsx.XMLTemplates do
           """
           end
         end) |>
-    List.foldr "", &<>/2
+    List.foldr("", &<>/2)
   end
 
 
@@ -223,7 +223,7 @@ defmodule Elixlsx.XMLTemplates do
     if Dict.size(sheet.col_widths) != 0 do
       cols = Dict.to_list(sheet.col_widths)
       |> Enum.sort
-      |> Enum.map_join &make_col_width/1
+      |> Enum.map_join(&make_col_width/1)
 
       "<cols>#{cols}</cols>"
     else
@@ -308,13 +308,12 @@ defmodule Elixlsx.XMLTemplates do
       do: 0,
       else: NumFmtDB.get_id wci.numfmtdb, style.numfmt
 
-    if !is_nil(style.font) && style.font.wrap_text do
-      apply_alignment = "applyAlignment=\"1\""
-      wrap_text_tag = "<alignment wrapText=\"1\"/>"
-    else
-      apply_alignment = ""
-      wrap_text_tag = ""
-    end
+    {apply_alignment, wrap_text_tag} =
+      if !is_nil(style.font) && style.font.wrap_text do
+        {"applyAlignment=\"1\"", "<alignment wrapText=\"1\"/>"}
+      else
+        {"", ""}
+      end
 
     """
     <xf borderId="0"
@@ -410,7 +409,7 @@ defmodule Elixlsx.XMLTemplates do
   @spec workbook_sheet_entries(nonempty_list(Sheet.t), nonempty_list(SheetCompInfo.t)) :: String.t
   defp workbook_sheet_entries sheet_infos, sheet_comp_infos do
     Enum.zip(sheet_infos, sheet_comp_infos)
-    |> Enum.map_join &make_xl_workbook_xml_sheet_entry/1
+    |> Enum.map_join(&make_xl_workbook_xml_sheet_entry/1)
   end
 
   @doc ~S"""

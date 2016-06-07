@@ -41,6 +41,6 @@ defmodule Elixlsx.Compiler.NumFmtDB do
     db.numfmts
     |> Enum.map(fn ({k, v}) -> {v, k} end)
     |> Enum.sort
-    |> Enum.filter (fn ({id, _}) -> id >= 164 end)
+    |> Enum.filter(fn ({id, _}) -> id >= 164 end)
   end
 end
