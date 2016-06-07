@@ -45,9 +45,15 @@ sheet3 = %Sheet{name: "Second", rows:
    [4,5,6, ["goat", bold: true]],
    [["Bold", bold: true], ["Italic", italic: true], ["Underline", underline: true], ["Strike!", strike: true],
     ["Large", size: 22]],
+   # wrap_text makes text wrap, but it does not increase the row height
+   # (see row_heights below).
+   [["This is a cell with quite a bit of text.", wrap_text: true]],
 # Unicode should work as well:
    [["Müłti", bold: true, italic: true, underline: true, strike: true]]
-  ]}
+  ],
+  row_heights: %{4 => 60}}
 
+# Insert sheet3 as the second sheet:
 Workbook.insert_sheet(workbook, sheet3, 1)
+
 |> Elixlsx.write_to("empty.xlsx")
