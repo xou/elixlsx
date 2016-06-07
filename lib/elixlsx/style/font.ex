@@ -9,11 +9,12 @@ defmodule Elixlsx.Style.Font do
   - underline: boolean
   - strike: boolean
   - size: pos_integer
+  - wrap_text: boolean
 
   """
   alias __MODULE__
   defstruct bold: false, italic: false, underline: false,
-  strike: false, size: nil, color: nil
+  strike: false, size: nil, color: nil, wrap_text: false
 
   @type t :: %Font{
     bold: boolean,
@@ -21,7 +22,8 @@ defmodule Elixlsx.Style.Font do
     underline: boolean,
     strike: boolean,
     size: pos_integer,
-    color: String.t
+    color: String.t,
+    wrap_text: boolean
   }
 
 
@@ -34,7 +36,8 @@ defmodule Elixlsx.Style.Font do
                underline: !!props[:underline],
                strike: !!props[:strike],
                size: props[:size],
-               color: props[:color]
+               color: props[:color],
+               wrap_text: !!props[:wrap_text]
               }
 
     if ft == %Font{}, do: nil, else: ft

@@ -252,7 +252,7 @@ defmodule Elixlsx.XMLTemplates do
   """ <> make_col_widths(sheet) <>
   """
   <sheetData>
-  """ 
+  """
   <>
   xl_sheet_rows(sheet.rows, sheet.row_heights, wci)
   <>
@@ -308,12 +308,22 @@ defmodule Elixlsx.XMLTemplates do
       do: 0,
       else: NumFmtDB.get_id wci.numfmtdb, style.numfmt
 
+    if !is_nil(style.font) && style.font.wrap_text do
+      apply_alignment = "applyAlignment=\"1\""
+      wrap_text_tag = "<alignment wrapText=\"1\"/>"
+    else
+      apply_alignment = ""
+      wrap_text_tag = ""
+    end
+
     """
     <xf borderId="0"
            fillId="0"
            fontId="#{fontid}"
            numFmtId="#{numfmtid}"
-           xfId="0" />
+           xfId="0" #{apply_alignment}>
+      #{wrap_text_tag}
+    </xf>
     """
   end
 
@@ -367,7 +377,9 @@ defmodule Elixlsx.XMLTemplates do
     <border />
   </borders>
   <cellStyleXfs count="1">
-    <xf borderId="0" fillId="0" fontId="0"/>
+    <xf borderId="0" fillId="0" fontId="0" applyAlignment="1">
+      <alignment wrapText="1"/>
+    </xf>
   </cellStyleXfs>
   <cellXfs count="#{1 + length cell_xfs}">
     <xf borderId="0" fillId="0" fontId="0" xfId="0"/>
