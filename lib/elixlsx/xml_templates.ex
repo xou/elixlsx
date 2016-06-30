@@ -308,11 +308,17 @@ defmodule Elixlsx.XMLTemplates do
       do: 0,
       else: NumFmtDB.get_id wci.numfmtdb, style.numfmt
 
-    {apply_alignment, wrap_text_tag} =
-      if !is_nil(style.font) && style.font.wrap_text do
-        {"applyAlignment=\"1\"", "<alignment wrapText=\"1\"/>"}
-      else
-        {"", ""}
+    {apply_alignment, wrap_text_tag} = case style.font do
+        nil ->
+          {"", ""}
+        font ->
+            
+          case make_style_alignment(font) do
+            "" ->
+              {"", ""}
+            alignment ->
+              {"applyAlignment=\"1\"", alignment}
+          end
       end
 
     """
@@ -324,6 +330,45 @@ defmodule Elixlsx.XMLTemplates do
       #{wrap_text_tag}
     </xf>
     """
+  end
+
+  @spec make_style_alignment(Font.t) :: String.t
+  @doc ~S"""
+  Create a aligment xml tag from font style.
+  """
+  defp make_style_alignment(font) do
+    attrs = case font.wrap_text do 
+        true ->
+          "wrapText=\"1\" "
+        _ ->
+          ""
+      end
+
+    attrs = case font.align_horizontal do 
+        nil -> 
+          attrs
+        :center ->
+          attrs <> "horizontal=\"center\" "
+        :fill ->
+          attrs <> "horizontal=\"fill\" "
+        :general ->
+          attrs <> "horizontal=\"general\" "
+        :justify ->
+          attrs <> "horizontal=\"justify\" "
+        :left ->
+          attrs <> "horizontal=\"left\" "
+        :right ->
+          attrs <> "horizontal=\"right\" "
+        _ -> 
+          raise %ArgumentError{message: "Given horizontal alignment not supported. Only :center, :fill, :general, :justify, :left, :right are available."}
+      end
+    
+    case attrs do
+      "" ->
+        nil
+      ^attrs ->
+        "<alignment #{attrs}/>"
+    end
   end
 
   @spec make_cellxfs(list(CellStyle.t), WorkbookCompInfo.t) :: String.t
