@@ -209,7 +209,7 @@ defmodule Elixlsx.XMLTemplates do
   defp get_row_height_attr(row_heights, rowidx) do
     row_height = Dict.get(row_heights, rowidx)
     if (row_height) do
-      "ht=\"#{row_height}\""
+      "customHeight=\"1\" ht=\"#{row_height}\""
     else
     ""
     end
