@@ -49,7 +49,11 @@ sheet3 = %Sheet{name: "Second", rows:
    # (see row_heights below).
    [["This is a cell with quite a bit of text.", wrap_text: true]],
 # Unicode should work as well:
-   [["Müłti", bold: true, italic: true, underline: true, strike: true]]
+   [["Müłti", bold: true, italic: true, underline: true, strike: true]],
+# Change horizontal alignment 
+   [["left", align_horizontal: :left], ["right", align_horizontal: :right],
+    ["center", align_horizontal: :center], ["justify", align_horizontal: :justify],
+    ["general", align_horizontal: :general], ["fill", align_horizontal: :fill]]
   ],
   row_heights: %{4 => 60}}
 
