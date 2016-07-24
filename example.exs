@@ -11,6 +11,8 @@ sheet1 = Sheet.with_name("First")
          |> Sheet.set_cell("B2", "Hi")
 # Optionally, set font properties:
          |> Sheet.set_cell("B3", "Hello World", bold: true, underline: true, color: "#ffaa00")
+# Set background color
+         |> Sheet.set_cell("B4", "Background color \\o/", bg_color: "#ffff00")
 # Number formatting can be applied like this:
          |> Sheet.set_cell("A1", 123.4, num_format: "0.00")
 # Two date formats are accepted, erlang's :calendar format and UNIX timestamps.
