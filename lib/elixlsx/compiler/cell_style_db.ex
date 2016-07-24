@@ -1,6 +1,7 @@
 defmodule Elixlsx.Compiler.CellStyleDB do
   alias Elixlsx.Compiler.CellStyleDB
   alias Elixlsx.Compiler.FontDB
+  alias Elixlsx.Compiler.FillDB
   alias Elixlsx.Compiler.NumFmtDB
   alias Elixlsx.Compiler.WorkbookCompInfo
 
@@ -52,6 +53,11 @@ defmodule Elixlsx.Compiler.CellStyleDB do
         wci
       else
         update_in(wci.fontdb, &(FontDB.register_font &1, style.font))
+      end
+      wci = if is_nil(style.fill) do
+        wci
+      else
+        update_in(wci.filldb, &(FillDB.register_fill &1, style.fill))
       end
       wci = if is_nil(style.numfmt) do
         wci

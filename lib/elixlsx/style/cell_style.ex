@@ -2,19 +2,23 @@ defmodule Elixlsx.Style.CellStyle do
   alias __MODULE__
   alias Elixlsx.Style.NumFmt
   alias Elixlsx.Style.Font
+  alias Elixlsx.Style.Fill
 
-  defstruct font: nil, numfmt: nil
+  defstruct font: nil, fill: nil, numfmt: nil
 
   @type t :: %CellStyle{
-    font: Font.t
+    font: Font.t,
+    fill: Fill.t
   }
 
 
   def from_props props do
     font = Font.from_props props
+    fill = Fill.from_props props
     numfmt = NumFmt.from_props props
 
     %CellStyle{font: font,
+               fill: fill,
                numfmt: numfmt}
   end
 
