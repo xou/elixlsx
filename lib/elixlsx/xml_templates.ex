@@ -54,7 +54,7 @@ defmodule Elixlsx.XMLTemplates do
 <Properties xmlns="http://schemas.openxmlformats.org/officeDocument/2006/extended-properties" xmlns:vt="http://schemas.openxmlformats.org/officeDocument/2006/docPropsVTypes">
   <TotalTime>0</TotalTime>
   <Application>Elixlsx</Application>
-  <AppVersion>0.0.1</AppVersion>
+  <AppVersion>0.0.6</AppVersion>
 </Properties>
 """
   def docprops_app, do: @docprops_app
