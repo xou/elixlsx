@@ -3,6 +3,7 @@ defmodule Elixlsx.Compiler do
   alias Elixlsx.Compiler.SheetCompInfo
   alias Elixlsx.Compiler.CellStyleDB
   alias Elixlsx.Compiler.StringDB
+  alias Elixlsx.Sheet
 
   @doc ~S"""
   Accepts a list of Sheets and the next free relationship ID.

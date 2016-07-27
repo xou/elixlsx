@@ -4,6 +4,7 @@ defmodule Elixlsx.Writer do
   alias Elixlsx.Compiler.StringDB
   alias Elixlsx.Compiler.WorkbookCompInfo
   alias Elixlsx.Compiler.SheetCompInfo
+  alias Elixlsx.Workbook
 
   @type zip_tuple :: {char_list, String.t}
 
@@ -93,7 +94,7 @@ defmodule Elixlsx.Writer do
      XMLTemplates.make_xl_styles wci}
   end
 
-  @spec get_xl_workbook_xml(Workbook.t, SheetCompInfos.t) :: zip_tuple
+  @spec get_xl_workbook_xml(Workbook.t, SheetCompInfo.t) :: zip_tuple
   def get_xl_workbook_xml(data, sheetCompInfos) do
     {'xl/workbook.xml',
      XMLTemplates.make_workbook_xml(data, sheetCompInfos)}

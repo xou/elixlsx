@@ -6,7 +6,11 @@ defmodule Elixlsx.XMLTemplates do
   alias Elixlsx.Compiler.FillDB
   alias Elixlsx.Compiler.SheetCompInfo
   alias Elixlsx.Compiler.NumFmtDB
+  alias Elixlsx.Compiler.WorkbookCompInfo
   alias Elixlsx.Style.CellStyle
+  alias Elixlsx.Style.Font
+  alias Elixlsx.Style.Fill
+  alias Elixlsx.Sheet
 
 
   # TODO: the xml_text_exape functions belong into Elixlsx.Util,
@@ -288,16 +292,16 @@ defmodule Elixlsx.XMLTemplates do
   ### xl/styles.xml
   ###
 
-  @spec make_font_list(list(Elixlsx.Style.Font.t)) :: String.t
+  @spec make_font_list(list(Font.t)) :: String.t
   defp make_font_list(ordered_font_list) do
     Enum.map_join(ordered_font_list, "\n",
-                  &(Elixlsx.Style.Font.get_stylexml_entry &1))
+                  &(Font.get_stylexml_entry &1))
   end
 
-  @spec make_fill_list(list(Elixlsx.Style.Fill.t)) :: String.t
+  @spec make_fill_list(list(Fill.t)) :: String.t
   defp make_fill_list(ordered_fill_list) do
     Enum.map_join(ordered_fill_list, "\n",
-                  &(Elixlsx.Style.Fill.get_stylexml_entry &1))
+                  &(Fill.get_stylexml_entry &1))
   end
 
   @spec style_to_xml_entry(CellStyle.t, WorkbookCompInfo.t) :: String.t

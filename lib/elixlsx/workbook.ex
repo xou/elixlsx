@@ -6,8 +6,8 @@ defmodule Elixlsx.Workbook do
   The datetime property can optionally be set to override
   the "created at" date. It defaults to the current time.
   """
-  alias __MODULE__
   alias Elixlsx.Sheet
+  alias Elixlsx.Workbook
 
   defstruct sheets: [], datetime: nil
   @type t :: %Workbook{
