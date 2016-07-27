@@ -6,9 +6,11 @@ A writer for XLSX files.
 
 Supports:
 
+- Multiple (named) sheets with custom column widths & column heights.
 - (Unicode-)strings, Numbers, Dates
-- Font formatting (size, bold, italic, underline, strike, color)
-- Multiple (named) sheets with custom column widths.
+- Font formatting (size, bold, italic, underline, strike)
+- Horizontal alignment and text wrapping
+- Font and cell background color
 
 This library is currently more in a proof-of-concept state;
 it is also my first Elixir project, feedback is very welcome.
@@ -19,7 +21,7 @@ Via hex, in mix.exs:
 
 ```Elixir
 defp deps do
-  [{:elixlsx, "~> 0.0.1"}]
+  [{:elixlsx, "~> 0.0.5"}]
 end
 ```
 
