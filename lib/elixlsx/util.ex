@@ -124,8 +124,9 @@ defmodule Elixlsx.Util do
   @type datetime_t :: :calendar.datetime()
   @spec iso_from_datetime(datetime_t) :: String.t
   def iso_from_datetime calendar do
-    {{y, m, d}, {h, min, s}} = calendar
-    to_string(:io_lib.format('~4.10.0b-~2.10.0b-~2.10.0bT~2.10.0b:~2.10.0b:~2.10.0bZ', [y, m, d, h, min, s]))
+    {{y, m, d}, {hours, minutes, seconds}} = calendar
+    to_string(:io_lib.format('~4.10.0b-~2.10.0b-~2.10.0bT~2.10.0b:~2.10.0b:~2.10.0bZ',
+                             [y, m, d, hours, minutes, seconds]))
   end
 
 
