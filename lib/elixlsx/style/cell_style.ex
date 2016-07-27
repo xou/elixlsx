@@ -8,7 +8,8 @@ defmodule Elixlsx.Style.CellStyle do
 
   @type t :: %CellStyle{
     font: Font.t,
-    fill: Fill.t
+    fill: Fill.t,
+    numfmt: NumFmt.t
   }
 
 
