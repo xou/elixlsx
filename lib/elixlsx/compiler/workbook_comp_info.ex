@@ -10,6 +10,7 @@ defmodule Elixlsx.Compiler.WorkbookCompInfo do
   defstruct sheet_info: nil,
   stringdb: %Compiler.StringDB{},
   fontdb: %Compiler.FontDB{},
+  filldb: %Compiler.FillDB{},
   cellstyledb: %Compiler.CellStyleDB{},
   numfmtdb: %Compiler.NumFmtDB{},
   next_free_xl_rid: nil
@@ -18,6 +19,7 @@ defmodule Elixlsx.Compiler.WorkbookCompInfo do
     sheet_info: Compiler.SheetCompInfo.t,
     stringdb: Compiler.StringDB.t,
     fontdb: Compiler.FontDB.t,
+    filldb: Compiler.FillDB.t,
     cellstyledb: Compiler.CellStyleDB.t,
     numfmtdb: Compiler.NumFmtDB.t,
     next_free_xl_rid: non_neg_integer

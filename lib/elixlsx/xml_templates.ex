@@ -3,6 +3,7 @@ defmodule Elixlsx.XMLTemplates do
   alias Elixlsx.Compiler.CellStyleDB
   alias Elixlsx.Compiler.StringDB
   alias Elixlsx.Compiler.FontDB
+  alias Elixlsx.Compiler.FillDB
   alias Elixlsx.Compiler.SheetCompInfo
   alias Elixlsx.Compiler.NumFmtDB
   alias Elixlsx.Style.CellStyle
@@ -293,6 +294,12 @@ defmodule Elixlsx.XMLTemplates do
                   &(Elixlsx.Style.Font.get_stylexml_entry &1))
   end
 
+  @spec make_fill_list(list(Elixlsx.Style.Fill.t)) :: String.t
+  defp make_fill_list(ordered_fill_list) do
+    Enum.map_join(ordered_fill_list, "\n",
+                  &(Elixlsx.Style.Fill.get_stylexml_entry &1))
+  end
+
   @spec style_to_xml_entry(CellStyle.t, WorkbookCompInfo.t) :: String.t
   @doc ~S"""
   Turn a CellStyle struct into the styles.xml <xf /> representation.
@@ -303,6 +310,10 @@ defmodule Elixlsx.XMLTemplates do
     fontid = if is_nil(style.font),
       do: 0,
       else: FontDB.get_id wci.fontdb, style.font
+
+    fillid = if is_nil(style.fill),
+      do: 0,
+      else: FillDB.get_id wci.filldb, style.fill
 
     numfmtid = if is_nil(style.numfmt),
       do: 0,
@@ -323,7 +334,7 @@ defmodule Elixlsx.XMLTemplates do
 
     """
     <xf borderId="0"
-           fillId="0"
+           fillId="#{fillid}"
            fontId="#{fontid}"
            numFmtId="#{numfmtid}"
            xfId="0" #{apply_alignment}>
@@ -403,6 +414,7 @@ defmodule Elixlsx.XMLTemplates do
   """
   def make_xl_styles(wci) do
     font_list = FontDB.id_sorted_fonts wci.fontdb
+    fill_list = FillDB.id_sorted_fills wci.filldb
     cell_xfs = CellStyleDB.id_sorted_styles wci.cellstyledb
     numfmts_list = NumFmtDB.custom_numfmt_id_tuples wci.numfmtdb
 
@@ -414,8 +426,9 @@ defmodule Elixlsx.XMLTemplates do
     <font />
     #{make_font_list(font_list)}
   </fonts>
-  <fills count="1">
+  <fills count="#{1 + length fill_list}">
     <fill />
+    #{make_fill_list(fill_list)}
   </fills>
   <borders count="1">
     <border />
