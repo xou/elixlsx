@@ -225,7 +225,7 @@ defmodule Elixlsx.XMLTemplates do
   end
 
   defp make_col_widths(sheet) do
-    if Dict.size(sheet.col_widths) != 0 do
+    if Kernel.map_size(sheet.col_widths) != 0 do
       cols = Dict.to_list(sheet.col_widths)
       |> Enum.sort
       |> Enum.map_join(&make_col_width/1)
