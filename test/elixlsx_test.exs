@@ -41,6 +41,27 @@ defmodule ElixlsxTest do
     assert to_text(sis2) == "World"
   end
 
+  test "xml escaping StringDB functionality" do
+    sdb = (%StringDB{}
+            # An unfortunate side effect of :xmerl_scan is that although some values
+            # will be xml escaped, for example "&" replaced with "&amp;", the parser
+            # still splits on the "&" of the escaped value, thus creating two values
+            # instead of one. This will not effect the actual output of the library
+            # though.
+            |> StringDB.register_string("Hello World & Goodbye Cruel World"))
+
+    xml = XMLTemplates.make_xl_shared_strings(StringDB.sorted_id_string_tuples sdb)
+
+    {xmerl, []} = :xmerl_scan.string String.to_char_list(xml)
+
+    strings = :xmerl_xpath.string('/sst/si/t/text()', xmerl)
+
+    assert length(strings) == 2
+    [sis1, sis2] = strings
+
+    assert to_text(sis1) <> to_text(sis2) == "Hello World & Goodbye Cruel World"
+  end
+
   test "font color" do
     xml = Font.from_props(color: "#012345") |>
     Font.get_stylexml_entry
