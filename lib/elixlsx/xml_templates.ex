@@ -430,7 +430,7 @@ defmodule Elixlsx.XMLTemplates do
     #{make_font_list(font_list)}
   </fonts>
   <fills count="#{1 + length fill_list}">
-    <fill />
+    <fill><patternFill patternType="none"/></fill>
     #{make_fill_list(fill_list)}
   </fills>
   <borders count="1">
