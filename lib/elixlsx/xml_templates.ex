@@ -200,6 +200,19 @@ defmodule Elixlsx.XMLTemplates do
     List.foldr("", &<>/2)
   end
 
+  defp xl_merge_cells([]) do
+    ""
+  end
+
+  defp xl_merge_cells(merge_cells) do
+      """
+      <mergeCells count="#{Enum.count(merge_cells)}">
+        #{Enum.map(merge_cells, fn {fromCell, toCell} ->
+          "<mergeCell ref=\"#{fromCell}:#{toCell}\"/>"
+        end)}
+      </mergeCells>
+      """
+  end
 
   defp xl_sheet_rows(data, row_heights, wci) do
     Enum.zip(data, 1 .. length data) |>
@@ -263,6 +276,8 @@ defmodule Elixlsx.XMLTemplates do
   <>
   ~S"""
   </sheetData>
+  """ <> xl_merge_cells(sheet.merge_cells) <>
+  """
   <pageMargins left="0.75" right="0.75" top="1" bottom="1.0" header="0.5" footer="0.5"/>
 </worksheet>
     """
@@ -326,7 +341,7 @@ defmodule Elixlsx.XMLTemplates do
         nil ->
           {"", ""}
         font ->
-            
+
           case make_style_alignment(font) do
             "" ->
               {"", ""}
@@ -351,15 +366,15 @@ defmodule Elixlsx.XMLTemplates do
   Create a aligment xml tag from font style.
   """
   defp make_style_alignment(font) do
-    attrs = case font.wrap_text do 
+    attrs = case font.wrap_text do
         true ->
           "wrapText=\"1\" "
         _ ->
           ""
       end
 
-    attrs = case font.align_horizontal do 
-        nil -> 
+    attrs = case font.align_horizontal do
+        nil ->
           attrs
         :center ->
           attrs <> "horizontal=\"center\" "
@@ -373,10 +388,10 @@ defmodule Elixlsx.XMLTemplates do
           attrs <> "horizontal=\"left\" "
         :right ->
           attrs <> "horizontal=\"right\" "
-        _ -> 
+        _ ->
           raise %ArgumentError{message: "Given horizontal alignment not supported. Only :center, :fill, :general, :justify, :left, :right are available."}
       end
-    
+
     case attrs do
       "" ->
         nil
