@@ -4,16 +4,14 @@
 
 A writer for XLSX files.
 
-Supports:
+Features:
 
 - Multiple (named) sheets with custom column widths & column heights.
 - (Unicode-)strings, Numbers, Dates
 - Font formatting (size, bold, italic, underline, strike)
 - Horizontal alignment and text wrapping
 - Font and cell background color
-
-This library is currently more in a proof-of-concept state;
-it is also my first Elixir project, feedback is very welcome.
+- Merged cells
 
 ## Installation
 
@@ -42,7 +40,7 @@ end
 iex(1)> Workbook.append_sheet(%Workbook{}, Sheet.with_name("Sheet 1") |> Sheet.set_cell("A1", "Hello", bold: true)) |> Elixlsx.write_to("hello.xlsx")
 ```
 
-See [example.exs](example.exs) for a more complete example.
+See [example.exs](example.exs) for examples how to use the various features.
 
 ## Number and date formatting reference
 
