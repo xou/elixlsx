@@ -60,7 +60,7 @@ sheet3 = %Sheet{name: "Second", rows:
   row_heights: %{4 => 60}}
 
 # Insert sheet3 as the second sheet:
-Workbook.insert_sheet(workbook, sheet3, 1)
+workbook = Workbook.insert_sheet(workbook, sheet3, 1)
 
 # If you need to merge cells horizontally:
 sheet4 = %Sheet{rows: [[1,2,3]], merge_cells: [{"A1", "C1"}]}
