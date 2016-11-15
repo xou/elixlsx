@@ -16,12 +16,13 @@ defmodule Elixlsx.Sheet do
   The property list describes formatting options for that
   cell. See Font.from_props/1 for a list of options.
   """
-  defstruct name: "", rows: [], col_widths: %{}, row_heights: %{}
+  defstruct name: "", rows: [], col_widths: %{}, row_heights: %{}, merge_cells: []
   @type t :: %Sheet {
     name: String.t,
     rows: list(list(any())),
     col_widths: %{pos_integer => number},
-    row_heights: %{pos_integer => number}
+    row_heights: %{pos_integer => number},
+    merge_cells: []
   }
 
   @doc ~S"""
