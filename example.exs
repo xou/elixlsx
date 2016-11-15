@@ -62,19 +62,11 @@ sheet3 = %Sheet{name: "Second", rows:
 # Insert sheet3 as the second sheet:
 workbook = Workbook.insert_sheet(workbook, sheet3, 1)
 
-# If you need to merge cells horizontally:
-sheet4 = %Sheet{rows: [[1,2,3]], merge_cells: [{"A1", "C1"}]}
+# It is possible to merge blocks of cells. The top-left cells' value will be retained
+# in the block, all others will be dropped.
+sheet4 = %Sheet{name: "Merged Cells",
+                rows: List.duplicate(["A", "B", "C", "D", "E"], 5),
+                merge_cells: [{"A1", "A3"}, {"C1", "E1"}, {"C3", "E5"}]}
 
-workbook = Workbook.append_sheet(workbook, sheet4)
-
-# If you need to merge cells vertically:
-sheet5 = %Sheet{rows: [[1],[2],[3]], merge_cells: [{"A1", "A3"}]}
-
-workbook = Workbook.append_sheet(workbook, sheet5)
-
-# If you need to merge cells diagonally:
-sheet6 = %Sheet{rows: [[1,2,3],[1,2,3],[1,2,3]], merge_cells: [{"A1", "C3"}]}
-
-workbook = Workbook.append_sheet(workbook, sheet6)
-
+Workbook.append_sheet(workbook, sheet4)
 |> Elixlsx.write_to("empty.xlsx")
