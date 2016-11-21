@@ -200,6 +200,19 @@ defmodule Elixlsx.XMLTemplates do
     List.foldr("", &<>/2)
   end
 
+  defp xl_merge_cells([]) do
+    ""
+  end
+
+  defp xl_merge_cells(merge_cells) do
+      """
+      <mergeCells count="#{Enum.count(merge_cells)}">
+        #{Enum.map(merge_cells, fn {fromCell, toCell} ->
+          "<mergeCell ref=\"#{fromCell}:#{toCell}\"/>"
+        end)}
+      </mergeCells>
+      """
+  end
 
   defp xl_sheet_rows(data, row_heights, wci) do
     Enum.zip(data, 1 .. length data) |>
@@ -263,6 +276,8 @@ defmodule Elixlsx.XMLTemplates do
   <>
   ~S"""
   </sheetData>
+  """ <> xl_merge_cells(sheet.merge_cells) <>
+  """
   <pageMargins left="0.75" right="0.75" top="1" bottom="1.0" header="0.5" footer="0.5"/>
 </worksheet>
     """
@@ -433,7 +448,7 @@ defmodule Elixlsx.XMLTemplates do
     #{make_font_list(font_list)}
   </fonts>
   <fills count="#{1 + length fill_list}">
-    <fill />
+    <fill><patternFill patternType="none"/></fill>
     #{make_fill_list(fill_list)}
   </fills>
   <borders count="1">

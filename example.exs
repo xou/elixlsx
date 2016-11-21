@@ -52,7 +52,7 @@ sheet3 = %Sheet{name: "Second", rows:
    [["This is a cell with quite a bit of text.", wrap_text: true]],
 # Unicode should work as well:
    [["Müłti", bold: true, italic: true, underline: true, strike: true]],
-# Change horizontal alignment 
+# Change horizontal alignment
    [["left", align_horizontal: :left], ["right", align_horizontal: :right],
     ["center", align_horizontal: :center], ["justify", align_horizontal: :justify],
     ["general", align_horizontal: :general], ["fill", align_horizontal: :fill]]
@@ -60,6 +60,13 @@ sheet3 = %Sheet{name: "Second", rows:
   row_heights: %{4 => 60}}
 
 # Insert sheet3 as the second sheet:
-Workbook.insert_sheet(workbook, sheet3, 1)
+workbook = Workbook.insert_sheet(workbook, sheet3, 1)
 
+# It is possible to merge blocks of cells. The top-left cells' value will be retained
+# in the block, all others will be dropped.
+sheet4 = %Sheet{name: "Merged Cells",
+                rows: List.duplicate(["A", "B", "C", "D", "E"], 5),
+                merge_cells: [{"A1", "A3"}, {"C1", "E1"}, {"C3", "E5"}]}
+
+Workbook.append_sheet(workbook, sheet4)
 |> Elixlsx.write_to("empty.xlsx")
