@@ -72,4 +72,15 @@ defmodule ElixlsxTest do
 
     assert xmlAttribute(color, :value) == 'FF012345'
   end
+
+  test "font name" do
+    xml = Font.from_props(name: "Arial") |>
+    Font.get_stylexml_entry
+
+    {xmerl, []} = :xmerl_scan.string String.to_char_list(xml)
+
+    [name] = :xmerl_xpath.string('/font/name/@val', xmerl)
+
+    assert xmlAttribute(name, :value) == 'Arial'
+  end
 end

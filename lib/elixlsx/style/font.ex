@@ -12,11 +12,12 @@ defmodule Elixlsx.Style.Font do
   - color: (Hex-)String
   - wrap_text: boolean
   - align_horizontal: atom (:left, :right, :center, :justify, :general, :fill)
-
+  - name: (Hex-)String
   """
   alias __MODULE__
   defstruct bold: false, italic: false, underline: false,
-  strike: false, size: nil, color: nil, wrap_text: false, align_horizontal: nil
+  strike: false, size: nil, color: nil, wrap_text: false, align_horizontal: nil,
+  name: nil
 
   @type t :: %Font{
     bold: boolean,
@@ -26,7 +27,8 @@ defmodule Elixlsx.Style.Font do
     size: pos_integer,
     color: String.t,
     wrap_text: boolean,
-    align_horizontal: atom
+    align_horizontal: atom,
+    name: String.t
   }
 
 
@@ -41,7 +43,8 @@ defmodule Elixlsx.Style.Font do
                size: props[:size],
                color: props[:color],
                wrap_text: !!props[:wrap_text],
-               align_horizontal: props[:align_horizontal]
+               align_horizontal: props[:align_horizontal],
+               name: props[:name]
               }
 
     if ft == %Font{}, do: nil, else: ft
@@ -87,7 +90,8 @@ defmodule Elixlsx.Style.Font do
     end
 
     color = if font.color do "<color rgb=\"#{to_rgb_color(font.color)}\" />" else "" end
+    name = if font.name do "<name val=\"#{font.name}\" />" else "" end
 
-    "<font>#{bold}#{italic}#{underline}#{strike}#{size}#{color}</font>"
+    "<font>#{bold}#{italic}#{underline}#{strike}#{size}#{name}#{color}</font>"
   end
 end
