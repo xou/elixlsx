@@ -12,12 +12,13 @@ defmodule Elixlsx.Style.Font do
   - color: (Hex-)String
   - wrap_text: boolean
   - align_horizontal: atom (:left, :right, :center, :justify, :general, :fill)
+  - align_vertical: atom (:top, :bottom, :center)
   - name: (Hex-)String
   """
   alias __MODULE__
   defstruct bold: false, italic: false, underline: false,
-  strike: false, size: nil, color: nil, wrap_text: false, align_horizontal: nil,
-  name: nil
+  strike: false, size: nil, name: nil, color: nil, wrap_text: false,
+  align_horizontal: nil, align_vertical: nil
 
   @type t :: %Font{
     bold: boolean,
@@ -28,6 +29,7 @@ defmodule Elixlsx.Style.Font do
     color: String.t,
     wrap_text: boolean,
     align_horizontal: atom,
+    align_vertical: atom,
     name: String.t
   }
 
@@ -44,6 +46,7 @@ defmodule Elixlsx.Style.Font do
                color: props[:color],
                wrap_text: !!props[:wrap_text],
                align_horizontal: props[:align_horizontal],
+               align_vertical: props[:align_vertical],
                name: props[:name]
               }
 

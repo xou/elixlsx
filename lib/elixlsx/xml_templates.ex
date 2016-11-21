@@ -326,7 +326,7 @@ defmodule Elixlsx.XMLTemplates do
         nil ->
           {"", ""}
         font ->
-            
+
           case make_style_alignment(font) do
             "" ->
               {"", ""}
@@ -346,37 +346,40 @@ defmodule Elixlsx.XMLTemplates do
     """
   end
 
+  @spec wrap_text(String.t, Font.t) :: String.t
+  defp wrap_text(attrs, %Font{wrap_text: true}), do: attrs <> "wrapText=\"1\" "
+  defp wrap_text(attrs, _), do: attrs
+
+  @spec horizontal_alignment(String.t, Font.t) :: String.t
+  defp horizontal_alignment(attrs, %Font{align_horizontal: nil}), do: attrs
+  defp horizontal_alignment(attrs, %Font{align_horizontal: alignment}) do
+    if alignment in [:center, :fill, :general, :justify, :left, :right] do
+      attrs <> "horizontal=\"#{ Atom.to_string(alignment) }\" "
+    else
+      IO.inspect alignment
+      raise %ArgumentError{message: "Given horizontal alignment not supported. Only :center, :fill, :general, :justify, :left, :right are available."}
+    end
+  end
+
+  @spec vertical_alignment(String.t, Font.t) :: String.t
+  defp vertical_alignment(attrs, %Font{align_vertical: nil}), do: attrs
+  defp vertical_alignment(attrs, %Font{align_vertical: alignment}) do
+    if alignment in [:center, :top, :bottom] do
+      "vertical=\"#{ Atom.to_string(alignment) }\" "
+    else
+      raise %ArgumentError{message: "Given vertical alignment not supported. Only :center, :top, :bottom are available."}
+    end
+  end
+
   @spec make_style_alignment(Font.t) :: String.t
   @doc ~S"""
   Create a aligment xml tag from font style.
   """
   defp make_style_alignment(font) do
-    attrs = case font.wrap_text do 
-        true ->
-          "wrapText=\"1\" "
-        _ ->
-          ""
-      end
+    attrs = "" |> wrap_text(font)
+    |> horizontal_alignment(font)
+    |> vertical_alignment(font)
 
-    attrs = case font.align_horizontal do 
-        nil -> 
-          attrs
-        :center ->
-          attrs <> "horizontal=\"center\" "
-        :fill ->
-          attrs <> "horizontal=\"fill\" "
-        :general ->
-          attrs <> "horizontal=\"general\" "
-        :justify ->
-          attrs <> "horizontal=\"justify\" "
-        :left ->
-          attrs <> "horizontal=\"left\" "
-        :right ->
-          attrs <> "horizontal=\"right\" "
-        _ -> 
-          raise %ArgumentError{message: "Given horizontal alignment not supported. Only :center, :fill, :general, :justify, :left, :right are available."}
-      end
-    
     case attrs do
       "" ->
         nil
