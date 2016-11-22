@@ -15,6 +15,7 @@ defmodule Elixlsx.Style.Font do
   - align_vertical: atom (:top, :bottom, :center)
   - name: (Hex-)String
   """
+  import Elixlsx.Color, only: [to_rgb_color: 1]
   alias __MODULE__
   defstruct bold: false, italic: false, underline: false,
   strike: false, size: nil, name: nil, color: nil, wrap_text: false,
@@ -51,23 +52,6 @@ defmodule Elixlsx.Style.Font do
               }
 
     if ft == %Font{}, do: nil, else: ft
-  end
-
-  defp to_rgb_color(color) do
-    # parses a color property and regurns a ARGB code (FFRRGGBB)
-    # In the future, this would be the place to support color names such as "red", etc.
-    # Also, XLSX has "indexed" colors, see
-    # https://msdn.microsoft.com/en-us/library/documentformat.openxml.spreadsheet.indexedcolors%28v=office.14%29.aspx
-    # for a list.
-    case String.match?(color, ~r/#[0-9a-fA-F]{6}/) do
-      true ->
-        "FF" <> (
-          color |>
-          String.slice(1..-1) |> # remove leading character
-          String.capitalize)
-      false ->
-        raise %ArgumentError{message: "Font color must be in format #rrggbb (hex values), is " <> (inspect color)}
-    end
   end
 
   @spec get_stylexml_entry(Elixlsx.Style.Font.t) :: String.t

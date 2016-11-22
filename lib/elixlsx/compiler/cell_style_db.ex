@@ -3,6 +3,7 @@ defmodule Elixlsx.Compiler.CellStyleDB do
   alias Elixlsx.Compiler.FontDB
   alias Elixlsx.Compiler.FillDB
   alias Elixlsx.Compiler.NumFmtDB
+  alias Elixlsx.Compiler.BorderStyleDB
   alias Elixlsx.Compiler.WorkbookCompInfo
 
   defstruct cellstyles: %{}, element_count: 0
@@ -63,6 +64,11 @@ defmodule Elixlsx.Compiler.CellStyleDB do
         wci
       else
         update_in(wci.numfmtdb, &(NumFmtDB.register_numfmt &1, style.numfmt))
+      end
+      wci = if is_nil(style.border) do
+        wci
+      else
+        update_in(wci.borderstyledb, &(BorderStyleDB.register_border &1, style.border))
       end
 
       wci

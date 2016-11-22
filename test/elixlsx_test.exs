@@ -8,6 +8,9 @@ defmodule ElixlsxTest do
   doctest Elixlsx.Sheet
   doctest Elixlsx.Util, import: true
   doctest Elixlsx.XMLTemplates
+  doctest Elixlsx.Color
+  doctest Elixlsx.Style.Border
+  doctest Elixlsx.Style.BorderStyle
 
   alias Elixlsx.XMLTemplates
   alias Elixlsx.Compiler.StringDB
