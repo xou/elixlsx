@@ -3,7 +3,7 @@ defmodule Elixlsx.Style.Border do
   Border styling properties
   - type: atom (:left, :right, :top, :bottom, :diagonal)
   - style: atom (:solid, :dotted, :dashed, :double,
-              dash_dot, :dash_dot_dot, :thin, :medium, :thick)
+              :dash_dot, :dash_dot_dot, :thin, :medium, :thick)
   - color: (Hex-)String
   """
   alias __MODULE__

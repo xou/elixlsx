@@ -51,7 +51,12 @@ sheet3 = %Sheet{name: "Second", rows:
     ["Large", size: 22]],
    # wrap_text makes text wrap, but it does not increase the row height
    # (see row_heights below).
-   [["This is a cell with quite a bit of text.", wrap_text: true]],
+   [["This is a cell with quite a bit of text.", wrap_text: true],
+   # make some vertical alignment
+    ["Top", align_vertical: :top],
+    # also set font name
+    ["Middle", align_vertical: :center, font: "Courier New"],
+    ["Bottom", align_vertical: :bottom]],
 # Unicode should work as well:
    [["Müłti", bold: true, italic: true, underline: true, strike: true]],
 # Change horizontal alignment

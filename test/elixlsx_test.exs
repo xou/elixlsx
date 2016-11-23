@@ -77,7 +77,7 @@ defmodule ElixlsxTest do
   end
 
   test "font name" do
-    xml = Font.from_props(name: "Arial") |>
+    xml = Font.from_props(font: "Arial") |>
     Font.get_stylexml_entry
 
     {xmerl, []} = :xmerl_scan.string String.to_char_list(xml)
