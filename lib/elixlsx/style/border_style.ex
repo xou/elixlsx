@@ -45,7 +45,7 @@ defmodule Elixlsx.Style.BorderStyle do
 
   @spec get_border_style_entry(BorderStyle.t) :: String.t
   @doc ~S"""
-   Description
+   Generate xml entry for border group
 
   ## Examples
 
