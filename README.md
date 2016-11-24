@@ -10,7 +10,7 @@ Features:
 - (Unicode-)strings, Numbers, Dates
 - Font formatting (size, bold, italic, underline, strike)
 - Horizontal alignment and text wrapping
-- Font and cell background color
+- Font and cell background color, borders
 - Merged cells
 
 ## Installation
@@ -19,7 +19,7 @@ Via hex, in mix.exs:
 
 ```Elixir
 defp deps do
-  [{:elixlsx, "~> 0.0.7"}]
+  [{:elixlsx, "~> 0.1.0"}]
 end
 ```
 
