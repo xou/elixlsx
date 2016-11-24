@@ -23,6 +23,8 @@ sheet1 = Sheet.with_name("First")
          |> Sheet.set_cell("A4", 1448882362, yyyymmdd: true)
 # make some room in the first column, otherwise the date will only show up as ###
          |> Sheet.set_col_width("A", 18.0)
+# Cell borders
+         |> Sheet.set_cell("A5", "Double border", border: [bottom: [style: :double, color: "#cc3311"]])
 
 workbook = %Workbook{sheets: [sheet1]}
 
@@ -49,7 +51,12 @@ sheet3 = %Sheet{name: "Second", rows:
     ["Large", size: 22]],
    # wrap_text makes text wrap, but it does not increase the row height
    # (see row_heights below).
-   [["This is a cell with quite a bit of text.", wrap_text: true]],
+   [["This is a cell with quite a bit of text.", wrap_text: true],
+   # make some vertical alignment
+    ["Top", align_vertical: :top],
+    # also set font name
+    ["Middle", align_vertical: :center, font: "Courier New"],
+    ["Bottom", align_vertical: :bottom]],
 # Unicode should work as well:
    [["Müłti", bold: true, italic: true, underline: true, strike: true]],
 # Change horizontal alignment

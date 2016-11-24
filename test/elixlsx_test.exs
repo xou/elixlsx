@@ -8,6 +8,9 @@ defmodule ElixlsxTest do
   doctest Elixlsx.Sheet
   doctest Elixlsx.Util, import: true
   doctest Elixlsx.XMLTemplates
+  doctest Elixlsx.Color
+  doctest Elixlsx.Style.Border
+  doctest Elixlsx.Style.BorderStyle
 
   alias Elixlsx.XMLTemplates
   alias Elixlsx.Compiler.StringDB
@@ -71,5 +74,16 @@ defmodule ElixlsxTest do
     [color] = :xmerl_xpath.string('/font/color/@rgb', xmerl)
 
     assert xmlAttribute(color, :value) == 'FF012345'
+  end
+
+  test "font name" do
+    xml = Font.from_props(font: "Arial") |>
+    Font.get_stylexml_entry
+
+    {xmerl, []} = :xmerl_scan.string String.to_char_list(xml)
+
+    [name] = :xmerl_xpath.string('/font/name/@val', xmerl)
+
+    assert xmlAttribute(name, :value) == 'Arial'
   end
 end

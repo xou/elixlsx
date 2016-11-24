@@ -13,6 +13,7 @@ defmodule Elixlsx.Compiler.WorkbookCompInfo do
   filldb: %Compiler.FillDB{},
   cellstyledb: %Compiler.CellStyleDB{},
   numfmtdb: %Compiler.NumFmtDB{},
+  borderstyledb: %Compiler.BorderStyleDB{},
   next_free_xl_rid: nil
 
   @type t :: %Compiler.WorkbookCompInfo{
@@ -22,6 +23,7 @@ defmodule Elixlsx.Compiler.WorkbookCompInfo do
     filldb: Compiler.FillDB.t,
     cellstyledb: Compiler.CellStyleDB.t,
     numfmtdb: Compiler.NumFmtDB.t,
+    borderstyledb: Compiler.BorderStyleDB.t,
     next_free_xl_rid: non_neg_integer
   }
 end

@@ -12,11 +12,14 @@ defmodule Elixlsx.Style.Font do
   - color: (Hex-)String
   - wrap_text: boolean
   - align_horizontal: atom (:left, :right, :center, :justify, :general, :fill)
-
+  - align_vertical: atom (:top, :bottom, :center)
+  - font: String
   """
+  import Elixlsx.Color, only: [to_rgb_color: 1]
   alias __MODULE__
   defstruct bold: false, italic: false, underline: false,
-  strike: false, size: nil, color: nil, wrap_text: false, align_horizontal: nil
+  strike: false, size: nil, font: nil, color: nil, wrap_text: false,
+  align_horizontal: nil, align_vertical: nil
 
   @type t :: %Font{
     bold: boolean,
@@ -26,7 +29,9 @@ defmodule Elixlsx.Style.Font do
     size: pos_integer,
     color: String.t,
     wrap_text: boolean,
-    align_horizontal: atom
+    align_horizontal: atom,
+    align_vertical: atom,
+    font: String.t
   }
 
 
@@ -41,27 +46,12 @@ defmodule Elixlsx.Style.Font do
                size: props[:size],
                color: props[:color],
                wrap_text: !!props[:wrap_text],
-               align_horizontal: props[:align_horizontal]
+               align_horizontal: props[:align_horizontal],
+               align_vertical: props[:align_vertical],
+               font: props[:font]
               }
 
     if ft == %Font{}, do: nil, else: ft
-  end
-
-  defp to_rgb_color(color) do
-    # parses a color property and regurns a ARGB code (FFRRGGBB)
-    # In the future, this would be the place to support color names such as "red", etc.
-    # Also, XLSX has "indexed" colors, see
-    # https://msdn.microsoft.com/en-us/library/documentformat.openxml.spreadsheet.indexedcolors%28v=office.14%29.aspx
-    # for a list.
-    case String.match?(color, ~r/#[0-9a-fA-F]{6}/) do
-      true ->
-        "FF" <> (
-          color |>
-          String.slice(1..-1) |> # remove leading character
-          String.capitalize)
-      false ->
-        raise %ArgumentError{message: "Font color must be in format #rrggbb (hex values), is " <> (inspect color)}
-    end
   end
 
   @spec get_stylexml_entry(Elixlsx.Style.Font.t) :: String.t
@@ -87,7 +77,8 @@ defmodule Elixlsx.Style.Font do
     end
 
     color = if font.color do "<color rgb=\"#{to_rgb_color(font.color)}\" />" else "" end
+    font_name = if font.font do "<name val=\"#{font.font}\" />" else "" end
 
-    "<font>#{bold}#{italic}#{underline}#{strike}#{size}#{color}</font>"
+    "<font>#{bold}#{italic}#{underline}#{strike}#{size}#{font_name}#{color}</font>"
   end
 end

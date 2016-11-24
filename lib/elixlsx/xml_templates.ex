@@ -6,10 +6,12 @@ defmodule Elixlsx.XMLTemplates do
   alias Elixlsx.Compiler.FillDB
   alias Elixlsx.Compiler.SheetCompInfo
   alias Elixlsx.Compiler.NumFmtDB
+  alias Elixlsx.Compiler.BorderStyleDB
   alias Elixlsx.Compiler.WorkbookCompInfo
   alias Elixlsx.Style.CellStyle
   alias Elixlsx.Style.Font
   alias Elixlsx.Style.Fill
+  alias Elixlsx.Style.BorderStyle
   alias Elixlsx.Sheet
 
 
@@ -337,6 +339,10 @@ defmodule Elixlsx.XMLTemplates do
       do: 0,
       else: NumFmtDB.get_id wci.numfmtdb, style.numfmt
 
+    borderid = if is_nil(style.border),
+      do: 0,
+      else: BorderStyleDB.get_id wci.borderstyledb, style.border
+
     {apply_alignment, wrap_text_tag} = case style.font do
         nil ->
           {"", ""}
@@ -351,7 +357,7 @@ defmodule Elixlsx.XMLTemplates do
       end
 
     """
-    <xf borderId="0"
+    <xf borderId="#{borderid}"
            fillId="#{fillid}"
            fontId="#{fontid}"
            numFmtId="#{numfmtid}"
@@ -361,36 +367,38 @@ defmodule Elixlsx.XMLTemplates do
     """
   end
 
+  @spec wrap_text(String.t, Font.t) :: String.t
+  defp wrap_text(attrs, %Font{wrap_text: true}), do: attrs <> "wrapText=\"1\" "
+  defp wrap_text(attrs, _), do: attrs
+
+  @spec horizontal_alignment(String.t, Font.t) :: String.t
+  defp horizontal_alignment(attrs, %Font{align_horizontal: nil}), do: attrs
+  defp horizontal_alignment(attrs, %Font{align_horizontal: alignment}) do
+    if alignment in [:center, :fill, :general, :justify, :left, :right] do
+      attrs <> "horizontal=\"#{ Atom.to_string(alignment) }\" "
+    else
+      raise %ArgumentError{message: "Given horizontal alignment not supported. Only :center, :fill, :general, :justify, :left, :right are available."}
+    end
+  end
+
+  @spec vertical_alignment(String.t, Font.t) :: String.t
+  defp vertical_alignment(attrs, %Font{align_vertical: nil}), do: attrs
+  defp vertical_alignment(attrs, %Font{align_vertical: alignment}) do
+    if alignment in [:center, :top, :bottom] do
+      attrs <> "vertical=\"#{ Atom.to_string(alignment) }\" "
+    else
+      raise %ArgumentError{message: "Given vertical alignment not supported. Only :center, :top, :bottom are available."}
+    end
+  end
+
   @spec make_style_alignment(Font.t) :: String.t
   @doc ~S"""
   Create a aligment xml tag from font style.
   """
   defp make_style_alignment(font) do
-    attrs = case font.wrap_text do
-        true ->
-          "wrapText=\"1\" "
-        _ ->
-          ""
-      end
-
-    attrs = case font.align_horizontal do
-        nil ->
-          attrs
-        :center ->
-          attrs <> "horizontal=\"center\" "
-        :fill ->
-          attrs <> "horizontal=\"fill\" "
-        :general ->
-          attrs <> "horizontal=\"general\" "
-        :justify ->
-          attrs <> "horizontal=\"justify\" "
-        :left ->
-          attrs <> "horizontal=\"left\" "
-        :right ->
-          attrs <> "horizontal=\"right\" "
-        _ ->
-          raise %ArgumentError{message: "Given horizontal alignment not supported. Only :center, :fill, :general, :justify, :left, :right are available."}
-      end
+    attrs = "" |> wrap_text(font)
+    |> horizontal_alignment(font)
+    |> vertical_alignment(font)
 
     case attrs do
       "" ->
@@ -423,6 +431,9 @@ defmodule Elixlsx.XMLTemplates do
     end
   end
 
+  defp make_borders(borders_list) do
+    Enum.map_join borders_list, "\n", &(BorderStyle.get_border_style_entry &1)
+  end
 
   @spec make_xl_styles(WorkbookCompInfo.t) :: String.t
   @doc ~S"""
@@ -435,6 +446,7 @@ defmodule Elixlsx.XMLTemplates do
     fill_list = FillDB.id_sorted_fills wci.filldb
     cell_xfs = CellStyleDB.id_sorted_styles wci.cellstyledb
     numfmts_list = NumFmtDB.custom_numfmt_id_tuples wci.numfmtdb
+    borders_list = BorderStyleDB.id_sorted_borders wci.borderstyledb
 
     """
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
@@ -448,8 +460,9 @@ defmodule Elixlsx.XMLTemplates do
     <fill><patternFill patternType="none"/></fill>
     #{make_fill_list(fill_list)}
   </fills>
-  <borders count="1">
+  <borders count="#{1 + length borders_list}">
     <border />
+    #{make_borders(borders_list)}
   </borders>
   <cellStyleXfs count="1">
     <xf borderId="0" fillId="0" fontId="0" applyAlignment="1">
