@@ -70,7 +70,7 @@ defmodule Elixlsx.Style.BorderStyle do
 
     """
     <border diagonalUp="#{diagonal_up}" diagonalDown="#{diagonal_down}">
-      #{top}#{bottom}#{left}#{right}#{diagonal}
+      #{left}#{right}#{top}#{bottom}#{diagonal}
     </border>
     """
   end
