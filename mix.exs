@@ -5,11 +5,11 @@ defmodule Elixlsx.Mixfile do
     [app: :elixlsx,
      version: "0.1.0",
      elixir: "~> 1.1",
-     package: package,
+     package: package(),
      description: "a writer for XLSX spreadsheet files",
      build_embedded: Mix.env == :prod,
      start_permanent: Mix.env == :prod,
-     deps: deps]
+     deps: deps()]
   end
 
   def application do
