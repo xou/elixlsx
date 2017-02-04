@@ -25,6 +25,15 @@ sheet1 = Sheet.with_name("First")
          |> Sheet.set_col_width("A", 18.0)
 # Cell borders
          |> Sheet.set_cell("A5", "Double border", border: [bottom: [style: :double, color: "#cc3311"]])
+# Formula
+         |> Sheet.set_cell("E1", 1.2, num_format: "0.00")
+         |> Sheet.set_cell("E2", 2, num_format: "0.00")
+         |> Sheet.set_cell("E3", 3.5, num_format: "0.00")
+         |> Sheet.set_cell("E4", 4, num_format: "0.00")
+         |> Sheet.set_cell("E5", 5, num_format: "0.00")
+         |> Sheet.set_cell("E8", {:formula, "SUM(C1:C5)"}, num_format: "0.00", bold: true)
+         |> Sheet.set_cell("F1", {:formula, "NOW()"}, num_format: "yyyy-mm-dd hh:MM:ss")
+         |> Sheet.set_col_width("F", 18.0)
 
 workbook = %Workbook{sheets: [sheet1]}
 
