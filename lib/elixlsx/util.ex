@@ -210,6 +210,13 @@ defmodule Elixlsx.Util do
     {:excelts, value}
   end
 
+  @doc ~S"""
+  Formula's value calculate on opening excel programm. We don't need to format this here.
+  """
+  @spec to_excel_datetime({:formula, String.t}) :: {:formula, String.t}
+  def to_excel_datetime({:formula, value}) do
+    {:formula, value}
+  end
 
   @doc ~S"""
   replace_all(input, [{search, replace}])
