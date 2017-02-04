@@ -468,8 +468,9 @@ defmodule Elixlsx.XMLTemplates do
     <font />
     #{make_font_list(font_list)}
   </fonts>
-  <fills count="#{1 + length fill_list}">
+  <fills count="#{2 + length fill_list}">
     <fill><patternFill patternType="none"/></fill>
+    <fill><patternFill patternType="gray125"/></fill>
     #{make_fill_list(fill_list)}
   </fills>
   <borders count="#{1 + length borders_list}">

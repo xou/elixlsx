@@ -12,8 +12,8 @@ defmodule Elixlsx.Compiler.FillDB do
   @spec register_fill(FillDB.t, Fill.t) :: FillDB.t
   def register_fill(filldb, fill) do
     case Dict.fetch(filldb.fills, fill) do
-      :error -> %FillDB{fills: Dict.put(filldb.fills, fill, filldb.element_count + 1),
-                       element_count: filldb.element_count + 1}
+      :error -> %FillDB{fills: Dict.put(filldb.fills, fill, filldb.element_count + 2),
+                       element_count: filldb.element_count + 2}
       {:ok, _} -> filldb
     end
   end
