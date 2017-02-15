@@ -155,6 +155,8 @@ defmodule Elixlsx.XMLTemplates do
     case content do
       {:excelts, num} ->
         {"n", to_string(num)}
+      {:formula, x} ->
+        {:formula, x}
       x when is_number(x) ->
         {"n", to_string(x)}
       x when is_binary(x) ->
@@ -191,12 +193,22 @@ defmodule Elixlsx.XMLTemplates do
                                     }
           end
 
-          """
-          <c r="#{U.to_excel_coords(rowidx, colidx)}"
-          s="#{styleID}" t="#{content_type}">
-          <v>#{content_value}</v>
-          </c>
-          """
+          case content_type do
+            :formula ->
+              """
+              <c r="#{U.to_excel_coords(rowidx, colidx)}"
+              s="#{styleID}">
+              <f>#{content_value}</f>
+              </c>
+              """
+            type ->
+              """
+              <c r="#{U.to_excel_coords(rowidx, colidx)}"
+              s="#{styleID}" t="#{type}">
+              <v>#{content_value}</v>
+              </c>
+              """
+          end
           end
         end) |>
     List.foldr("", &<>/2)
@@ -456,8 +468,9 @@ defmodule Elixlsx.XMLTemplates do
     <font />
     #{make_font_list(font_list)}
   </fonts>
-  <fills count="#{1 + length fill_list}">
+  <fills count="#{2 + length fill_list}">
     <fill><patternFill patternType="none"/></fill>
+    <fill><patternFill patternType="gray125"/></fill>
     #{make_fill_list(fill_list)}
   </fills>
   <borders count="#{1 + length borders_list}">
