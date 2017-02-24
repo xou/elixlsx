@@ -530,7 +530,7 @@ defmodule Elixlsx.XMLTemplates do
   <> workbook_sheet_entries(data.sheets, sci)
   <> ~S"""
   </sheets>
-  <calcPr iterateCount="100" refMode="A1" iterate="false" iterateDelta="0.001"/>
+  <calcPr fullCalcOnLoad="1" iterateCount="100" refMode="A1" iterate="false" iterateDelta="0.001"/>
   </workbook>
   """
   end
