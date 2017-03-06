@@ -198,9 +198,7 @@ defmodule Elixlsx.XMLTemplates do
 
           case content_type do
             :formula ->
-              if not is_nil(content_opts[:value]) do
-                value = "<v>#{content_opts[:value]}</v>"
-              end
+              value = if not is_nil(content_opts[:value]), do: "<v>#{content_opts[:value]}</v>", else: ""
 
               """
               <c r="#{U.to_excel_coords(rowidx, colidx)}"
