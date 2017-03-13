@@ -157,6 +157,8 @@ defmodule Elixlsx.XMLTemplates do
         {"n", to_string(num)}
       {:formula, x} ->
         {:formula, x}
+      {:formula, x, opts} when is_list(opts) ->
+        {:formula, x, opts}
       x when is_number(x) ->
         {"n", to_string(x)}
       x when is_binary(x) ->
@@ -183,9 +185,10 @@ defmodule Elixlsx.XMLTemplates do
           end
 
           cv = get_content_type_value(content, wci)
-          {content_type, content_value} =
+          {content_type, content_value, content_opts} =
           case cv do
-            {t, v} -> {t, v}
+            {t, v} -> {t, v, []}
+            {t, v, opts} -> {t, v, opts}
             :error -> raise %ArgumentError{
                         message: "Invalid column content at " <>
                                     U.to_excel_coords(rowidx, colidx) <> ": "
@@ -195,10 +198,13 @@ defmodule Elixlsx.XMLTemplates do
 
           case content_type do
             :formula ->
+              value = if not is_nil(content_opts[:value]), do: "<v>#{content_opts[:value]}</v>", else: ""
+
               """
               <c r="#{U.to_excel_coords(rowidx, colidx)}"
               s="#{styleID}">
               <f>#{content_value}</f>
+              #{value}
               </c>
               """
             type ->
@@ -530,7 +536,7 @@ defmodule Elixlsx.XMLTemplates do
   <> workbook_sheet_entries(data.sheets, sci)
   <> ~S"""
   </sheets>
-  <calcPr iterateCount="100" refMode="A1" iterate="false" iterateDelta="0.001"/>
+  <calcPr fullCalcOnLoad="1" iterateCount="100" refMode="A1" iterate="false" iterateDelta="0.001"/>
   </workbook>
   """
   end
