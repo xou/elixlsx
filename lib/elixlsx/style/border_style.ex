@@ -50,7 +50,7 @@ defmodule Elixlsx.Style.BorderStyle do
   ## Examples
 
     iex> Elixlsx.Style.BorderStyle.get_border_style_entry Elixlsx.Style.BorderStyle.from_props top: [style: :dash_dot, color: "#eeccaa"]
-    "<border diagonalUp=\"false\" diagonalDown=\"false\">\n  <top style=\"dashDot\"><color rgb=\"FFEECCAA\" /></top><bottom></bottom><left></left><right></right><diagonal></diagonal>\n</border>\n"
+    "<border diagonalUp=\"false\" diagonalDown=\"false\">\n  <left></left><right></right><top style=\"dashDot\"><color rgb=\"FFEECCAA\" /></top><bottom></bottom><diagonal></diagonal>\n</border>\n"
 
   """
   def get_border_style_entry(border) do
