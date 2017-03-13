@@ -1,0 +1,26 @@
+# From
+# https://blog.fazibear.me/automated-elixir-code-review-with-github-credo-and-travis-ci-986cd56b8f02#.g28k30jtt
+language: elixir
+
+elixir:
+  - 1.3.2
+
+otp_release:
+  - 19.0
+
+env:
+  global:
+    - MIX_ENV=test
+    - PULL_REQUEST_ID=$TRAVIS_PULL_REQUEST
+
+before_script:
+  - rvm install ruby-2.3.1
+  - gem install pronto-credo
+
+script:
+  - if [ $PULL_REQUEST_ID != false ]; then pronto run -f github_pr; fi
+  - mix test
+
+cache:
+  directories:
+    - /home/travis/.rvm/
