@@ -236,5 +236,14 @@ defmodule Elixlsx.Util do
   def replace_all(input, []) do
     input
   end
+
+
+  @version Mix.Project.config[:version]
+  @doc ~S"""
+  Returns the application version suitable for the <ApplicationVersion> tag.
+  """
+  def app_version_string do 
+    String.replace(@version, ~r/(\d+)\.(\d+)\.(\d+)/, "\\1.\\2\\3")
+  end
 end
 
