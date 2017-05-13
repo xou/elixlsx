@@ -51,15 +51,19 @@ defmodule Elixlsx.XMLTemplates do
                        {">", "&gt;"} ])
   end
 
+
   @docprops_app ~S"""
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <Properties xmlns="http://schemas.openxmlformats.org/officeDocument/2006/extended-properties" xmlns:vt="http://schemas.openxmlformats.org/officeDocument/2006/docPropsVTypes">
   <TotalTime>0</TotalTime>
   <Application>Elixlsx</Application>
-  <AppVersion>0.0.6</AppVersion>
+  <AppVersion>__APPVERSION__</AppVersion>
 </Properties>
 """
-  def docprops_app, do: @docprops_app
+  def docprops_app do
+    U.replace_all(@docprops_app,
+                  [{"__APPVERSION__", U.app_version_string()}])
+  end
 
 
   @docprops_core ~S"""
