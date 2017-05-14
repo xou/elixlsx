@@ -19,7 +19,7 @@ Via hex, in mix.exs:
 
 ```Elixir
 defp deps do
-  [{:elixlsx, "~> 0.1.0"}]
+  [{:elixlsx, "~> 0.2.0"}]
 end
 ```
 
