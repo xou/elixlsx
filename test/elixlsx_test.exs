@@ -15,6 +15,8 @@ defmodule ElixlsxTest do
   alias Elixlsx.XMLTemplates
   alias Elixlsx.Compiler.StringDB
   alias Elixlsx.Style.Font
+  alias Elixlsx.Workbook
+  alias Elixlsx.Sheet
 
   def xpath(el, path) do
     :xmerl_xpath.string(to_char_list(path), el)
@@ -85,5 +87,13 @@ defmodule ElixlsxTest do
     [name] = :xmerl_xpath.string('/font/name/@val', xmerl)
 
     assert xmlAttribute(name, :value) == 'Arial'
+  end
+
+  test "too long sheet name" do
+    sheet1 = Sheet.with_name("This is a very looong sheet name")
+    assert_raise ArgumentError, ~r/The sheet name .* is too long. Maximum 31 chars allowed for name./, fn ->
+      %Workbook{sheets: [sheet1]}
+      |> Elixlsx.write_to("test.xlsx")
+    end
   end
 end

@@ -100,6 +100,10 @@ defmodule Elixlsx.XMLTemplates do
   ### xl/workbook.xml
   @spec make_xl_workbook_xml_sheet_entry({Sheet.t, SheetCompInfo.t}) :: String.t
   def make_xl_workbook_xml_sheet_entry {sheet_info, sheet_comp_info} do
+    if String.length(sheet_info.name) > 31 do
+      raise %ArgumentError{message: "The sheet name '#{sheet_info.name}' is too long. Maximum 31 chars allowed for name."}
+    end
+    
     """
 <sheet name="#{sheet_info.name}" sheetId="#{sheet_comp_info.sheetId}" state="visible" r:id="#{sheet_comp_info.rId}"/>
     """
