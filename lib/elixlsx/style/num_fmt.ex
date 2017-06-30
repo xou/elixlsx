@@ -9,8 +9,8 @@ defmodule Elixlsx.Style.NumFmt do
 
   def from_props(props) do
     cond do
-      props[:yyyymmdd] -> date_yyyy_mm_dd
-      props[:datetime] -> date_datetime
+      props[:yyyymmdd] -> date_yyyy_mm_dd()
+      props[:datetime] -> date_datetime()
       props[:num_format] ->
         if String.valid? props[:num_format] do
           %NumFmt{format: props[:num_format]}
