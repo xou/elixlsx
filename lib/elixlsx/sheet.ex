@@ -125,7 +125,7 @@ defmodule Elixlsx.Sheet do
   """
   def set_col_width(sheet, column, width) do
     update_in sheet.col_widths,
-              &(Dict.put &1, Util.decode_col(column), width)
+              &(Map.put &1, Util.decode_col(column), width)
   end
 
   @spec set_row_height(Sheet.t, number, number) :: Sheet.t
@@ -134,6 +134,6 @@ defmodule Elixlsx.Sheet do
   """
   def set_row_height(sheet, row_idx, height) do
     update_in sheet.row_heights,
-              &(Dict.put &1, row_idx, height)
+              &(Map.put &1, row_idx, height)
   end
 end

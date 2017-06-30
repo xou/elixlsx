@@ -17,8 +17,8 @@ defmodule Elixlsx.Compiler.DBUtil do
   def register({dict, nextid}, value) do
     # Note that the parameter "value" in the API
     # refers to the *key* in the dictionary
-    case Dict.fetch(dict, value) do
-      :error -> { Dict.put(dict, value, nextid),
+    case Map.fetch(dict, value) do
+      :error -> { Map.put(dict, value, nextid),
                   nextid + 1
                 }
       {:ok, _} -> {dict, nextid}
@@ -30,7 +30,7 @@ defmodule Elixlsx.Compiler.DBUtil do
   """
   @spec get_id(gen_db_datatype, object_type) :: non_neg_integer
   def get_id(dict, value) do
-    case Dict.fetch(dict, value) do
+    case Map.fetch(dict, value) do
       :error -> raise %ArgumentError{message: "Unable to find element: " <> (inspect value)}
       {:ok, id} -> id
     end
@@ -42,6 +42,6 @@ defmodule Elixlsx.Compiler.DBUtil do
     dict
     |> Enum.map(fn ({k, v}) -> {v, k} end)
     |> Enum.sort
-    |> Dict.values
+    |> Map.values
   end
 end

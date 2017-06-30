@@ -13,15 +13,15 @@ defmodule Elixlsx.Compiler.StringDB do
 
   @spec register_string(StringDB.t, String.t) :: StringDB.t
   def register_string(stringdb, s) do
-    case Dict.fetch(stringdb.strings, s) do
-      :error -> %StringDB{strings: Dict.put(stringdb.strings, s, stringdb.element_count),
+    case Map.fetch(stringdb.strings, s) do
+      :error -> %StringDB{strings: Map.put(stringdb.strings, s, stringdb.element_count),
                           element_count: stringdb.element_count + 1}
       {:ok, _} -> stringdb
     end
   end
 
   def get_id(stringdb, s) do
-    case Dict.fetch(stringdb.strings, s) do
+    case Map.fetch(stringdb.strings, s) do
       :error ->
         raise %ArgumentError{
           message: "Invalid key provided for StringDB.get_id: " <> inspect(s)}

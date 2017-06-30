@@ -11,15 +11,15 @@ defmodule Elixlsx.Compiler.FontDB do
 
   @spec register_font(FontDB.t, Font.t) :: FontDB.t
   def register_font(fontdb, font) do
-    case Dict.fetch(fontdb.fonts, font) do
-      :error -> %FontDB{fonts: Dict.put(fontdb.fonts, font, fontdb.element_count + 1),
+    case Map.fetch(fontdb.fonts, font) do
+      :error -> %FontDB{fonts: Map.put(fontdb.fonts, font, fontdb.element_count + 1),
                        element_count: fontdb.element_count + 1}
       {:ok, _} -> fontdb
     end
   end
 
   def get_id(fontdb, font) do
-    case Dict.fetch(fontdb.fonts, font) do
+    case Map.fetch(fontdb.fonts, font) do
       :error ->
         raise %ArgumentError{message: "Invalid key provided for FontDB.get_id: " <> inspect(font)}
       {:ok, id} ->
@@ -31,6 +31,6 @@ defmodule Elixlsx.Compiler.FontDB do
     fontdb.fonts
     |> Enum.map(fn ({k, v}) -> {v, k} end)
     |> Enum.sort
-    |> Dict.values
+    |> Map.values
   end
 end
