@@ -3,7 +3,7 @@ defmodule Elixlsx.Sheet do
   alias Elixlsx.Sheet
   alias Elixlsx.Util
   @moduledoc ~S"""
-  Describes a single sheet with a given name.
+  Describes a single sheet with a given name. The name can be up to 31 characters long.
   The rows property is a list, each corresponding to a
   row (from the top), of lists, each corresponding to
   a column (from the left), of contents.
@@ -27,6 +27,7 @@ defmodule Elixlsx.Sheet do
 
   @doc ~S"""
   Create a sheet with a sheet name.
+  The name can be up to 31 characters long.
   """
   @spec with_name(String.t) :: Sheet.t
   def with_name(name) do
