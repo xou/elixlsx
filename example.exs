@@ -44,7 +44,7 @@ workbook = %Workbook{sheets: [sheet1]}
 workbook = %Workbook{workbook | datetime: "2015-12-01T13:40:59Z"}
 
 # It is also possible to create a sheet as a list of rows:
-sheet2 = %Sheet{name: 'Third', rows: [[1,2,3,4,5],
+sheet2 = %Sheet{name: "Third", rows: [[1,2,3,4,5],
                                        [1,2],
                                        ["increased row height"],
                                        ["hello", "world"]]}
