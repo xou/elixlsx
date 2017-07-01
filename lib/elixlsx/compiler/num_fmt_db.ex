@@ -24,7 +24,7 @@ defmodule Elixlsx.Compiler.NumFmtDB do
   should save a couple of bytes in the resulting XLSX file.
   """
   def register_builtin(db, value, id) do
-    update_in db.numfmts, &(Dict.put &1, value, id)
+    update_in db.numfmts, &(Map.put &1, value, id)
   end
 
   def get_id(db, value), do: DBUtil.get_id(db.numfmts, value)

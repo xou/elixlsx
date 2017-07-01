@@ -261,7 +261,7 @@ defmodule Elixlsx.XMLTemplates do
   end
 
   defp get_row_height_attr(row_heights, rowidx) do
-    row_height = Dict.get(row_heights, rowidx)
+    row_height = Map.get(row_heights, rowidx)
     if (row_height) do
       "customHeight=\"1\" ht=\"#{row_height}\""
     else
@@ -275,7 +275,7 @@ defmodule Elixlsx.XMLTemplates do
 
   defp make_col_widths(sheet) do
     if Kernel.map_size(sheet.col_widths) != 0 do
-      cols = Dict.to_list(sheet.col_widths)
+      cols = Map.to_list(sheet.col_widths)
       |> Enum.sort
       |> Enum.map_join(&make_col_width/1)
 

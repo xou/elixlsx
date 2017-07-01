@@ -11,9 +11,9 @@ defmodule Elixlsx.Compiler.BorderStyleDB do
   }
 
   def register_border(borderstyledb, border) do
-    case Dict.fetch(borderstyledb.borders, border) do
+    case Map.fetch(borderstyledb.borders, border) do
       :error -> %BorderStyleDB{
-          borders: Dict.put(borderstyledb.borders, border, borderstyledb.element_count + 1),
+          borders: Map.put(borderstyledb.borders, border, borderstyledb.element_count + 1),
           element_count: borderstyledb.element_count + 1
         }
       {:ok, _} -> borderstyledb
@@ -21,7 +21,7 @@ defmodule Elixlsx.Compiler.BorderStyleDB do
   end
 
   def get_id(borderstyledb, border) do
-    case Dict.fetch(borderstyledb.borders, border) do
+    case Map.fetch(borderstyledb.borders, border) do
       :error ->
         raise %ArgumentError{message: "Invalid key provided for BorderStyleDB.get_id: " <> inspect(border)}
       {:ok, id} ->
