@@ -42,6 +42,6 @@ defmodule Elixlsx.Compiler.DBUtil do
     dict
     |> Enum.map(fn ({k, v}) -> {v, k} end)
     |> Enum.sort
-    |> Map.values
+    |> Enum.map(fn ({_, k}) -> k end)
   end
 end

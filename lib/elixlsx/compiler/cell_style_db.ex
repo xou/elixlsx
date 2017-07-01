@@ -5,6 +5,7 @@ defmodule Elixlsx.Compiler.CellStyleDB do
   alias Elixlsx.Compiler.NumFmtDB
   alias Elixlsx.Compiler.BorderStyleDB
   alias Elixlsx.Compiler.WorkbookCompInfo
+  alias Elixlsx.Compiler.DBUtil
 
   defstruct cellstyles: %{}, element_count: 0
 
@@ -35,12 +36,7 @@ defmodule Elixlsx.Compiler.CellStyleDB do
     end
   end
 
-  def id_sorted_styles(cellstyledb) do
-    cellstyledb.cellstyles
-    |> Enum.map(fn ({k, v}) -> {v, k} end)
-    |> Enum.sort
-    |> Map.values
-  end
+  def id_sorted_styles(cellstyledb), do: DBUtil.id_sorted_values(cellstyledb.cellstyles)
 
   @doc ~S"""
   Recursively register all fonts, numberformat,
