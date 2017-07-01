@@ -1,6 +1,7 @@
 defmodule Elixlsx.Compiler.FontDB do
   alias __MODULE__
   alias Elixlsx.Style.Font
+  alias Elixlsx.Compiler.DBUtil
 
   defstruct fonts: %{}, element_count: 0
 
@@ -27,10 +28,6 @@ defmodule Elixlsx.Compiler.FontDB do
     end
   end
 
-  def id_sorted_fonts(fontdb) do
-    fontdb.fonts
-    |> Enum.map(fn ({k, v}) -> {v, k} end)
-    |> Enum.sort
-    |> Map.values
-  end
+  def id_sorted_fonts(fontdb), do: DBUtil.id_sorted_values(fontdb.fonts)
+
 end

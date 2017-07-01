@@ -1,6 +1,7 @@
 defmodule Elixlsx.Compiler.FillDB do
   alias __MODULE__
   alias Elixlsx.Style.Fill
+  alias Elixlsx.Compiler.DBUtil
 
   defstruct fills: %{}, element_count: 0
 
@@ -27,10 +28,5 @@ defmodule Elixlsx.Compiler.FillDB do
     end
   end
 
-  def id_sorted_fills(filldb) do
-    filldb.fills
-    |> Enum.map(fn ({k, v}) -> {v, k} end)
-    |> Enum.sort
-    |> Map.values
-  end
+  def id_sorted_fills(filldb), do: DBUtil.id_sorted_values(filldb.fills)
 end
