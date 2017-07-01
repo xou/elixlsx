@@ -1,6 +1,7 @@
 # Elixlsx
 
 [![Hex Version](http://img.shields.io/hexpm/v/elixlsx.svg?style=flat)](https://hex.pm/packages/elixlsx)
+[![Build Status](https://travis-ci.org/xou/elixlsx.svg?branch=master)](https://travis-ci.org/xou/elixlsx)
 
 A writer for XLSX files.
 
