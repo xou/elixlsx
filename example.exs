@@ -88,4 +88,4 @@ sheet4 = %Sheet{name: "Merged Cells",
                 merge_cells: [{"A1", "A3"}, {"C1", "E1"}, {"C3", "E5"}]}
 
 Workbook.append_sheet(workbook, sheet4)
-|> Elixlsx.write_to("empty.xlsx")
+|> Elixlsx.write_to("example.xlsx")
