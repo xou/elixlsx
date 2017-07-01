@@ -25,6 +25,8 @@ sheet1 = Sheet.with_name("First")
          |> Sheet.set_col_width("A", 18.0)
 # Cell borders
          |> Sheet.set_cell("A5", "Double border", border: [bottom: [style: :double, color: "#cc3311"]])
+# Formatting with empty content
+         |> Sheet.set_cell("A5", :empty, bg_color: "#ffff00", border: [bottom: [style: :double, color: "#cc3311"]])
 # Formula
          |> Sheet.set_cell("E1", 1.2, num_format: "0.00")
          |> Sheet.set_cell("E2", 2, num_format: "0.00")

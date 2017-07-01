@@ -171,6 +171,8 @@ defmodule Elixlsx.XMLTemplates do
         {"n", to_string(x)}
       x when is_binary(x) ->
         {"s", to_string(StringDB.get_id wci.stringdb, x)}
+      :empty ->
+        {:empty, :empty}
       true ->
         :error
     end
@@ -213,6 +215,12 @@ defmodule Elixlsx.XMLTemplates do
               s="#{styleID}">
               <f>#{content_value}</f>
               #{value}
+              </c>
+              """
+            :empty ->
+              """
+              <c r="#{U.to_excel_coords(rowidx, colidx)}"
+              s="#{styleID}">
               </c>
               """
             type ->
