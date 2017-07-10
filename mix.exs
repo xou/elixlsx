@@ -18,6 +18,7 @@ defmodule Elixlsx.Mixfile do
 
   defp deps do
     [
+      {:decimal, "~> 1.4"},
       {:excheck, "~> 0.5", only: :test},
       {:triq, github: "triqng/triq", only: :test},
       {:credo, "~> 0.5", only: [:dev, :test]},
