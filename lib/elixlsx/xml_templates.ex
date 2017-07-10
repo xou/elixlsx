@@ -172,7 +172,7 @@ defmodule Elixlsx.XMLTemplates do
       x when is_binary(x) ->
         {"s", to_string(StringDB.get_id wci.stringdb, x)}
       %Decimal{} = x ->
-        {"n", Decimal.to_string(x)}
+        {"n", Decimal.to_string(x, :normal)}
       :empty ->
         {:empty, :empty}
       true ->
