@@ -14,12 +14,18 @@ defmodule Elixlsx.Util do
 
   """
   @spec encode_col(non_neg_integer) :: String.t
-  def encode_col(0) do "" end
-  def encode_col num do
-    znum = num - 1
-    encode_col(div(znum, String.length(@col_alphabet))) <> String.at(@col_alphabet, rem(znum, String.length(@col_alphabet)))
-  end
+  def encode_col(0), do: ""
+  def encode_col(num) when num <= 26, do: <<num + 64>>
+  def encode_col(num) do
+    mod = div(num, 26)
+    rem = rem(num, 26)
 
+    if rem == 0 do
+      encode_col(mod - 1) <> encode_col(26)
+    else
+      encode_col(mod) <> encode_col(rem)
+    end
+  end
 
   @doc ~S"""
   returns the column index associated with a given letter.
