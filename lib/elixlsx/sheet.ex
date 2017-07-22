@@ -16,13 +16,14 @@ defmodule Elixlsx.Sheet do
   The property list describes formatting options for that
   cell. See Font.from_props/1 for a list of options.
   """
-  defstruct name: "", rows: [], col_widths: %{}, row_heights: %{}, merge_cells: []
+  defstruct name: "", rows: [], col_widths: %{}, row_heights: %{}, merge_cells: [], pane_freeze: nil
   @type t :: %Sheet {
     name: String.t,
     rows: list(list(any())),
     col_widths: %{pos_integer => number},
     row_heights: %{pos_integer => number},
-    merge_cells: []
+    merge_cells: [],
+    pane_freeze: {number, number}
   }
 
   @doc ~S"""
@@ -136,5 +137,21 @@ defmodule Elixlsx.Sheet do
   def set_row_height(sheet, row_idx, height) do
     update_in sheet.row_heights,
               &(Map.put &1, row_idx, height)
+  end
+
+  @spec set_pane_freeze(Sheet.t, number, number) :: Sheet.t
+  @doc ~S"""
+  Set the pane freeze at the given row and column. Row and column are indexed starting from 1
+  """
+  def set_pane_freeze(sheet, row_idx, col_idx) do
+     %{sheet | pane_freeze: {row_idx, col_idx}}
+  end
+
+  @spec remove_pane_freeze(Sheet.t) :: Sheet.t
+  @doc ~S"""
+  Removes any pane freezing that has been set
+  """
+  def remove_pane_freeze(sheet) do
+    %{sheet | pane_freeze: nil}
   end
 end

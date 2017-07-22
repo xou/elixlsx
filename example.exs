@@ -87,5 +87,11 @@ sheet4 = %Sheet{name: "Merged Cells",
                 rows: List.duplicate(["A", "B", "C", "D", "E"], 5),
                 merge_cells: [{"A1", "A3"}, {"C1", "E1"}, {"C3", "E5"}]}
 
+# You can set pane freeze.
+sheet4
+|> Sheet.set_pane_freeze(1, 1) # first row and first column frozen
+|> Sheet.set_pane_freeze(2, 1) # first and second row and first column frozen
+|> Sheet.remove_pane_freeze # unfreeze pane
+
 Workbook.append_sheet(workbook, sheet4)
 |> Elixlsx.write_to("example.xlsx")

@@ -299,7 +299,7 @@ defmodule Elixlsx.XMLTemplates do
   <dimension ref="A1"/>
   <sheetViews>
     <sheetView workbookViewId="0">
-      <selection activeCell="A1" sqref="A1"/>
+      """ <> make_sheetview(sheet) <> """
     </sheetView>
   </sheetViews>
   <sheetFormatPr defaultRowHeight="12.8"/>
@@ -317,6 +317,17 @@ defmodule Elixlsx.XMLTemplates do
   <pageMargins left="0.75" right="0.75" top="1" bottom="1.0" header="0.5" footer="0.5"/>
 </worksheet>
     """
+  end
+
+  defp make_sheetview(sheet) do
+    {selection_pane_attr, panel_xml} = case sheet.pane_freeze do
+      {row_idx, col_idx} ->
+        top_left_cell = U.to_excel_coords(row_idx + 1, col_idx + 1)
+        {"pane=\"bottomRight\"", "<pane xSplit=\"#{col_idx}\" ySplit=\"#{row_idx}\" topLeftCell=\"#{top_left_cell}\" activePane=\"bottomRight\" state=\"frozen\" />"}
+      nil ->
+        {"", ""}
+    end
+    panel_xml <> "<selection " <> selection_pane_attr <> " activeCell=\"A1\" sqref=\"A1\" />"
   end
 
   ###
