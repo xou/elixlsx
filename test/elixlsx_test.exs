@@ -1,6 +1,7 @@
 defmodule ElixlsxTest do
   require Record
   Record.defrecord :xmlAttribute, Record.extract(:xmlAttribute, from_lib: "xmerl/include/xmerl.hrl")
+  Record.defrecord :xmlElement, Record.extract(:xmlElement, from_lib: "xmerl/include/xmerl.hrl")
   Record.defrecord :xmlText, Record.extract(:xmlText, from_lib: "xmerl/include/xmerl.hrl")
 
   use ExUnit.Case
@@ -22,6 +23,19 @@ defmodule ElixlsxTest do
     :xmerl_xpath.string(to_char_list(path), el)
   end
 
+  defp xml_inner_strings(xml, path) do
+    {xmerl, []} = :xmerl_scan.string String.to_char_list(xml)
+
+    Enum.map(
+      xpath(xmerl, path),
+      fn(element) ->
+        Enum.reduce(xmlElement(element, :content), "", fn(text, acc) ->
+          acc <> to_text(text)
+        end)
+      end
+    )
+  end
+
   defp to_text xml_text do
     xmlText(value: value) = xml_text
     to_string value
@@ -35,36 +49,16 @@ defmodule ElixlsxTest do
 
     xml = XMLTemplates.make_xl_shared_strings(StringDB.sorted_id_string_tuples sdb)
 
-    {xmerl, []} = :xmerl_scan.string String.to_char_list(xml)
-
-    strings = :xmerl_xpath.string('/sst/si/t/text()', xmerl)
-
-    assert length(strings) == 2
-    [sis1, sis2] = strings
-
-    assert to_text(sis1) == "Hello"
-    assert to_text(sis2) == "World"
+    assert xml_inner_strings(xml, '/sst/si/t') == ["Hello", "World"]
   end
 
   test "xml escaping StringDB functionality" do
     sdb = (%StringDB{}
-            # An unfortunate side effect of :xmerl_scan is that although some values
-            # will be xml escaped, for example "&" replaced with "&amp;", the parser
-            # still splits on the "&" of the escaped value, thus creating two values
-            # instead of one. This will not effect the actual output of the library
-            # though.
             |> StringDB.register_string("Hello World & Goodbye Cruel World"))
 
     xml = XMLTemplates.make_xl_shared_strings(StringDB.sorted_id_string_tuples sdb)
 
-    {xmerl, []} = :xmerl_scan.string String.to_char_list(xml)
-
-    strings = :xmerl_xpath.string('/sst/si/t/text()', xmerl)
-
-    assert length(strings) == 2
-    [sis1, sis2] = strings
-
-    assert to_text(sis1) <> to_text(sis2) == "Hello World & Goodbye Cruel World"
+    assert xml_inner_strings(xml, '/sst/si/t') == ["Hello World & Goodbye Cruel World"]
   end
 
   test "font color" do
