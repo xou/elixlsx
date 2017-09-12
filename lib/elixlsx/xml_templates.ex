@@ -511,12 +511,12 @@ defmodule Elixlsx.XMLTemplates do
     #{make_borders(borders_list)}
   </borders>
   <cellStyleXfs count="1">
-    <xf borderId="0" fillId="0" fontId="0" applyAlignment="1">
+    <xf borderId="0" numFmtId="0" fillId="0" fontId="0" applyAlignment="1">
       <alignment wrapText="1"/>
     </xf>
   </cellStyleXfs>
   <cellXfs count="#{1 + length cell_xfs}">
-    <xf borderId="0" fillId="0" fontId="0" xfId="0"/>
+    <xf borderId="0" numFmtId="0" fillId="0" fontId="0" xfId="0"/>
     #{make_cellxfs cell_xfs, wci}
   </cellXfs>
   </styleSheet>
