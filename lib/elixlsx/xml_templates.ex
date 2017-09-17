@@ -298,7 +298,9 @@ defmodule Elixlsx.XMLTemplates do
   </sheetPr>
   <dimension ref="A1"/>
   <sheetViews>
-    <sheetView workbookViewId="0">
+    <sheetView workbookViewId="0"
+    """ <> make_sheet_show_grid(sheet) <> """
+    >
       """ <> make_sheetview(sheet) <> """
     </sheetView>
   </sheetViews>
@@ -319,6 +321,14 @@ defmodule Elixlsx.XMLTemplates do
     """
   end
 
+  defp make_sheet_show_grid(sheet) do
+    show_grid_lines_xml = case sheet.show_grid_lines do
+      false -> "showGridLines=\"0\" "
+      _ -> ""
+    end
+    show_grid_lines_xml
+  end
+
   defp make_sheetview(sheet) do
     {selection_pane_attr, panel_xml} = case sheet.pane_freeze do
       {row_idx, col_idx} ->
@@ -327,6 +337,7 @@ defmodule Elixlsx.XMLTemplates do
       nil ->
         {"", ""}
     end
+
     panel_xml <> "<selection " <> selection_pane_attr <> " activeCell=\"A1\" sqref=\"A1\" />"
   end
 
