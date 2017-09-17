@@ -93,5 +93,9 @@ sheet4
 |> Sheet.set_pane_freeze(2, 1) # first and second row and first column frozen
 |> Sheet.remove_pane_freeze # unfreeze pane
 
+sheet5 = %Sheet{name: "No gridlines shown", show_grid_lines: false}
+         |> Sheet.set_at(0, 0, "Just this cell")
+
 Workbook.append_sheet(workbook, sheet4)
+|> Workbook.append_sheet(sheet5)
 |> Elixlsx.write_to("example.xlsx")
