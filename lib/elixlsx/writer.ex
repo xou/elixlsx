@@ -6,7 +6,7 @@ defmodule Elixlsx.Writer do
   alias Elixlsx.Compiler.SheetCompInfo
   alias Elixlsx.Workbook
 
-  @type zip_tuple :: {char_list, String.t}
+  @type zip_tuple :: {charlist, String.t}
 
   @moduledoc ~S"""
   Contains functions to generate the individual files
@@ -109,7 +109,7 @@ defmodule Elixlsx.Writer do
 
   @spec sheet_full_path(SheetCompInfo.t) :: list(char)
   defp sheet_full_path sci do
-    String.to_char_list "xl/worksheets/#{sci.filename}"
+    String.to_charlist "xl/worksheets/#{sci.filename}"
   end
 
   @spec get_xl_worksheets_dir(Workbook.t, WorkbookCompInfo.t)
