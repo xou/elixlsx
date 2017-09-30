@@ -23,7 +23,7 @@ defmodule Elixlsx.Sheet do
     col_widths: %{pos_integer => number},
     row_heights: %{pos_integer => number},
     merge_cells: [],
-    pane_freeze: {number, number}
+    pane_freeze: {number, number} | nil
   }
 
   @doc ~S"""
