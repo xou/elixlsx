@@ -21,7 +21,8 @@ defmodule Elixlsx.Mixfile do
       {:excheck, "~> 0.5", only: :test},
       {:triq, github: "triqng/triq", only: :test},
       {:credo, "~> 0.5", only: [:dev, :test]},
-      {:ex_doc, "~> 0.14", only: [:dev]}
+      {:ex_doc, "~> 0.14", only: [:dev]},
+      {:dialyxir, "~> 0.5", only: [:dev], runtime: false}
     ]
   end
 
