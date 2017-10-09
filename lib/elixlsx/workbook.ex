@@ -12,7 +12,7 @@ defmodule Elixlsx.Workbook do
   defstruct sheets: [], datetime: nil
   @type t :: %Workbook{
     sheets: nonempty_list(Sheet.t),
-    datetime: Elixlsx.Util.calendar
+    datetime: String.t | integer | nil
   }
 
   @doc "Append a sheet at the end."

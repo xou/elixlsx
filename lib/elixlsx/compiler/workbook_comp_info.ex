@@ -17,7 +17,7 @@ defmodule Elixlsx.Compiler.WorkbookCompInfo do
   next_free_xl_rid: nil
 
   @type t :: %Compiler.WorkbookCompInfo{
-    sheet_info: Compiler.SheetCompInfo.t,
+    sheet_info: [Compiler.SheetCompInfo.t],
     stringdb: Compiler.StringDB.t,
     fontdb: Compiler.FontDB.t,
     filldb: Compiler.FillDB.t,

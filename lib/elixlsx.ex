@@ -46,7 +46,7 @@ defmodule Elixlsx do
   @spec write_to(Elixlsx.Workbook.t, String.t) :: {:ok, String.t} | {:error, any()}
   def write_to(workbook, filename) do
     wci = Elixlsx.Compiler.make_workbook_comp_info workbook
-    :zip.create(filename, Elixlsx.Writer.create_files(workbook, wci))
+    :zip.create(to_charlist(filename), Elixlsx.Writer.create_files(workbook, wci))
   end
 
 
@@ -57,7 +57,7 @@ defmodule Elixlsx do
   @spec write_to_memory(Elixlsx.Workbook.t, String.t) :: {:ok, {String.t, binary}} | {:error, any()}
   def write_to_memory(workbook, filename) do
     wci = Elixlsx.Compiler.make_workbook_comp_info workbook
-    :zip.create(filename, Elixlsx.Writer.create_files(workbook, wci), [:memory])
+    :zip.create(to_charlist(filename), Elixlsx.Writer.create_files(workbook, wci), [:memory])
   end
 end
 
