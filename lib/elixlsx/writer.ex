@@ -6,7 +6,7 @@ defmodule Elixlsx.Writer do
   alias Elixlsx.Compiler.SheetCompInfo
   alias Elixlsx.Workbook
 
-  @type zip_tuple :: {char_list, String.t}
+  @type zip_tuple :: {charlist, String.t}
 
   @moduledoc ~S"""
   Contains functions to generate the individual files
@@ -70,7 +70,7 @@ defmodule Elixlsx.Writer do
   end
 
 
-  @spec get_xl_rels_dir(any, SheetCompInfo.t, non_neg_integer) :: list(zip_tuple)
+  @spec get_xl_rels_dir(any, [SheetCompInfo.t], non_neg_integer) :: list(zip_tuple)
   def get_xl_rels_dir(_, sheetCompInfos, next_rId) do
     [{'xl/_rels/workbook.xml.rels',
       ~S"""
@@ -94,7 +94,7 @@ defmodule Elixlsx.Writer do
      XMLTemplates.make_xl_styles wci}
   end
 
-  @spec get_xl_workbook_xml(Workbook.t, SheetCompInfo.t) :: zip_tuple
+  @spec get_xl_workbook_xml(Workbook.t, [SheetCompInfo.t]) :: zip_tuple
   def get_xl_workbook_xml(data, sheetCompInfos) do
     {'xl/workbook.xml',
      XMLTemplates.make_workbook_xml(data, sheetCompInfos)}
@@ -109,7 +109,7 @@ defmodule Elixlsx.Writer do
 
   @spec sheet_full_path(SheetCompInfo.t) :: list(char)
   defp sheet_full_path sci do
-    String.to_char_list "xl/worksheets/#{sci.filename}"
+    String.to_charlist "xl/worksheets/#{sci.filename}"
   end
 
   @spec get_xl_worksheets_dir(Workbook.t, WorkbookCompInfo.t)
