@@ -330,11 +330,26 @@ defmodule Elixlsx.XMLTemplates do
   end
 
   defp make_sheetview(sheet) do
+    # according to spec:
+    # * when only horizontal split is applied we need to use bottomLeft
+    # * when only vertical split is applied we need to use topRight
+    # * and when both splits is applied, we can use bottomRight
+    pane = case sheet.pane_freeze do
+      {row_idx, 0} ->
+        "bottomLeft"
+      {0, _col_idx} ->
+        "topRight"
+      {col_idx, row_idx} when col_idx > 0 and row_idx > 0 ->
+        "bottomRight"
+      _any ->
+        nil
+    end
+
     {selection_pane_attr, panel_xml} = case sheet.pane_freeze do
-      {row_idx, col_idx} ->
+      {row_idx, col_idx} when col_idx > 0 or row_idx > 0 ->
         top_left_cell = U.to_excel_coords(row_idx + 1, col_idx + 1)
-        {"pane=\"bottomRight\"", "<pane xSplit=\"#{col_idx}\" ySplit=\"#{row_idx}\" topLeftCell=\"#{top_left_cell}\" activePane=\"bottomRight\" state=\"frozen\" />"}
-      nil ->
+        {"pane=\"#{pane}\"", "<pane xSplit=\"#{col_idx}\" ySplit=\"#{row_idx}\" topLeftCell=\"#{top_left_cell}\" activePane=\"#{pane}\" state=\"frozen\" />"}
+      _any ->
         {"", ""}
     end
 

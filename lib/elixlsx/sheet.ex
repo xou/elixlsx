@@ -142,7 +142,8 @@ defmodule Elixlsx.Sheet do
 
   @spec set_pane_freeze(Sheet.t, number, number) :: Sheet.t
   @doc ~S"""
-  Set the pane freeze at the given row and column. Row and column are indexed starting from 1
+  Set the pane freeze at the given row and column. Row and column are indexed starting from 1.
+  Special value 0 means no freezing, e.g. {1, 0} will freeze first row and no columns.
   """
   def set_pane_freeze(sheet, row_idx, col_idx) do
      %{sheet | pane_freeze: {row_idx, col_idx}}
