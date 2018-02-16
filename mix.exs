@@ -3,8 +3,8 @@ defmodule Elixlsx.Mixfile do
 
   def project do
     [app: :elixlsx,
-     version: "0.3.0",
-     elixir: "~> 1.1",
+     version: "0.4.0",
+     elixir: "~> 1.5",
      package: package(),
      description: "a writer for XLSX spreadsheet files",
      build_embedded: Mix.env == :prod,

@@ -16,7 +16,26 @@ Features:
 
 ## Installation
 
+
+### Elixir 1.5 and above
+
 Via hex, in mix.exs:
+
+```Elixir
+defp deps do
+  [{:elixlsx, "~> 0.4.0"}]
+end
+```
+
+Via github:
+
+```Elixir
+defp deps do
+  [{:elixlsx, github: "xou/elixlsx"}]
+end
+```
+
+### Elixir  ~> 1.4
 
 ```Elixir
 defp deps do
@@ -28,7 +47,7 @@ Via github:
 
 ```Elixir
 defp deps do
-  [{:elixlsx, git: "https://github.com/xou/elixlsx.git"}]
+  [{:elixlsx, github: "xou/elixlsx", tag: "v0.3.0"}]
 end
 ```
 

@@ -53,14 +53,14 @@ defmodule Elixlsx.Util do
   @spec decode_col_(String.t) :: non_neg_integer
   defp decode_col_("") do 0 end
   defp decode_col_(s) do
-    alphabet_list = String.to_char_list @col_alphabet
+    alphabet_list = String.to_charlist @col_alphabet
 
     if !String.match? s, ~r/^[A-Z]*$/ do
       raise %ArgumentError{message: "Invalid column string: " <> inspect s}
     end
 
     # translate list of strings to the base-26 value they represent
-    Enum.map(String.to_char_list(s), (fn x -> :string.chr(alphabet_list, x) end)) |>
+    Enum.map(String.to_charlist(s), (fn x -> :string.chr(alphabet_list, x) end)) |>
     # multiply and aggregate them
     List.foldl(0, (fn (x, acc) -> x + 26 * acc end))
   end
@@ -248,7 +248,7 @@ defmodule Elixlsx.Util do
   @doc ~S"""
   Returns the application version suitable for the <ApplicationVersion> tag.
   """
-  def app_version_string do 
+  def app_version_string do
     String.replace(@version, ~r/(\d+)\.(\d+)\.(\d+)/, "\\1.\\2\\3")
   end
 end
