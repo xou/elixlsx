@@ -103,9 +103,9 @@ defmodule Elixlsx.XMLTemplates do
     if String.length(sheet_info.name) > 31 do
       raise %ArgumentError{message: "The sheet name '#{sheet_info.name}' is too long. Maximum 31 chars allowed for name."}
     end
-    
+
     """
-<sheet name="#{sheet_info.name}" sheetId="#{sheet_comp_info.sheetId}" state="visible" r:id="#{sheet_comp_info.rId}"/>
+    <sheet name="#{sheet_info.name}" sheetId="#{sheet_comp_info.sheetId}" state="visible" r:id="#{sheet_comp_info.rId}"/>
     """
   end
 
@@ -122,19 +122,20 @@ defmodule Elixlsx.XMLTemplates do
 
   def make_contenttypes_xml(wci) do
     ~S"""
-<?xml version="1.0" encoding="UTF-8"?>
-<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">
-  <Override PartName="/_rels/.rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>
-  <Override PartName="/docProps/app.xml" ContentType="application/vnd.openxmlformats-officedocument.extended-properties+xml"/>
-  <Override PartName="/docProps/core.xml" ContentType="application/vnd.openxmlformats-package.core-properties+xml"/>
-  <Override PartName="/xl/_rels/workbook.xml.rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>
-  <Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>
-  <Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/>
-    """ <> contenttypes_sheet_entries(wci.sheet_info) <>
+    <?xml version="1.0" encoding="UTF-8"?>
+    <Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">
+    <Override PartName="/_rels/.rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>
+    <Override PartName="/docProps/app.xml" ContentType="application/vnd.openxmlformats-officedocument.extended-properties+xml"/>
+    <Override PartName="/docProps/core.xml" ContentType="application/vnd.openxmlformats-package.core-properties+xml"/>
+    <Override PartName="/xl/_rels/workbook.xml.rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>
+    <Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>
+    <Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/>
+    """
+    <> contenttypes_sheet_entries(wci.sheet_info) <>
     ~S"""
-  <Override PartName="/xl/sharedStrings.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sharedStrings+xml"/>
-</Types>
-"""
+    <Override PartName="/xl/sharedStrings.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sharedStrings+xml"/>
+    </Types>
+    """
   end
 
   ###
@@ -291,33 +292,39 @@ defmodule Elixlsx.XMLTemplates do
   """
   def make_sheet(sheet, wci) do
     ~S"""
-<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">
-  <sheetPr filterMode="false">
-    <pageSetUpPr fitToPage="false"/>
-  </sheetPr>
-  <dimension ref="A1"/>
-  <sheetViews>
+    <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+    <worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">
+    <sheetPr filterMode="false">
+      <pageSetUpPr fitToPage="false"/>
+    </sheetPr>
+    <dimension ref="A1"/>
+    <sheetViews>
     <sheetView workbookViewId="0"
-    """ <> make_sheet_show_grid(sheet) <> """
+    """
+    <> make_sheet_show_grid(sheet) <>
+    """
     >
-      """ <> make_sheetview(sheet) <> """
+    """
+    <> make_sheetview(sheet) <>
+    """
     </sheetView>
-  </sheetViews>
-  <sheetFormatPr defaultRowHeight="12.8"/>
-  """ <> make_col_widths(sheet) <>
-  """
-  <sheetData>
-  """
-  <>
-  xl_sheet_rows(sheet.rows, sheet.row_heights, wci)
-  <>
-  ~S"""
-  </sheetData>
-  """ <> xl_merge_cells(sheet.merge_cells) <>
-  """
-  <pageMargins left="0.75" right="0.75" top="1" bottom="1.0" header="0.5" footer="0.5"/>
-</worksheet>
+    </sheetViews>
+    <sheetFormatPr defaultRowHeight="12.8"/>
+    """
+    <> make_col_widths(sheet) <>
+    """
+    <sheetData>
+    """
+    <>
+    xl_sheet_rows(sheet.rows, sheet.row_heights, wci)
+    <>
+    ~S"""
+    </sheetData>
+    """
+    <> xl_merge_cells(sheet.merge_cells) <>
+    """
+    <pageMargins left="0.75" right="0.75" top="1" bottom="1.0" header="0.5" footer="0.5"/>
+    </worksheet>
     """
   end
 
@@ -364,8 +371,8 @@ defmodule Elixlsx.XMLTemplates do
   def make_xl_shared_strings(stringlist) do
     len = length stringlist
   """
-<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<sst xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" count="#{len}" uniqueCount="#{len}">
+  <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+  <sst xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" count="#{len}" uniqueCount="#{len}">
   """
   <> Enum.map_join(stringlist, fn ({_, value}) ->
     # the only two characters that *must* be replaced for safe XML encoding are & and <:
@@ -520,33 +527,33 @@ defmodule Elixlsx.XMLTemplates do
     borders_list = BorderStyleDB.id_sorted_borders wci.borderstyledb
 
     """
-<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">
-  #{make_numfmts(numfmts_list)}
-  <fonts count="#{1 + length font_list}">
-    <font />
-    #{make_font_list(font_list)}
-  </fonts>
-  <fills count="#{2 + length fill_list}">
-    <fill><patternFill patternType="none"/></fill>
-    <fill><patternFill patternType="gray125"/></fill>
-    #{make_fill_list(fill_list)}
-  </fills>
-  <borders count="#{1 + length borders_list}">
-    <border />
-    #{make_borders(borders_list)}
-  </borders>
-  <cellStyleXfs count="1">
-    <xf borderId="0" numFmtId="0" fillId="0" fontId="0" applyAlignment="1">
-      <alignment wrapText="1"/>
-    </xf>
-  </cellStyleXfs>
-  <cellXfs count="#{1 + length cell_xfs}">
-    <xf borderId="0" numFmtId="0" fillId="0" fontId="0" xfId="0"/>
-    #{make_cellxfs cell_xfs, wci}
-  </cellXfs>
-  </styleSheet>
-  """
+    <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+    <styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">
+      #{make_numfmts(numfmts_list)}
+      <fonts count="#{1 + length font_list}">
+        <font />
+        #{make_font_list(font_list)}
+      </fonts>
+      <fills count="#{2 + length fill_list}">
+        <fill><patternFill patternType="none"/></fill>
+        <fill><patternFill patternType="gray125"/></fill>
+        #{make_fill_list(fill_list)}
+      </fills>
+      <borders count="#{1 + length borders_list}">
+        <border />
+        #{make_borders(borders_list)}
+      </borders>
+      <cellStyleXfs count="1">
+        <xf borderId="0" numFmtId="0" fillId="0" fontId="0" applyAlignment="1">
+          <alignment wrapText="1"/>
+        </xf>
+      </cellStyleXfs>
+      <cellXfs count="#{1 + length cell_xfs}">
+        <xf borderId="0" numFmtId="0" fillId="0" fontId="0" xfId="0"/>
+        #{make_cellxfs cell_xfs, wci}
+      </cellXfs>
+    </styleSheet>
+    """
   end
 
   ###
@@ -578,19 +585,20 @@ defmodule Elixlsx.XMLTemplates do
   """
   def make_workbook_xml(data, sci) do
     ~S"""
-<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-  <workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">
-  <fileVersion appName="Calc"/>
-  <bookViews>
-  <workbookView activeTab="0"/>
-  </bookViews>
-  <sheets>
-  """
-  <> workbook_sheet_entries(data.sheets, sci)
-  <> ~S"""
-  </sheets>
-  <calcPr fullCalcOnLoad="1" iterateCount="100" refMode="A1" iterate="false" iterateDelta="0.001"/>
-  </workbook>
-  """
+    <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+    <workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">
+    <fileVersion appName="Calc"/>
+    <bookViews>
+      <workbookView activeTab="0"/>
+    </bookViews>
+    <sheets>
+    """
+    <> workbook_sheet_entries(data.sheets, sci)
+    <>
+    ~S"""
+    </sheets>
+    <calcPr fullCalcOnLoad="1" iterateCount="100" refMode="A1" iterate="false" iterateDelta="0.001"/>
+    </workbook>
+    """
   end
 end
