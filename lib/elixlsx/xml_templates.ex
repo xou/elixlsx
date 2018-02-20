@@ -105,7 +105,7 @@ defmodule Elixlsx.XMLTemplates do
     end
     
     """
-<sheet name="#{sheet_info.name}" sheetId="#{sheet_comp_info.sheetId}" state="visible" r:id="#{sheet_comp_info.rId}"/>
+<sheet name="#{xml_escape(sheet_info.name)}" sheetId="#{sheet_comp_info.sheetId}" state="visible" r:id="#{sheet_comp_info.rId}"/>
     """
   end
 
