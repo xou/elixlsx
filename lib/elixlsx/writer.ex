@@ -74,17 +74,17 @@ defmodule Elixlsx.Writer do
   def get_xl_rels_dir(_, sheetCompInfos, next_rId) do
     [{'xl/_rels/workbook.xml.rels',
       ~S"""
-<?xml version="1.0" encoding="UTF-8"?>
-<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
-  <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/>
-  """
-  <>
-  XMLTemplates.make_xl_rel_sheets(sheetCompInfos)
-  <>
-  """
-  <Relationship Id="rId#{next_rId}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/sharedStrings" Target="sharedStrings.xml"/>
-</Relationships>
-"""
+      <?xml version="1.0" encoding="UTF-8"?>
+      <Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
+        <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/>
+      """
+      <>
+      XMLTemplates.make_xl_rel_sheets(sheetCompInfos)
+      <>
+      """
+        <Relationship Id="rId#{next_rId}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/sharedStrings" Target="sharedStrings.xml"/>
+      </Relationships>
+      """
     }]
   end
 
