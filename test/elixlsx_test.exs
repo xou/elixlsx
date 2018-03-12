@@ -20,11 +20,11 @@ defmodule ElixlsxTest do
   alias Elixlsx.Sheet
 
   def xpath(el, path) do
-    :xmerl_xpath.string(to_char_list(path), el)
+    :xmerl_xpath.string(to_charlist(path), el)
   end
 
   defp xml_inner_strings(xml, path) do
-    {xmerl, []} = :xmerl_scan.string String.to_char_list(xml)
+    {xmerl, []} = :xmerl_scan.string String.to_charlist(xml)
 
     Enum.map(
       xpath(xmerl, path),
@@ -65,7 +65,7 @@ defmodule ElixlsxTest do
     xml = Font.from_props(color: "#012345") |>
     Font.get_stylexml_entry
 
-    {xmerl, []} = :xmerl_scan.string String.to_char_list(xml)
+    {xmerl, []} = :xmerl_scan.string String.to_charlist(xml)
 
     [color] = :xmerl_xpath.string('/font/color/@rgb', xmerl)
 
@@ -76,7 +76,7 @@ defmodule ElixlsxTest do
     xml = Font.from_props(font: "Arial") |>
     Font.get_stylexml_entry
 
-    {xmerl, []} = :xmerl_scan.string String.to_char_list(xml)
+    {xmerl, []} = :xmerl_scan.string String.to_charlist(xml)
 
     [name] = :xmerl_xpath.string('/font/name/@val', xmerl)
 
