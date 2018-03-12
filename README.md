@@ -17,7 +17,7 @@ Features:
 ## Installation
 
 
-### Elixir 1.5 and above
+### Elixir 1.3 and above
 
 Via hex, in mix.exs:
 
@@ -39,7 +39,7 @@ defp deps do
 end
 ```
 
-### Elixir pre 1.5
+### Elixir pre 1.3
 
 ```Elixir
 defp deps do
