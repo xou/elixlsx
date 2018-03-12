@@ -39,7 +39,7 @@ defp deps do
 end
 ```
 
-### Elixir  ~> 1.4
+### Elixir pre 1.5
 
 ```Elixir
 defp deps do
@@ -51,7 +51,7 @@ Via github:
 
 ```Elixir
 defp deps do
-  [{:elixlsx, github: "xou/elixlsx", tag: "v0.3.0"}]
+  [{:elixlsx, github: "xou/elixlsx", tag: "v0.3.1"}]
 end
 ```
 
