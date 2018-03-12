@@ -43,7 +43,7 @@ end
 
 ```Elixir
 defp deps do
-  [{:elixlsx, "~> 0.3.0"}]
+  [{:elixlsx, "~> 0.3.1"}]
 end
 ```
 
