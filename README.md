@@ -21,15 +21,11 @@ Features:
 
 Via hex, in mix.exs:
 
-<!--
-If library is bumped to version 0.4.0 else this can be removed
-
 ```Elixir
 defp deps do
   [{:elixlsx, "~> 0.4.0"}]
 end
 ```
--->
 
 Via github:
 
