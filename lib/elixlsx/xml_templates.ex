@@ -342,7 +342,7 @@ defmodule Elixlsx.XMLTemplates do
     # * when only vertical split is applied we need to use topRight
     # * and when both splits is applied, we can use bottomRight
     pane = case sheet.pane_freeze do
-      {row_idx, 0} ->
+      {_row_idx, 0} ->
         "bottomLeft"
       {0, _col_idx} ->
         "topRight"
