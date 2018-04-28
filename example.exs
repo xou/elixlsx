@@ -27,6 +27,8 @@ sheet1 = Sheet.with_name("First")
          |> Sheet.set_cell("A5", "Double border", border: [bottom: [style: :double, color: "#cc3311"]])
 # Formatting with empty content
          |> Sheet.set_cell("A5", :empty, bg_color: "#ffff00", border: [bottom: [style: :double, color: "#cc3311"]])
+# Boolean value
+         |> Sheet.set_cell("A6", true)
 # Formula
          |> Sheet.set_cell("E1", 1.2, num_format: "0.00")
          |> Sheet.set_cell("E2", 2, num_format: "0.00")
