@@ -16,7 +16,7 @@ defmodule Elixlsx.Sheet do
   The property list describes formatting options for that
   cell. See Font.from_props/1 for a list of options.
   """
-  defstruct name: "", rows: [], col_widths: %{}, row_heights: %{}, merge_cells: [], pane_freeze: nil, show_grid_lines: true
+  defstruct name: "", rows: [], col_widths: %{}, row_heights: %{}, merge_cells: [], pane_freeze: nil, show_grid_lines: true, hidden: false
   @type t :: %Sheet {
     name: String.t,
     rows: list(list(any())),
@@ -24,7 +24,8 @@ defmodule Elixlsx.Sheet do
     row_heights: %{pos_integer => number},
     merge_cells: [],
     pane_freeze: {number, number} | nil,
-    show_grid_lines: boolean()
+    show_grid_lines: boolean(),
+    hidden: boolean()
   }
 
   @doc ~S"""
@@ -155,5 +156,13 @@ defmodule Elixlsx.Sheet do
   """
   def remove_pane_freeze(sheet) do
     %{sheet | pane_freeze: nil}
+  end
+
+  @spec set_hidden(Sheet.t(), boolean) :: Sheet.t()
+  @doc ~S"""
+  Sets a sheet as hidden.
+  """
+  def set_hidden(sheet, is_hidden) do
+    %{sheet | hidden: is_hidden}
   end
 end
