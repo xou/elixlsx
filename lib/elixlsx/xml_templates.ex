@@ -104,8 +104,10 @@ defmodule Elixlsx.XMLTemplates do
       raise %ArgumentError{message: "The sheet name '#{sheet_info.name}' is too long. Maximum 31 chars allowed for name."}
     end
 
+    state = if sheet_info.hidden, do: "invisible", else: "visible"
+
     """
-    <sheet name="#{xml_escape(sheet_info.name)}" sheetId="#{sheet_comp_info.sheetId}" state="visible" r:id="#{sheet_comp_info.rId}"/>
+    <sheet name="#{xml_escape(sheet_info.name)}" sheetId="#{sheet_comp_info.sheetId}" state="#{ state }" r:id="#{sheet_comp_info.rId}"/>
     """
   end
 
