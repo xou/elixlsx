@@ -400,12 +400,9 @@ defmodule Elixlsx.XMLTemplates do
                   &(Fill.get_stylexml_entry &1))
   end
 
+  # Turns a CellStyle struct into the styles.xml <xf /> representation.
+  # TODO: This could be moved into the CellStyle struct.
   @spec style_to_xml_entry(CellStyle.t, WorkbookCompInfo.t) :: String.t
-  @doc ~S"""
-  Turn a CellStyle struct into the styles.xml <xf /> representation.
-
-  TODO: This could be moved into the CellStyle struct.
-  """
   defp style_to_xml_entry(style, wci) do
     fontid = if is_nil(style.font),
       do: 0,
@@ -471,10 +468,8 @@ defmodule Elixlsx.XMLTemplates do
     end
   end
 
+  # Creates an aligment xml tag from font style.
   @spec make_style_alignment(Font.t) :: String.t
-  @doc ~S"""
-  Create a aligment xml tag from font style.
-  """
   defp make_style_alignment(font) do
     attrs = "" |> wrap_text(font)
     |> horizontal_alignment(font)
@@ -488,10 +483,8 @@ defmodule Elixlsx.XMLTemplates do
     end
   end
 
+  # Returns the inner content of the <CellXfs> block.
   @spec make_cellxfs(list(CellStyle.t), WorkbookCompInfo.t) :: String.t
-  @doc ~S"""
-  return the inner content of the <CellXfs> block.
-  """
   defp make_cellxfs(ordered_style_list, wci) do
     Enum.map_join(ordered_style_list, "\n", &(style_to_xml_entry &1, wci))
   end
