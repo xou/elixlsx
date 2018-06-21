@@ -98,6 +98,18 @@ sheet4
 sheet5 = %Sheet{name: "No gridlines shown", show_grid_lines: false}
          |> Sheet.set_at(0, 0, "Just this cell")
 
+sheet6 = %Sheet{
+  name: "Images",
+  rows: List.duplicate(["A", "B", "C", "D", "E"], 5)
+}
+
+sheet6 =
+  sheet6
+  |> Sheet.insert_image(1, 6, "ladybug-3475779_640.jpg")
+  |> Sheet.set_row_height(1, 40)
+  |> Sheet.insert_image(7, 7, "ladybug-3475779_640.jpg")
+
 Workbook.append_sheet(workbook, sheet4)
 |> Workbook.append_sheet(sheet5)
+|> Workbook.append_sheet(sheet6)
 |> Elixlsx.write_to("example.xlsx")

@@ -1,8 +1,10 @@
 defmodule Elixlsx.Compiler do
   alias Elixlsx.Compiler.WorkbookCompInfo
   alias Elixlsx.Compiler.SheetCompInfo
+  alias Elixlsx.Compiler.DrawingCompInfo
   alias Elixlsx.Compiler.CellStyleDB
   alias Elixlsx.Compiler.StringDB
+  alias Elixlsx.Compiler.DrawingDB
   alias Elixlsx.Sheet
 
   @doc ~S"""
@@ -23,7 +25,29 @@ defmodule Elixlsx.Compiler do
     {Enum.reverse(sheetCompInfos), nextrID}
   end
 
-  def compinfo_cell_pass_value wci, value do
+  @doc ~S"""
+  Accepts a list of Sheets and the next free relationship ID.
+  Returns a tuple containing a list of DrawingCompInfo's based on the images
+  within the sheets and the next free relationship ID.
+  """
+  @spec make_drawing_info(nonempty_list(Sheet.t()), non_neg_integer) ::
+          {list(DrawingCompInfo.t()), non_neg_integer}
+  def make_drawing_info(sheets, init_rId) do
+    # fold helper. aggregator holds {list(DrawingCompInfo), drawingidx, rId}.
+    add_sheet = fn sheet, {dci, idx, rId} ->
+      if sheet.images == [] do
+        {dci, idx, rId}
+      else
+        {[DrawingCompInfo.make(idx, rId) | dci], idx + 1, rId + 1}
+      end
+    end
+
+    # TODO probably better to use a zip [1..] |> map instead of fold[l|r]/reverse
+    {sheetCompInfos, _, nextrID} = List.foldl(sheets, {[], 1, init_rId}, add_sheet)
+    {Enum.reverse(sheetCompInfos), nextrID}
+  end
+
+  def compinfo_cell_pass_value wci, value  do
     cond do
       is_binary(value) && String.valid?(value)
         -> update_in wci.stringdb, &StringDB.register_string(&1, value)
@@ -62,20 +86,37 @@ defmodule Elixlsx.Compiler do
     end
   end
 
-  @spec compinfo_from_sheets(WorkbookCompInfo.t, list(Sheet.t)) :: WorkbookCompInfo.t
-  def compinfo_from_sheets wci, sheets do
-    List.foldl sheets, wci, fn (sheet, wci) ->
-      compinfo_from_rows wci, sheet.rows
-    end
+  def compinfo_image_pass(wci, image) do
+    update_in(
+      wci.drawingdb,
+      &DrawingDB.register_image(&1, image)
+    )
+  end
+
+  def compinfo_from_images(wci, images) do
+    List.foldl(images, wci, fn image, wci ->
+      compinfo_image_pass(wci, image)
+    end)
+  end
+
+  @spec compinfo_from_sheets(WorkbookCompInfo.t(), list(Sheet.t())) :: WorkbookCompInfo.t()
+  def compinfo_from_sheets(wci, sheets) do
+    List.foldl(sheets, wci, fn sheet, wci ->
+      wci
+      |> compinfo_from_rows(sheet.rows)
+      |> compinfo_from_images(sheet.images)
+    end)
   end
 
   @first_free_rid 2
   def make_workbook_comp_info workbook do
     {sci, next_rId} = make_sheet_info(workbook.sheets, @first_free_rid)
+    {dci, next_rId} = make_drawing_info(workbook.sheets, next_rId)
 
     %WorkbookCompInfo{
       sheet_info: sci,
-      next_free_xl_rid: next_rId,
+      drawing_info: dci,
+      next_free_xl_rid: next_rId
     }
     |> compinfo_from_sheets(workbook.sheets)
     |> CellStyleDB.register_all
