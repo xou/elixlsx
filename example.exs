@@ -105,9 +105,9 @@ sheet6 = %Sheet{
 
 sheet6 =
   sheet6
-  |> Sheet.insert_image(1, 6, "ladybug-3475779_640.jpg")
+  |> Sheet.insert_image(0, 5, "ladybug-3475779_640.jpg")
   |> Sheet.set_row_height(1, 40)
-  |> Sheet.insert_image(7, 7, "ladybug-3475779_640.jpg")
+  |> Sheet.insert_image(6, 6, "ladybug-3475779_640.jpg")
 
 Workbook.append_sheet(workbook, sheet4)
 |> Workbook.append_sheet(sheet5)

@@ -349,15 +349,15 @@ defmodule Elixlsx.XMLTemplates do
     """
     <xdr:twoCellAnchor editAs="#{image.positioning}">
         <xdr:from>
-            <xdr:col>#{image.colidx - 1}</xdr:col>
-            <xdr:colOff>#{image.x_offset}</xdr:colOff>
-            <xdr:row>#{image.rowidx - 1}</xdr:row>
-            <xdr:rowOff>#{image.x_offset}</xdr:rowOff>
-        </xdr:from>
-        <xdr:to>
             <xdr:col>#{image.colidx}</xdr:col>
             <xdr:colOff>#{image.x_offset}</xdr:colOff>
             <xdr:row>#{image.rowidx}</xdr:row>
+            <xdr:rowOff>#{image.x_offset}</xdr:rowOff>
+        </xdr:from>
+        <xdr:to>
+            <xdr:col>#{image.colidx + 1}</xdr:col>
+            <xdr:colOff>#{image.x_offset}</xdr:colOff>
+            <xdr:row>#{image.rowidx + 1}</xdr:row>
             <xdr:rowOff>#{image.x_offset}</xdr:rowOff>
         </xdr:to>
         <xdr:pic>
