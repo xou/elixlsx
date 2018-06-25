@@ -133,21 +133,32 @@ defmodule Elixlsx.XMLTemplates do
     Enum.map_join sheet_comp_infos, &contenttypes_sheet_entry/1
   end
 
-  defp contenttypes_drawing_entry({extension, type}) do
+  defp contenttypes_drawing_entry(drawing_comp_info) do
+    """
+    <Override PartName="/xl/drawings/#{drawing_comp_info.filename}" ContentType="application/vnd.openxmlformats-officedocument.drawing+xml"/>
+    """
+  end
+
+  defp contenttypes_drawing_entries(drawing_comp_infos) do
+    Enum.map_join(drawing_comp_infos, &contenttypes_drawing_entry/1)
+  end
+
+  defp contenttypes_drawing_type({extension, type}) do
     """
     <Default Extension=\"#{extension}\" ContentType=\"#{type}\"/>
     """
   end
 
-  defp contenttypes_drawing_entries(drawing_db) do
+  defp contenttypes_drawing_types(drawing_db) do
     drawing_types = DrawingDB.image_types(drawing_db)
-    Enum.map_join(drawing_types, &contenttypes_drawing_entry/1)
+    Enum.map_join(drawing_types, &contenttypes_drawing_type/1)
   end
 
   def make_contenttypes_xml(wci) do
     ~S"""
     <?xml version="1.0" encoding="UTF-8"?>
     <Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">
+    <Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>
     <Override PartName="/_rels/.rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>
     <Override PartName="/docProps/app.xml" ContentType="application/vnd.openxmlformats-officedocument.extended-properties+xml"/>
     <Override PartName="/docProps/core.xml" ContentType="application/vnd.openxmlformats-package.core-properties+xml"/>
@@ -156,7 +167,8 @@ defmodule Elixlsx.XMLTemplates do
     <Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/>
     """ <>
       contenttypes_sheet_entries(wci.sheet_info) <>
-      contenttypes_drawing_entries(wci.drawingdb) <>
+      contenttypes_drawing_entries(wci.drawing_info) <>
+      contenttypes_drawing_types(wci.drawingdb) <>
       ~S"""
       <Override PartName="/xl/sharedStrings.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sharedStrings+xml"/>
       </Types>
@@ -440,9 +452,11 @@ defmodule Elixlsx.XMLTemplates do
       </sheetData>
       """ <>
       xl_merge_cells(sheet.merge_cells) <>
-      make_drawing_ref(sheet.images) <>
       """
       <pageMargins left="0.75" right="0.75" top="1" bottom="1.0" header="0.5" footer="0.5"/>
+      """ <>
+      make_drawing_ref(sheet.images) <>
+      """
       </worksheet>
       """
   end
