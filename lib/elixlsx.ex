@@ -23,7 +23,7 @@ defmodule Elixlsx do
   The sharedStrings database is built up using the
   `Elixlsx.Compiler.StringDB` module. Pre-compilation, all cells
   are *folded* over, producing the StringDB struct which assigns
-  each string a uniqe ID. The StringDB is part of the
+  each string a unique ID. The StringDB is part of the
   `Elixlsx.Compiler.WorkbookCompInfo` struct, which is passed to
   the XML generating function, which then `get_id`'s the ID
   associated with the string found in the cell.
