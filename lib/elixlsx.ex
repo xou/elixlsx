@@ -23,7 +23,7 @@ defmodule Elixlsx do
   The sharedStrings database is built up using the
   `Elixlsx.Compiler.StringDB` module. Pre-compilation, all cells
   are *folded* over, producing the StringDB struct which assigns
-  each string a uniqe ID. The StringDB is part of the
+  each string a unique ID. The StringDB is part of the
   `Elixlsx.Compiler.WorkbookCompInfo` struct, which is passed to
   the XML generating function, which then `get_id`'s the ID
   associated with the string found in the cell.
@@ -43,21 +43,19 @@ defmodule Elixlsx do
   @doc ~S"""
   Write a Workbook object to the given filename
   """
-  @spec write_to(Elixlsx.Workbook.t, String.t) :: {:ok, String.t} | {:error, any()}
+  @spec write_to(Elixlsx.Workbook.t(), String.t()) :: {:ok, String.t()} | {:error, any()}
   def write_to(workbook, filename) do
-    wci = Elixlsx.Compiler.make_workbook_comp_info workbook
+    wci = Elixlsx.Compiler.make_workbook_comp_info(workbook)
     :zip.create(to_charlist(filename), Elixlsx.Writer.create_files(workbook, wci))
   end
-
 
   @doc ~S"""
   Write a Workbook object to the binary
   Returns a tuple containing a filename and the binary
   """
-  @spec write_to_memory(Elixlsx.Workbook.t, String.t) :: {:ok, {String.t, binary}} | {:error, any()}
+  @spec write_to_memory(Elixlsx.Workbook.t(), String.t()) :: {:ok, {charlist, binary}} | {:error, any()}
   def write_to_memory(workbook, filename) do
-    wci = Elixlsx.Compiler.make_workbook_comp_info workbook
+    wci = Elixlsx.Compiler.make_workbook_comp_info(workbook)
     :zip.create(to_charlist(filename), Elixlsx.Writer.create_files(workbook, wci), [:memory])
   end
 end
-
