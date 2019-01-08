@@ -21,7 +21,7 @@ defmodule Elixlsx.Mixfile do
       {:excheck, "~> 0.5", only: :test},
       {:triq, git: "https://gitlab.com/triq/triq.git", ref: "2c497398e020e06db8496f1d89f12481cc5adab9", only: :test},
       {:credo, "~> 0.5", only: [:dev, :test]},
-      {:ex_doc, "~> 0.14", only: [:dev]},
+      {:ex_doc, "~> 0.19", only: [:dev]},
       {:dialyxir, "~> 0.5", only: [:dev], runtime: false}
     ]
   end
