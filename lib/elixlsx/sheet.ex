@@ -16,12 +16,14 @@ defmodule Elixlsx.Sheet do
   The property list describes formatting options for that
   cell. See Font.from_props/1 for a list of options.
   """
-  defstruct name: "", rows: [], col_widths: %{}, row_heights: %{}, merge_cells: [], pane_freeze: nil, show_grid_lines: true
+  defstruct name: "", rows: [], col_widths: %{}, row_heights: %{}, col_outline_levels: %{}, row_outline_levels: %{}, merge_cells: [], pane_freeze: nil, show_grid_lines: true
   @type t :: %Sheet {
     name: String.t,
     rows: list(list(any())),
     col_widths: %{pos_integer => number},
     row_heights: %{pos_integer => number},
+    col_outline_levels: %{pos_integer => pos_integer},
+    row_outline_levels: %{pos_integer => pos_integer},
     merge_cells: [],
     pane_freeze: {number, number} | nil,
     show_grid_lines: boolean()
@@ -138,6 +140,25 @@ defmodule Elixlsx.Sheet do
   def set_row_height(sheet, row_idx, height) do
     update_in sheet.row_heights,
               &(Map.put &1, row_idx, height)
+  end
+
+  @spec set_col_outline_level(Sheet.t, String.t, pos_integer) :: Sheet.t
+  @doc ~S"""
+  Set the column outline level for a given column. Column is indexed by
+  name ("A", ...)
+  """
+  def set_col_outline_level(sheet, column, outline_level) do
+    update_in sheet.col_outline_levels,
+              &(Map.put &1, Util.decode_col(column), outline_level)
+  end
+
+  @spec set_row_outline_level(Sheet.t, number, pos_integer) :: Sheet.t
+  @doc ~S"""
+  Set the row outline level for a given row. Row is indexed starting from 1
+  """
+  def set_row_outline_level(sheet, row_idx, outline_level) do
+    update_in sheet.row_outline_levels,
+              &(Map.put &1, row_idx, outline_level)
   end
 
   @spec set_pane_freeze(Sheet.t, number, number) :: Sheet.t

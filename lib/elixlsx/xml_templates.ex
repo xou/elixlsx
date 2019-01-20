@@ -253,11 +253,11 @@ defmodule Elixlsx.XMLTemplates do
       """
   end
 
-  defp xl_sheet_rows(data, row_heights, wci) do
+  defp xl_sheet_rows(data, row_heights, row_outline_levels, wci) do
     Enum.zip(data, 1 .. length data) |>
     Enum.map_join(fn {row, rowidx} ->
               """
-              <row r="#{rowidx}" #{get_row_height_attr(row_heights, rowidx)}>
+              <row r="#{rowidx}" #{get_row_height_attr(row_heights, rowidx)} #{get_row_outline_level_attr(row_outline_levels, rowidx)}>
                 #{xl_sheet_cols(row, rowidx, wci)}
               </row>
               """ end)
@@ -272,17 +272,56 @@ defmodule Elixlsx.XMLTemplates do
     end
   end
 
-  defp make_col_width({k, v}) do
-    '<col min="#{k}" max="#{k}" width="#{v}" customWidth="1" />'
+  defp get_row_outline_level_attr(row_outline_levels, rowidx) do
+    row_outline_level = Map.get(row_outline_levels, rowidx)
+    if (row_outline_level) do
+      "outlineLevel=\"#{row_outline_level}\""
+    else
+      ""
+    end
   end
 
-  defp make_col_widths(sheet) do
-    if Kernel.map_size(sheet.col_widths) != 0 do
-      cols = Map.to_list(sheet.col_widths)
-      |> Enum.sort
-      |> Enum.map_join(&make_col_width/1)
+  defp make_col({k, width, outline_level}) do
+    width_attr =
+      if width do
+        " width=\"#{width}\" customWidth=\"1\""
+      else
+        ""
+      end
+    outline_level_attr =
+      if outline_level do
+        " outlineLevel=\"#{outline_level}\""
+      else
+        ""
+      end
+    '<col min="#{k}" max="#{k}"#{width_attr}#{outline_level_attr} />'
+  end
+
+  defp make_cols(sheet) do
+    if Kernel.map_size(sheet.col_widths) != 0 or Kernel.map_size(sheet.col_outline_levels) != 0 do
+      col_indices =
+        (Map.keys(sheet.col_widths) ++ Map.keys(sheet.col_outline_levels))
+        |> Enum.sort()
+        |> Enum.dedup()
+
+      cols =
+        col_indices
+        |> Stream.map(&({&1, Map.get(sheet.col_widths, &1), Map.get(sheet.col_outline_levels, &1)}))
+        |> Enum.map_join(&make_col/1)
 
       "<cols>#{cols}</cols>"
+    else
+      ""
+    end
+  end
+
+  defp make_outline_level_row(sheet) do
+    unless sheet.row_outline_levels === %{} do
+      max_outline_level_row =
+      Map.values(sheet.row_outline_levels)
+      |> Enum.max()
+
+      " outlineLevelRow=\"#{max_outline_level_row}\""
     else
       ""
     end
@@ -311,14 +350,14 @@ defmodule Elixlsx.XMLTemplates do
     """
     </sheetView>
     </sheetViews>
-    <sheetFormatPr defaultRowHeight="12.8"/>
+    <sheetFormatPr defaultRowHeight="12.8"#{make_outline_level_row(sheet)}/>
     """
-    <> make_col_widths(sheet) <>
+    <> make_cols(sheet) <>
     """
     <sheetData>
     """
     <>
-    xl_sheet_rows(sheet.rows, sheet.row_heights, wci)
+    xl_sheet_rows(sheet.rows, sheet.row_heights, sheet.row_outline_levels, wci)
     <>
     ~S"""
     </sheetData>
