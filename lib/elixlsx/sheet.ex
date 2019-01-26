@@ -22,12 +22,13 @@ defmodule Elixlsx.Sheet do
     rows: list(list(any())),
     col_widths: %{pos_integer => number},
     row_heights: %{pos_integer => number},
-    group_cols: list(Range.t(pos_integer, pos_integer)),
-    group_rows: list(Range.t(pos_integer, pos_integer)),
+    group_cols: list(rowcol_group),
+    group_rows: list(rowcol_group),
     merge_cells: [],
     pane_freeze: {number, number} | nil,
     show_grid_lines: boolean()
   }
+  @type rowcol_group :: Range.t | {Range.t, opts :: keyword}
 
   @doc ~S"""
   Create a sheet with a sheet name.
@@ -146,20 +147,30 @@ defmodule Elixlsx.Sheet do
   @doc ~S"""
   Group given column range. (i.e. increase outline level by one)
   Column is indexed by name ("A", ...)
+
+  ## Options
+
+    - `collapsed`: if true, collapse this group.
   """
-  def group_cols(sheet, first_col, last_col) do
+  def group_cols(sheet, first_col, last_col, opts \\ []) do
     col_range = Range.new(Util.decode_col(first_col), Util.decode_col(last_col))
-    update_in(sheet.group_cols, fn groups -> groups ++ [col_range] end)
+    new_group = if opts === [], do: col_range, else: {col_range, opts}
+    update_in(sheet.group_cols, fn groups -> groups ++ [new_group] end)
   end
 
   @spec group_rows(Sheet.t, pos_integer, pos_integer) :: Sheet.t
   @doc ~S"""
   Group given row range. (i.e. increase outline level by one)
   Row is indexed starting from 1.
+
+  ## Options
+
+    - `collapsed`: if true, collapse this group.
   """
-  def group_rows(sheet, first_row_idx, last_row_idx) do
+  def group_rows(sheet, first_row_idx, last_row_idx, opts \\ []) do
     row_range = Range.new(first_row_idx, last_row_idx)
-    update_in(sheet.group_rows, fn groups -> groups ++ [row_range] end)
+    new_group = if opts === [], do: row_range, else: {row_range, opts}
+    update_in(sheet.group_rows, fn groups -> groups ++ [new_group] end)
   end
 
   @spec set_pane_freeze(Sheet.t, number, number) :: Sheet.t
