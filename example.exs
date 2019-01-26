@@ -98,6 +98,16 @@ sheet4
 sheet5 = %Sheet{name: "No gridlines shown", show_grid_lines: false}
          |> Sheet.set_at(0, 0, "Just this cell")
 
+# Rows/columns can be grouped.
+sheet6 = %Sheet{
+  name: "Row and Column Groups",
+  rows: 1..100 |> Enum.chunk_every(10),
+  group_rows: [{2..3, collapsed: true}, 6..7],  # collapse and hide rows 2 to 3
+  group_cols: [2..9, 2..5]  # nest
+}
+|> Sheet.group_cols("C", "D")  # nest further
+
 Workbook.append_sheet(workbook, sheet4)
 |> Workbook.append_sheet(sheet5)
+|> Workbook.append_sheet(sheet6)
 |> Elixlsx.write_to("example.xlsx")
