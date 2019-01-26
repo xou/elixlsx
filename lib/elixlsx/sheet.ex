@@ -16,14 +16,14 @@ defmodule Elixlsx.Sheet do
   The property list describes formatting options for that
   cell. See Font.from_props/1 for a list of options.
   """
-  defstruct name: "", rows: [], col_widths: %{}, row_heights: %{}, col_outline_levels: %{}, row_outline_levels: %{}, merge_cells: [], pane_freeze: nil, show_grid_lines: true
+  defstruct name: "", rows: [], col_widths: %{}, row_heights: %{}, group_cols: [], group_rows: [], merge_cells: [], pane_freeze: nil, show_grid_lines: true
   @type t :: %Sheet {
     name: String.t,
     rows: list(list(any())),
     col_widths: %{pos_integer => number},
     row_heights: %{pos_integer => number},
-    col_outline_levels: %{pos_integer => pos_integer},
-    row_outline_levels: %{pos_integer => pos_integer},
+    group_cols: list(Range.t(pos_integer, pos_integer)),
+    group_rows: list(Range.t(pos_integer, pos_integer)),
     merge_cells: [],
     pane_freeze: {number, number} | nil,
     show_grid_lines: boolean()
@@ -142,23 +142,24 @@ defmodule Elixlsx.Sheet do
               &(Map.put &1, row_idx, height)
   end
 
-  @spec set_col_outline_level(Sheet.t, String.t, pos_integer) :: Sheet.t
+  @spec group_cols(Sheet.t, String.t, String.t) :: Sheet.t
   @doc ~S"""
-  Set the column outline level for a given column. Column is indexed by
-  name ("A", ...)
+  Group given column range. (i.e. increase outline level by one)
+  Column is indexed by name ("A", ...)
   """
-  def set_col_outline_level(sheet, column, outline_level) do
-    update_in sheet.col_outline_levels,
-              &(Map.put &1, Util.decode_col(column), outline_level)
+  def group_cols(sheet, first_col, last_col) do
+    col_range = Range.new(Util.decode_col(first_col), Util.decode_col(last_col))
+    update_in(sheet.group_cols, fn groups -> groups ++ [col_range] end)
   end
 
-  @spec set_row_outline_level(Sheet.t, number, pos_integer) :: Sheet.t
+  @spec group_rows(Sheet.t, pos_integer, pos_integer) :: Sheet.t
   @doc ~S"""
-  Set the row outline level for a given row. Row is indexed starting from 1
+  Group given row range. (i.e. increase outline level by one)
+  Row is indexed starting from 1.
   """
-  def set_row_outline_level(sheet, row_idx, outline_level) do
-    update_in sheet.row_outline_levels,
-              &(Map.put &1, row_idx, outline_level)
+  def group_rows(sheet, first_row_idx, last_row_idx) do
+    row_range = Range.new(first_row_idx, last_row_idx)
+    update_in(sheet.group_rows, fn groups -> groups ++ [row_range] end)
   end
 
   @spec set_pane_freeze(Sheet.t, number, number) :: Sheet.t

@@ -281,6 +281,12 @@ defmodule Elixlsx.XMLTemplates do
     end
   end
 
+  defp groups_to_outline_levels(groups) do
+    Stream.concat(groups)
+    |> Enum.group_by(& &1)
+    |> Map.new(fn {k, v} -> {k, length(v)} end)
+  end
+
   defp make_col({k, width, outline_level}) do
     width_attr =
       if width do
@@ -298,15 +304,17 @@ defmodule Elixlsx.XMLTemplates do
   end
 
   defp make_cols(sheet) do
-    if Kernel.map_size(sheet.col_widths) != 0 or Kernel.map_size(sheet.col_outline_levels) != 0 do
+    col_outline_levels = groups_to_outline_levels(sheet.group_cols)
+
+    if Kernel.map_size(sheet.col_widths) != 0 or Kernel.map_size(col_outline_levels) != 0 do
       col_indices =
-        (Map.keys(sheet.col_widths) ++ Map.keys(sheet.col_outline_levels))
+        (Map.keys(sheet.col_widths) ++ Map.keys(col_outline_levels))
         |> Enum.sort()
         |> Enum.dedup()
 
       cols =
         col_indices
-        |> Stream.map(&({&1, Map.get(sheet.col_widths, &1), Map.get(sheet.col_outline_levels, &1)}))
+        |> Stream.map(&({&1, Map.get(sheet.col_widths, &1), Map.get(col_outline_levels, &1)}))
         |> Enum.map_join(&make_col/1)
 
       "<cols>#{cols}</cols>"
@@ -315,10 +323,10 @@ defmodule Elixlsx.XMLTemplates do
     end
   end
 
-  defp make_outline_level_row(sheet) do
-    unless sheet.row_outline_levels === %{} do
+  defp make_max_outline_level_row(row_outline_levels) do
+    unless row_outline_levels === %{} do
       max_outline_level_row =
-      Map.values(sheet.row_outline_levels)
+      Map.values(row_outline_levels)
       |> Enum.max()
 
       " outlineLevelRow=\"#{max_outline_level_row}\""
@@ -332,6 +340,8 @@ defmodule Elixlsx.XMLTemplates do
   Returns the XML content for single sheet.
   """
   def make_sheet(sheet, wci) do
+    row_outline_levels = groups_to_outline_levels(sheet.group_rows)
+
     ~S"""
     <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
     <worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">
@@ -350,14 +360,18 @@ defmodule Elixlsx.XMLTemplates do
     """
     </sheetView>
     </sheetViews>
-    <sheetFormatPr defaultRowHeight="12.8"#{make_outline_level_row(sheet)}/>
+    <sheetFormatPr defaultRowHeight="12.8"
+    """
+    <> make_max_outline_level_row(row_outline_levels) <>
+    """
+    />
     """
     <> make_cols(sheet) <>
     """
     <sheetData>
     """
     <>
-    xl_sheet_rows(sheet.rows, sheet.row_heights, sheet.row_outline_levels, wci)
+    xl_sheet_rows(sheet.rows, sheet.row_heights, row_outline_levels, wci)
     <>
     ~S"""
     </sheetData>
