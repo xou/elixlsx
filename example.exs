@@ -101,7 +101,7 @@ sheet5 = %Sheet{name: "No gridlines shown", show_grid_lines: false}
 # Rows/columns can be grouped.
 sheet6 = %Sheet{
   name: "Row and Column Groups",
-  rows: 1..100 |> Enum.chunk_every(10),
+  rows: 1..100 |> Enum.chunk(10),
   group_rows: [{2..3, collapsed: true}, 6..7],  # collapse and hide rows 2 to 3
   group_cols: [2..9, 2..5]  # nest
 }
