@@ -46,29 +46,29 @@ defmodule Elixlsx.Compiler.CellStyleDB do
   @spec register_all(WorkbookCompInfo.t) :: WorkbookCompInfo.t
   def register_all(wci) do
     Enum.reduce wci.cellstyledb.cellstyles, wci, fn ({style, _}, wci) ->
-      wci = if is_nil(style.font) do
-        wci
-      else
-        update_in(wci.fontdb, &(FontDB.register_font &1, style.font))
-      end
-      wci = if is_nil(style.fill) do
-        wci
-      else
-        update_in(wci.filldb, &(FillDB.register_fill &1, style.fill))
-      end
-      wci = if is_nil(style.numfmt) do
-        wci
-      else
-        update_in(wci.numfmtdb, &(NumFmtDB.register_numfmt &1, style.numfmt))
-      end
-      wci = if is_nil(style.border) do
-        wci
-      else
-        update_in(wci.borderstyledb, &(BorderStyleDB.register_border &1, style.border))
-      end
-
       wci
+      |> update_font(style.font)
+      |> update_fill(style.fill)
+      |> update_numfmt(style.numfmt)    
+      |> update_border(style.border)
       # TODO: update_in wci.borderstyledb ...; wci.fillstyledb...
     end
   end
+  
+  defp update_border(wci, nil), do: wci
+  
+  defp update_border(wci, border), do: update_in(wci.borderstyledb, &(BorderStyleDB.register_border &1, border))
+  
+  defp update_fill(wci, nil), do: wci
+  
+  defp update_fill(wci, fill), do: update_in(wci.filldb, &(FillDB.register_fill &1, fill))
+  
+  defp update_font(wci, nil), do: wci
+  
+  defp update_font(wci, font), do: update_in(wci.fontdb, &(FontDB.register_font &1, font))
+
+  defp update_numfmt(wci, nil), do: wci
+  
+  defp update_numfmt(wci, numfmt), do: update_in(wci.numfmtdb, &(NumFmtDB.register_numfmt &1, numfmt))
+  
 end
