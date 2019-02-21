@@ -1,5 +1,5 @@
 defmodule Elixlsx.Util do
-  @col_alphabet to_string(Enum.to_list(?A..?Z))
+  @col_alphabet Enum.to_list(?A..?Z)
 
   @doc ~S"""
   returns the column letter(s) associated with a column index. Col idx starts at 1.
@@ -53,14 +53,12 @@ defmodule Elixlsx.Util do
   @spec decode_col_(String.t) :: non_neg_integer
   defp decode_col_("") do 0 end
   defp decode_col_(s) do
-    alphabet_list = String.to_charlist @col_alphabet
-
     if !String.match? s, ~r/^[A-Z]*$/ do
       raise %ArgumentError{message: "Invalid column string: " <> inspect s}
     end
 
     # translate list of strings to the base-26 value they represent
-    Enum.map(String.to_charlist(s), (fn x -> :string.chr(alphabet_list, x) end)) |>
+    Enum.map(String.to_charlist(s), (fn x -> :string.chr(@col_alphabet, x) end)) |>
     # multiply and aggregate them
     List.foldl(0, (fn (x, acc) -> x + 26 * acc end))
   end
