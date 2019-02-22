@@ -16,14 +16,17 @@ defmodule Elixlsx.Util do
   @spec encode_col(non_neg_integer) :: String.t
   def encode_col(0), do: ""
   def encode_col(num) when num <= 26, do: <<num + 64>>
-  def encode_col(num) do
+  
+  def encode_col(num, suffix \\ "")
+  def encode_col(num, suffix) when num <= 26, do: <<num + 64>> <> suffix
+  def encode_col(num, suffix) do
     mod = div(num, 26)
     rem = rem(num, 26)
 
     if rem == 0 do
-      encode_col(mod - 1) <> encode_col(26)
+      encode_col(mod - 1, "Z" <> suffix)
     else
-      encode_col(mod) <> encode_col(rem)
+      encode_col(mod, <<rem + 64>> <> suffix)
     end
   end
 
