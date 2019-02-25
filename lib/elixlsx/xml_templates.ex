@@ -7,6 +7,7 @@ defmodule Elixlsx.XMLTemplates do
   alias Elixlsx.Compiler.SheetCompInfo
   alias Elixlsx.Compiler.NumFmtDB
   alias Elixlsx.Compiler.BorderStyleDB
+  alias Elixlsx.Compiler.DrawingDB
   alias Elixlsx.Compiler.WorkbookCompInfo
   alias Elixlsx.Style.CellStyle
   alias Elixlsx.Style.Font
@@ -91,6 +92,18 @@ defmodule Elixlsx.XMLTemplates do
     "<Relationship Id=\"#{sheet_comp_info.rId}\" Type=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet\" Target=\"worksheets/#{sheet_comp_info.filename}\"/>"
   end
 
+  @spec make_xl_worksheet_rel_sheet() :: String.t()
+  def make_xl_worksheet_rel_sheet() do
+    # We should probably care about a future with multiple rels here
+    # but for now just hard code the drawing one
+    """
+    <?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>
+    <Relationships xmlns=\"http://schemas.openxmlformats.org/package/2006/relationships\">
+      <Relationship Id=\"rId1\" Type=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships/drawing\"
+                    Target=\"../drawings/drawing1.xml\"/>
+    </Relationships>
+    """
+  end
 
   @spec make_xl_rel_sheets(nonempty_list(SheetCompInfo.t)) :: String.t
   def make_xl_rel_sheets sheet_comp_infos do
@@ -120,22 +133,46 @@ defmodule Elixlsx.XMLTemplates do
     Enum.map_join sheet_comp_infos, &contenttypes_sheet_entry/1
   end
 
+  defp contenttypes_drawing_entry(drawing_comp_info) do
+    """
+    <Override PartName="/xl/drawings/#{drawing_comp_info.filename}" ContentType="application/vnd.openxmlformats-officedocument.drawing+xml"/>
+    """
+  end
+
+  defp contenttypes_drawing_entries(drawing_comp_infos) do
+    Enum.map_join(drawing_comp_infos, &contenttypes_drawing_entry/1)
+  end
+
+  defp contenttypes_drawing_type({extension, type}) do
+    """
+    <Default Extension=\"#{extension}\" ContentType=\"#{type}\"/>
+    """
+  end
+
+  defp contenttypes_drawing_types(drawing_db) do
+    drawing_types = DrawingDB.image_types(drawing_db)
+    Enum.map_join(drawing_types, &contenttypes_drawing_type/1)
+  end
+
   def make_contenttypes_xml(wci) do
     ~S"""
     <?xml version="1.0" encoding="UTF-8"?>
     <Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">
+    <Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>
     <Override PartName="/_rels/.rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>
     <Override PartName="/docProps/app.xml" ContentType="application/vnd.openxmlformats-officedocument.extended-properties+xml"/>
     <Override PartName="/docProps/core.xml" ContentType="application/vnd.openxmlformats-package.core-properties+xml"/>
     <Override PartName="/xl/_rels/workbook.xml.rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>
     <Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>
     <Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/>
-    """
-    <> contenttypes_sheet_entries(wci.sheet_info) <>
-    ~S"""
-    <Override PartName="/xl/sharedStrings.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sharedStrings+xml"/>
-    </Types>
-    """
+    """ <>
+      contenttypes_sheet_entries(wci.sheet_info) <>
+      contenttypes_drawing_entries(wci.drawing_info) <>
+      contenttypes_drawing_types(wci.drawingdb) <>
+      ~S"""
+      <Override PartName="/xl/sharedStrings.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sharedStrings+xml"/>
+      </Types>
+      """
   end
 
   ###
@@ -288,6 +325,99 @@ defmodule Elixlsx.XMLTemplates do
     end
   end
 
+  ###
+  ### xl/drawings/drawing*.xml
+  ###
+  @spec make_drawing(list(Image.t()), WorkbookCompInfo.t()) :: String.t()
+  def make_drawing([], _wci), do: ""
+
+  def make_drawing(images, wci) do
+    """
+    <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+    <xdr:wsDr xmlns:xdr="http://schemas.openxmlformats.org/drawingml/2006/spreadsheetDrawing"
+              xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main">
+    """ <>
+      Enum.map_join(images, fn i -> make_xl_drawings_twoCell(i, wci) end) <>
+      """
+      </xdr:wsDr>
+      """
+  end
+
+  defp make_xl_drawings_twoCell(image, wci) do
+    drawing_id = to_string(DrawingDB.get_id(wci.drawingdb, image))
+
+    """
+    <xdr:twoCellAnchor editAs="#{image.positioning}">
+        <xdr:from>
+            <xdr:col>#{image.colidx}</xdr:col>
+            <xdr:colOff>#{image.x_offset}</xdr:colOff>
+            <xdr:row>#{image.rowidx}</xdr:row>
+            <xdr:rowOff>#{image.x_offset}</xdr:rowOff>
+        </xdr:from>
+        <xdr:to>
+            <xdr:col>#{image.colidx + 1}</xdr:col>
+            <xdr:colOff>#{image.x_offset}</xdr:colOff>
+            <xdr:row>#{image.rowidx + 1}</xdr:row>
+            <xdr:rowOff>#{image.x_offset}</xdr:rowOff>
+        </xdr:to>
+        <xdr:pic>
+            <xdr:nvPicPr>
+                <xdr:cNvPr id="#{drawing_id}" name="Picture #{drawing_id}"/>
+                <xdr:cNvPicPr>
+                    <a:picLocks noChangeAspect="1"/>
+                </xdr:cNvPicPr>
+            </xdr:nvPicPr>
+            <xdr:blipFill>
+                <a:blip xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"
+                        r:embed="rId#{drawing_id}" cstate="print">
+                </a:blip>
+                <a:stretch>
+                    <a:fillRect/>
+                </a:stretch>
+            </xdr:blipFill>
+            <xdr:spPr>
+                <a:xfrm>
+                    <a:off x="1812547" y="3503925"/>
+                    <a:ext cx="240431" cy="237600"/>
+                </a:xfrm>
+                <a:prstGeom prst="rect">
+                    <a:avLst/>
+                </a:prstGeom>
+            </xdr:spPr>
+        </xdr:pic>
+        <xdr:clientData/>
+    </xdr:twoCellAnchor>
+    """
+  end
+
+  def xl_drawing_rel_sheet_rows(images, wci) do
+    Enum.map_join(images, fn image ->
+      id = DrawingDB.get_id(wci.drawingdb, image)
+
+      ~s"""
+      <Relationship Id="rId#{id}"
+                    Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image"
+                    Target="../media/image#{id}.#{image.extension}"/>
+      """
+    end)
+  end
+
+  @spec make_xl_drawing_rel_sheet(list(Image.t()), WorkbookCompInfo.t()) :: String.t()
+  def make_xl_drawing_rel_sheet(images, wci) do
+    ~S"""
+    <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+    <Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
+    """ <>
+      xl_drawing_rel_sheet_rows(images, wci) <>
+      ~S"""
+      </Relationships>
+      """
+  end
+
+  @spec make_drawing_ref(List.t()) :: String.t()
+  defp make_drawing_ref([]), do: ""
+  defp make_drawing_ref(_drawings), do: "<drawing r:id=\"rId1\"/>"
+
   @spec make_sheet(Sheet.t, WorkbookCompInfo.t) :: String.t
   @doc ~S"""
   Returns the XML content for single sheet.
@@ -302,32 +432,33 @@ defmodule Elixlsx.XMLTemplates do
     <dimension ref="A1"/>
     <sheetViews>
     <sheetView workbookViewId="0"
-    """
-    <> make_sheet_show_grid(sheet) <>
-    """
-    >
-    """
-    <> make_sheetview(sheet) <>
-    """
-    </sheetView>
-    </sheetViews>
-    <sheetFormatPr defaultRowHeight="12.8"/>
-    """
-    <> make_col_widths(sheet) <>
-    """
-    <sheetData>
-    """
-    <>
-    xl_sheet_rows(sheet.rows, sheet.row_heights, wci)
-    <>
-    ~S"""
-    </sheetData>
-    """
-    <> xl_merge_cells(sheet.merge_cells) <>
-    """
-    <pageMargins left="0.75" right="0.75" top="1" bottom="1.0" header="0.5" footer="0.5"/>
-    </worksheet>
-    """
+    """ <>
+      make_sheet_show_grid(sheet) <>
+      """
+      >
+      """ <>
+      make_sheetview(sheet) <>
+      """
+      </sheetView>
+      </sheetViews>
+      <sheetFormatPr defaultRowHeight="12.8"/>
+      """ <>
+      make_col_widths(sheet) <>
+      """
+      <sheetData>
+      """ <>
+      xl_sheet_rows(sheet.rows, sheet.row_heights, wci) <>
+      ~S"""
+      </sheetData>
+      """ <>
+      xl_merge_cells(sheet.merge_cells) <>
+      """
+      <pageMargins left="0.75" right="0.75" top="1" bottom="1.0" header="0.5" footer="0.5"/>
+      """ <>
+      make_drawing_ref(sheet.images) <>
+      """
+      </worksheet>
+      """
   end
 
   defp make_sheet_show_grid(sheet) do
