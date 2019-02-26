@@ -277,13 +277,20 @@ defmodule Elixlsx.XMLTemplates do
     [" min=\"", key_str, "\" max=\"", key_str, "\""]
   end
 
+  defp make_col_style(props, _) when props == %{}, do: []
+  defp make_col_style(%{width: w} = props, _) when props == %{width: w}, do: []
+  defp make_col_style(props, wci) do
+    style_id = CellStyleDB.get_id(wci.cellstyledb, CellStyle.from_props(props))
+    [" style=\"", Integer.to_string(style_id), "\""]
+  end
+  
   defp make_col_width(%{width: width}) do
     [" width=\"", Integer.to_string(width), "\" customWidth=\"1\""]
   end
   defp make_col_width(_), do: []
 
-  defp make_cols(%{cols: cols}) when cols == %{}, do: ""
-  defp make_cols(%{cols: cols}) do
+  defp make_cols(%{cols: cols}, _) when cols == %{}, do: ""
+  defp make_cols(%{cols: cols}, wci) do
     [
       "<cols>",
       Map.to_list(cols)
@@ -292,6 +299,7 @@ defmodule Elixlsx.XMLTemplates do
         "<col",
         make_col_range(key),
         make_col_width(props),
+        make_col_style(props, wci),
         "/>"
       ]
       end),
@@ -326,7 +334,7 @@ defmodule Elixlsx.XMLTemplates do
     </sheetViews>
     <sheetFormatPr defaultRowHeight="12.8"/>
     """
-    <> make_cols(sheet) <>
+    <> make_cols(sheet, wci) <>
     """
     <sheetData>
     """

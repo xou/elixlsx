@@ -15,8 +15,8 @@ defmodule Elixlsx.SheetTest do
       sheet = 
       %Sheet{}
       |> Sheet.set_col_width(<<x>>, 10)
-      |> Sheet.set_col(<<x>>, bg_color: "#FFFF00", numfmt: "mmm-yyyy")
-      sheet.cols[x - 64] == %{bg_color: "#FFFF00", numfmt: "mmm-yyyy", width: 10}
+      |> Sheet.set_col(<<x>>, bg_color: "#FFFF00", num_format: "mmm-yyyy")
+      sheet.cols[x - 64] == %{bg_color: "#FFFF00", num_format: "mmm-yyyy", width: 10}
     end
   end
 end
