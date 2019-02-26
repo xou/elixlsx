@@ -16,11 +16,11 @@ defmodule Elixlsx.Sheet do
   The property list describes formatting options for that
   cell. See Font.from_props/1 for a list of options.
   """
-  defstruct name: "", rows: [], col_widths: %{}, row_heights: %{}, merge_cells: [], pane_freeze: nil, show_grid_lines: true
+  defstruct name: "", rows: [], cols: %{}, row_heights: %{}, merge_cells: [], pane_freeze: nil, show_grid_lines: true
   @type t :: %Sheet {
     name: String.t,
     rows: list(list(any())),
-    col_widths: %{pos_integer => number},
+    cols: %{pos_integer => map},
     row_heights: %{pos_integer => number},
     merge_cells: [],
     pane_freeze: {number, number} | nil,
@@ -121,14 +121,35 @@ defmodule Elixlsx.Sheet do
     end
   end
 
+  @spec set_col(Sheet.t, String.t, Keyword.t) :: Sheet.t
+  @doc ~S"""
+  Set various attributes for a given column. Column is indexed by 
+  name ("A", ...)
+  """
+  def set_col(sheet, column, [{k, v}]) do
+    index = Util.decode_col(column)
+    cols = Map.update(sheet.cols, index, %{k => v}, (&Map.put &1, k, v))
+    Map.put(sheet, :cols, cols)
+  end
+
+  def set_col(sheet, column, opts) do
+    index = Util.decode_col(column)
+
+    cols =
+      Enum.reduce(opts, sheet.cols, fn {k, v}, acc ->
+        Map.update(acc, index, %{k => v}, &Map.put(&1, k, v))
+      end)
+
+    Map.put(sheet, :cols, cols)
+  end
+  
   @spec set_col_width(Sheet.t, String.t, number) :: Sheet.t
   @doc ~S"""
   Set the column width for a given column. Column is indexed by
   name ("A", ...)
   """
   def set_col_width(sheet, column, width) do
-    update_in sheet.col_widths,
-              &(Map.put &1, Util.decode_col(column), width)
+    set_col(sheet, column, width: width)
   end
 
   @spec set_row_height(Sheet.t, number, number) :: Sheet.t
