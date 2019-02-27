@@ -272,20 +272,44 @@ defmodule Elixlsx.XMLTemplates do
     end
   end
 
-  defp make_col_width({k, v}) do
-    '<col min="#{k}" max="#{k}" width="#{v}" customWidth="1" />'
+  defp make_col_range(key) do
+    key_str = Integer.to_string(key)
+    [" min=\"", key_str, "\" max=\"", key_str, "\""]
   end
 
-  defp make_col_widths(sheet) do
-    if Kernel.map_size(sheet.col_widths) != 0 do
-      cols = Map.to_list(sheet.col_widths)
-      |> Enum.sort
-      |> Enum.map_join(&make_col_width/1)
+  defp make_col_style(props, _) when props == %{}, do: []
+  defp make_col_style(%{width: w} = props, _) when props == %{width: w}, do: []
+  defp make_col_style(props, wci) do
+    style_id = CellStyleDB.get_id(wci.cellstyledb, CellStyle.from_props(props))
+    [" style=\"", Integer.to_string(style_id), "\""]
+  end
+  
+  defp make_col_width(%{width: width}) when is_integer(width) do
+    [" width=\"", Integer.to_string(width), "\" customWidth=\"1\""]
+  end
+  defp make_col_width(%{width: width}) when is_float(width) do
+    [" width=\"", Float.to_string(width), "\" customWidth=\"1\""]
+  end
+  defp make_col_width(_), do: []
 
-      "<cols>#{cols}</cols>"
-    else
-      ""
-    end
+  defp make_cols(%{cols: cols}, _) when cols == %{}, do: ""
+  defp make_cols(%{cols: cols}, wci) do
+    [
+      "<cols>",
+      Map.to_list(cols)
+      |> Enum.sort()
+      |> Enum.map(fn {key, props} -> [
+        "<col",
+        make_col_range(key),
+        make_col_width(props),
+        make_col_style(props, wci),
+        "/>"
+      ]
+      end),
+      "</cols>"
+    ]
+    # remove to output as iolist instead of string
+    |> Enum.join()
   end
 
   @spec make_sheet(Sheet.t, WorkbookCompInfo.t) :: String.t
@@ -313,7 +337,7 @@ defmodule Elixlsx.XMLTemplates do
     </sheetViews>
     <sheetFormatPr defaultRowHeight="12.8"/>
     """
-    <> make_col_widths(sheet) <>
+    <> make_cols(sheet, wci) <>
     """
     <sheetData>
     """

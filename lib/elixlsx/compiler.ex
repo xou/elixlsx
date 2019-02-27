@@ -52,6 +52,21 @@ defmodule Elixlsx.Compiler do
     end
   end
 
+  def compinfo_col_pass_style(wci, %{width: w} = props) when props == %{width: w}, do: wci
+  
+  def compinfo_col_pass_style wci, props do
+    update_in wci.cellstyledb,
+            &CellStyleDB.register_style(&1,
+                                        Elixlsx.Style.CellStyle.from_props(props))
+  end
+
+  @spec compinfo_from_cols(WorkbookCompInfo.t, list(list(any()))) :: WorkbookCompInfo.t
+  def compinfo_from_cols wci, cols do
+    Enum.sort(cols)
+    |> List.foldl(wci, fn ({_, props}, wci) ->
+      compinfo_col_pass_style(wci, props)
+    end)
+  end
 
   @spec compinfo_from_rows(WorkbookCompInfo.t, list(list(any()))) :: WorkbookCompInfo.t
   def compinfo_from_rows wci, rows do
@@ -65,7 +80,9 @@ defmodule Elixlsx.Compiler do
   @spec compinfo_from_sheets(WorkbookCompInfo.t, list(Sheet.t)) :: WorkbookCompInfo.t
   def compinfo_from_sheets wci, sheets do
     List.foldl sheets, wci, fn (sheet, wci) ->
-      compinfo_from_rows wci, sheet.rows
+      wci
+      |> compinfo_from_rows(sheet.rows)
+      |> compinfo_from_cols(sheet.cols)
     end
   end
 
