@@ -284,8 +284,11 @@ defmodule Elixlsx.XMLTemplates do
     [" style=\"", Integer.to_string(style_id), "\""]
   end
   
-  defp make_col_width(%{width: width}) do
+  defp make_col_width(%{width: width}) when is_integer(width) do
     [" width=\"", Integer.to_string(width), "\" customWidth=\"1\""]
+  end
+  defp make_col_width(%{width: width}) when is_float(width) do
+    [" width=\"", Float.to_string(width), "\" customWidth=\"1\""]
   end
   defp make_col_width(_), do: []
 
