@@ -253,14 +253,23 @@ defmodule Elixlsx.XMLTemplates do
       """
   end
 
-  defp xl_sheet_rows(data, row_heights, wci) do
-    Enum.zip(data, 1 .. length data) |>
-    Enum.map_join(fn {row, rowidx} ->
+  defp xl_sheet_rows(data, row_heights, grouping_info, wci) do
+    rows =
+      Enum.zip(data, 1 .. length data) |>
+      Enum.map_join(fn {row, rowidx} ->
               """
-              <row r="#{rowidx}" #{get_row_height_attr(row_heights, rowidx)}>
+              <row r="#{rowidx}" #{get_row_height_attr(row_heights, rowidx)}#{get_row_grouping_attr(grouping_info, rowidx)}>
                 #{xl_sheet_cols(row, rowidx, wci)}
               </row>
               """ end)
+
+    if (length(data) + 1) in grouping_info.collapsed_idxs do
+      rows <> """
+      <row r="#{length(data) + 1}" collapsed="1"></row>
+      """
+    else
+      rows
+    end
   end
 
   defp get_row_height_attr(row_heights, rowidx) do
@@ -272,17 +281,99 @@ defmodule Elixlsx.XMLTemplates do
     end
   end
 
-  defp make_col_width({k, v}) do
-    '<col min="#{k}" max="#{k}" width="#{v}" customWidth="1" />'
+  defp get_row_grouping_attr(gr_info, rowidx) do
+    outline_level = Map.get(gr_info.outline_lvs, rowidx)
+    (if outline_level, do: " outlineLevel=\"#{outline_level}\"", else: "")
+    <>
+    (if rowidx in gr_info.hidden_idxs, do: " hidden=\"1\"", else: "")
+    <>
+    (if rowidx in gr_info.collapsed_idxs, do: " collapsed=\"1\"", else: "")
   end
 
-  defp make_col_widths(sheet) do
-    if Kernel.map_size(sheet.col_widths) != 0 do
-      cols = Map.to_list(sheet.col_widths)
-      |> Enum.sort
-      |> Enum.map_join(&make_col_width/1)
+  @typep grouping_info :: %{
+    outline_lvs: %{optional(idx :: pos_integer) => lv :: pos_integer},
+    hidden_idxs: MapSet.t(pos_integer),
+    collapsed_idxs: MapSet.t(pos_integer)
+  }
+  @spec get_grouping_info([Sheet.rowcol_group]) :: grouping_info
+  defp get_grouping_info(groups) do
+    ranges =
+      Enum.map(groups, fn
+        {%Range{} = range, _opts} -> range
+        %Range{} = range -> range
+      end)
+
+    collapsed_ranges =
+      groups
+      |> Enum.filter(fn
+        {%Range{} = _range, opts} -> opts[:collapsed]
+        %Range{} = _range -> false
+      end)
+      |> Enum.map(fn {range, _opts} -> range end)
+
+    # see ECMA Office Open XML Part1, 18.3.1.73 Row -> attributes -> collapsed for examples
+    %{
+      outline_lvs:
+        ranges
+        |> Stream.concat()
+        |> Enum.group_by(& &1)
+        |> Map.new(fn {k, v} -> {k, length(v)} end),
+      hidden_idxs:
+        collapsed_ranges |> Stream.concat() |> MapSet.new(),
+      collapsed_idxs:
+        collapsed_ranges |> Enum.map(& &1.last + 1) |> MapSet.new()
+    }
+  end
+
+  defp make_col({k, width, outline_level, hidden, collapsed}) do
+    width_attr =
+      if width, do: " width=\"#{width}\" customWidth=\"1\"", else: ""
+    hidden_attr = if hidden, do: " hidden=\"1\"", else: ""
+    outline_level_attr =
+      if outline_level, do: " outlineLevel=\"#{outline_level}\"", else: ""
+    collapsed_attr =
+      if collapsed, do: " collapsed=\"1\"", else: ""
+
+    '<col min="#{k}" max="#{k}"#{width_attr}#{hidden_attr}#{outline_level_attr}#{collapsed_attr} />'
+  end
+
+  defp make_cols(sheet) do
+    grouping_info = get_grouping_info(sheet.group_cols)
+    col_indices =
+      Stream.concat([
+        Map.keys(sheet.col_widths),
+        Map.keys(grouping_info.outline_lvs),
+        grouping_info.hidden_idxs,
+        grouping_info.collapsed_idxs
+      ])
+      |> Enum.sort()
+      |> Enum.dedup()
+
+    unless Enum.empty?(col_indices) do
+      cols =
+        col_indices
+        |> Stream.map(&({
+          &1,
+          Map.get(sheet.col_widths, &1),
+          Map.get(grouping_info.outline_lvs, &1),
+          &1 in grouping_info.hidden_idxs,
+          &1 in grouping_info.collapsed_idxs
+        }))
+        |> Enum.map_join(&make_col/1)
 
       "<cols>#{cols}</cols>"
+    else
+      ""
+    end
+  end
+
+  defp make_max_outline_level_row(row_outline_levels) do
+    unless row_outline_levels === %{} do
+      max_outline_level_row =
+      Map.values(row_outline_levels)
+      |> Enum.max()
+
+      " outlineLevelRow=\"#{max_outline_level_row}\""
     else
       ""
     end
@@ -293,6 +384,8 @@ defmodule Elixlsx.XMLTemplates do
   Returns the XML content for single sheet.
   """
   def make_sheet(sheet, wci) do
+    grouping_info = get_grouping_info(sheet.group_rows)
+
     ~S"""
     <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
     <worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">
@@ -311,14 +404,18 @@ defmodule Elixlsx.XMLTemplates do
     """
     </sheetView>
     </sheetViews>
-    <sheetFormatPr defaultRowHeight="12.8"/>
+    <sheetFormatPr defaultRowHeight="12.8"
     """
-    <> make_col_widths(sheet) <>
+    <> make_max_outline_level_row(grouping_info.outline_lvs) <>
+    """
+    />
+    """
+    <> make_cols(sheet) <>
     """
     <sheetData>
     """
     <>
-    xl_sheet_rows(sheet.rows, sheet.row_heights, wci)
+    xl_sheet_rows(sheet.rows, sheet.row_heights, grouping_info, wci)
     <>
     ~S"""
     </sheetData>
