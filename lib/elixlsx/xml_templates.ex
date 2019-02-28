@@ -142,23 +142,17 @@ defmodule Elixlsx.XMLTemplates do
   ### xl/worksheet/sheet*.xml
   ###
 
-  defp split_into_content_style(cell, wci) do
-    cond do
-      is_list(cell) ->
-        cellstyle = CellStyle.from_props (tl cell)
-        {
-          hd(cell),
-          CellStyleDB.get_id(wci.cellstyledb, cellstyle),
-          cellstyle
-        }
-      true ->
-        {
-          cell,
-          0,
-          nil
-        }
-    end
+  defp split_into_content_style([h | t], wci) do
+    cellstyle = CellStyle.from_props(t)
+
+    {
+      h,
+      CellStyleDB.get_id(wci.cellstyledb, cellstyle),
+      cellstyle
+    }
   end
+
+  defp split_into_content_style(cell, _wci), do: {cell, 0, nil}
 
   defp get_content_type_value(content, wci) do
     case content do
