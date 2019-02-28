@@ -1,5 +1,5 @@
 defmodule Elixlsx.Util do
-  @col_alphabet to_string(Enum.to_list(?A..?Z))
+  @col_alphabet Enum.to_list(?A..?Z)
 
   @doc ~S"""
   returns the column letter(s) associated with a column index. Col idx starts at 1.
@@ -40,29 +40,22 @@ defmodule Elixlsx.Util do
 
   """
   @spec decode_col(list(char()) | String.t) :: non_neg_integer
-  def decode_col s do
-    cond do
-      is_list s -> decode_col(to_string s)
-      String.valid? s -> decode_col_ s
-      true -> raise %ArgumentError{message: "decode_col expects string or charlist, got "
-                                   <> inspect s}
+  def decode_col(s) when is_list(s), do: decode_col(to_string s)
+  def decode_col(""), do: 0
+  def decode_col(s) when is_binary(s) do
+    case String.match? s, ~r/^[A-Z]*$/ do
+      false -> 
+        raise %ArgumentError{message: "Invalid column string: " <> inspect s}
+  
+      true ->
+        # translate list of strings to the base-26 value they represent
+        Enum.map(String.to_charlist(s), (fn x -> :string.chr(@col_alphabet, x) end)) |>
+        # multiply and aggregate them
+        List.foldl(0, (fn (x, acc) -> x + 26 * acc end))
     end
   end
-
-
-  @spec decode_col_(String.t) :: non_neg_integer
-  defp decode_col_("") do 0 end
-  defp decode_col_(s) do
-    alphabet_list = String.to_charlist @col_alphabet
-
-    if !String.match? s, ~r/^[A-Z]*$/ do
-      raise %ArgumentError{message: "Invalid column string: " <> inspect s}
-    end
-
-    # translate list of strings to the base-26 value they represent
-    Enum.map(String.to_charlist(s), (fn x -> :string.chr(alphabet_list, x) end)) |>
-    # multiply and aggregate them
-    List.foldl(0, (fn (x, acc) -> x + 26 * acc end))
+  def decode_col(s) do
+    raise %ArgumentError{message: "decode_col expects string or charlist, got " <> inspect s}
   end
 
 
@@ -252,4 +245,3 @@ defmodule Elixlsx.Util do
     String.replace(@version, ~r/(\d+)\.(\d+)\.(\d+)/, "\\1.\\2\\3")
   end
 end
-
