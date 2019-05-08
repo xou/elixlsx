@@ -178,59 +178,76 @@ defmodule Elixlsx.XMLTemplates do
 
   # TODO i know now about string interpolation, i should probably clean this up. ;)
   defp xl_sheet_cols(row, rowidx, wci) do
-    Enum.zip(row, 1 .. length row) |>
-    Enum.map(
-      fn {cell, colidx} ->
+    {updated_row, _id} =
+      row
+      |> List.foldl({"", 1}, fn cell, {acc, colidx} ->
         {content, styleID, cellstyle} = split_into_content_style(cell, wci)
+
         if is_nil(content) do
-          ""
+          {acc, colidx + 1}
         else
-          content = if CellStyle.is_date? cellstyle do
-            U.to_excel_datetime content
-          else
-            content
-          end
+          content =
+            if CellStyle.is_date?(cellstyle) do
+              U.to_excel_datetime(content)
+            else
+              content
+            end
 
           cv = get_content_type_value(content, wci)
+
           {content_type, content_value, content_opts} =
-          case cv do
-            {t, v} -> {t, v, []}
-            {t, v, opts} -> {t, v, opts}
-            :error -> raise %ArgumentError{
-                        message: "Invalid column content at " <>
-                                    U.to_excel_coords(rowidx, colidx) <> ": "
-                                    <> (inspect content)
-                                    }
-          end
+            case cv do
+              {t, v} ->
+                {t, v, []}
 
-          case content_type do
-            :formula ->
-              value = if not is_nil(content_opts[:value]), do: "<v>#{content_opts[:value]}</v>", else: ""
+              {t, v, opts} ->
+                {t, v, opts}
 
-              """
-              <c r="#{U.to_excel_coords(rowidx, colidx)}"
-              s="#{styleID}">
-              <f>#{content_value}</f>
-              #{value}
-              </c>
-              """
-            :empty ->
-              """
-              <c r="#{U.to_excel_coords(rowidx, colidx)}"
-              s="#{styleID}">
-              </c>
-              """
-            type ->
-              """
-              <c r="#{U.to_excel_coords(rowidx, colidx)}"
-              s="#{styleID}" t="#{type}">
-              <v>#{content_value}</v>
-              </c>
-              """
-          end
-          end
-        end) |>
-    List.foldr("", &<>/2)
+              :error ->
+                raise %ArgumentError{
+                  message:
+                    "Invalid column content at " <>
+                      U.to_excel_coords(rowidx, colidx) <> ": " <> inspect(content)
+                }
+            end
+
+          cell_xml =
+            case content_type do
+              :formula ->
+                value =
+                  if not is_nil(content_opts[:value]),
+                    do: "<v>#{content_opts[:value]}</v>",
+                    else: ""
+
+                """
+                <c r="#{U.to_excel_coords(rowidx, colidx)}"
+                s="#{styleID}">
+                <f>#{content_value}</f>
+                #{value}
+                </c>
+                """
+
+              :empty ->
+                """
+                <c r="#{U.to_excel_coords(rowidx, colidx)}"
+                s="#{styleID}">
+                </c>
+                """
+
+              type ->
+                """
+                <c r="#{U.to_excel_coords(rowidx, colidx)}"
+                s="#{styleID}" t="#{type}">
+                <v>#{content_value}</v>
+                </c>
+                """
+            end
+
+          {acc <> cell_xml, colidx + 1}
+        end
+      end)
+
+    updated_row
   end
 
   defp xl_merge_cells([]) do
