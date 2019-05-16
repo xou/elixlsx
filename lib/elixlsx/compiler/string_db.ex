@@ -23,8 +23,14 @@ defmodule Elixlsx.Compiler.StringDB do
   def get_id(stringdb, s) do
     case Map.fetch(stringdb.strings, s) do
       :error ->
-        raise %ArgumentError{
-          message: "Invalid key provided for StringDB.get_id: " <> inspect(s)}
+        if XML.valid?(s) do
+          raise %ArgumentError{
+            message: "Invalid key provided for StringDB.get_id: " <> inspect(s)}
+        else
+          # if the xml is invalid, then we never wanted it in the stringdb to
+          # begin with
+          -1
+        end
       {:ok, id} ->
         id
     end

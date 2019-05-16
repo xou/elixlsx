@@ -12,7 +12,7 @@ defmodule Elixlsx.Style.NumFmt do
       props[:yyyymmdd] -> date_yyyy_mm_dd()
       props[:datetime] -> date_datetime()
       props[:num_format] ->
-        if String.valid? props[:num_format] do
+        if XML.valid? props[:num_format] do
           %NumFmt{format: props[:num_format]}
         else
           raise %ArgumentError{

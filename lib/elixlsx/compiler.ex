@@ -25,7 +25,7 @@ defmodule Elixlsx.Compiler do
 
   def compinfo_cell_pass_value wci, value do
     cond do
-      is_binary(value) && String.valid?(value)
+      is_binary(value) && XML.valid?(value)
         -> update_in wci.stringdb, &StringDB.register_string(&1, value)
       true -> wci
     end
