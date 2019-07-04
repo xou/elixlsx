@@ -24,7 +24,7 @@ defmodule Elixlsx.Sheet do
     row_heights: %{pos_integer => number},
     group_cols: list(rowcol_group),
     group_rows: list(rowcol_group),
-    merge_cells: [],
+    merge_cells: [{String.t, String.t}],
     pane_freeze: {number, number} | nil,
     show_grid_lines: boolean()
   }
