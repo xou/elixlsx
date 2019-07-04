@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.4.2
+
+- Dialyzer fixes
+- Speed improvements
+- XML character validation fixes
+
 ## 0.4.1
 
 - Fixes for dialyzer, documentation.
