@@ -53,7 +53,8 @@ defmodule Elixlsx do
   Write a Workbook object to the binary
   Returns a tuple containing a filename and the binary
   """
-  @spec write_to_memory(Elixlsx.Workbook.t(), String.t()) :: {:ok, {charlist, binary}} | {:error, any()}
+  @spec write_to_memory(Elixlsx.Workbook.t(), String.t()) ::
+          {:ok, {charlist, binary}} | {:error, any()}
   def write_to_memory(workbook, filename) do
     wci = Elixlsx.Compiler.make_workbook_comp_info(workbook)
     :zip.create(to_charlist(filename), Elixlsx.Writer.create_files(workbook, wci), [:memory])

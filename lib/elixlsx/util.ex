@@ -13,12 +13,13 @@ defmodule Elixlsx.Util do
       "AB"
 
   """
-  @spec encode_col(non_neg_integer) :: String.t
+  @spec encode_col(non_neg_integer) :: String.t()
   def encode_col(0), do: ""
   def encode_col(num) when num <= 26, do: <<num + 64>>
 
   def encode_col(num, suffix \\ "")
   def encode_col(num, suffix) when num <= 26, do: <<num + 64>> <> suffix
+
   def encode_col(num, suffix) do
     mod = div(num, 26)
     rem = rem(num, 26)
@@ -42,25 +43,26 @@ defmodule Elixlsx.Util do
       1
 
   """
-  @spec decode_col(list(char()) | String.t) :: non_neg_integer
-  def decode_col(s) when is_list(s), do: decode_col(to_string s)
+  @spec decode_col(list(char()) | String.t()) :: non_neg_integer
+  def decode_col(s) when is_list(s), do: decode_col(to_string(s))
   def decode_col(""), do: 0
+
   def decode_col(s) when is_binary(s) do
-    case String.match? s, ~r/^[A-Z]*$/ do
+    case String.match?(s, ~r/^[A-Z]*$/) do
       false ->
-        raise %ArgumentError{message: "Invalid column string: " <> inspect s}
+        raise %ArgumentError{message: "Invalid column string: " <> inspect(s)}
 
       true ->
         # translate list of strings to the base-26 value they represent
-        Enum.map(String.to_charlist(s), (fn x -> :string.chr(@col_alphabet, x) end)) |>
+        Enum.map(String.to_charlist(s), fn x -> :string.chr(@col_alphabet, x) end)
         # multiply and aggregate them
-        List.foldl(0, (fn (x, acc) -> x + 26 * acc end))
+        |> List.foldl(0, fn x, acc -> x + 26 * acc end)
     end
   end
-  def decode_col(s) do
-    raise %ArgumentError{message: "decode_col expects string or charlist, got " <> inspect s}
-  end
 
+  def decode_col(s) do
+    raise %ArgumentError{message: "decode_col expects string or charlist, got " <> inspect(s)}
+  end
 
   @doc ~S"""
   Returns the Char/Number representation of a given row/column combination.
@@ -75,12 +77,12 @@ defmodule Elixlsx.Util do
       "AA10"
 
   """
-  @spec to_excel_coords(number, number) :: String.t
+  @spec to_excel_coords(number, number) :: String.t()
   def to_excel_coords(row, col) do
     encode_col(col) <> to_string(row)
   end
 
-  @spec from_excel_coords(String.t) :: {pos_integer, pos_integer}
+  @spec from_excel_coords(String.t()) :: {pos_integer, pos_integer}
   @doc ~S"""
   returns a tuple {row, col} corresponding to the input.
   row and col are 1-indexed, use from_excel_coords0 for zero-indexing.
@@ -96,22 +98,21 @@ defmodule Elixlsx.Util do
   """
   def from_excel_coords(input) do
     case Regex.run(~r/^([A-Z]+)([0-9]+)$/, input, capture: :all_but_first) do
-      nil -> raise %ArgumentError{
-                    message: "Invalid excel coordinates: " <>
-                            (inspect input)}
+      nil ->
+        raise %ArgumentError{message: "Invalid excel coordinates: " <> inspect(input)}
+
       [colS, rowS] ->
-        {row, _} = Integer.parse rowS
+        {row, _} = Integer.parse(rowS)
         {row, decode_col(colS)}
     end
   end
 
-  @spec from_excel_coords0(String.t) :: {non_neg_integer, non_neg_integer}
+  @spec from_excel_coords0(String.t()) :: {non_neg_integer, non_neg_integer}
   @doc ~S"See from_excel_coords/1"
   def from_excel_coords0(input) do
     {row, col} = from_excel_coords(input)
     {row - 1, col - 1}
   end
-
 
   @doc ~S"""
   Returns the ISO String representation (in UTC) for a erlang datetime() or datetime1970()
@@ -124,13 +125,17 @@ defmodule Elixlsx.Util do
 
   """
   @type datetime_t :: :calendar.datetime()
-  @spec iso_from_datetime(datetime_t) :: String.t
-  def iso_from_datetime calendar do
+  @spec iso_from_datetime(datetime_t) :: String.t()
+  def iso_from_datetime(calendar) do
     {{y, m, d}, {hours, minutes, seconds}} = calendar
-    to_string(:io_lib.format('~4.10.0b-~2.10.0b-~2.10.0bT~2.10.0b:~2.10.0b:~2.10.0bZ',
-                             [y, m, d, hours, minutes, seconds]))
-  end
 
+    to_string(
+      :io_lib.format(
+        '~4.10.0b-~2.10.0b-~2.10.0bT~2.10.0b:~2.10.0b:~2.10.0bZ',
+        [y, m, d, hours, minutes, seconds]
+      )
+    )
+  end
 
   @doc ~S"""
   returns
@@ -154,21 +159,26 @@ defmodule Elixlsx.Util do
       "goat"
 
   """
-  @spec iso_timestamp(String.t | integer | nil) :: String.t
-  def iso_timestamp input \\ nil do
+  @spec iso_timestamp(String.t() | integer | nil) :: String.t()
+  def iso_timestamp(input \\ nil) do
     cond do
       input == nil ->
-        iso_from_datetime(:calendar.universal_time)
+        iso_from_datetime(:calendar.universal_time())
+
       is_integer(input) ->
-        iso_from_datetime(:calendar.now_to_universal_time({div(input, 1000000), rem(input, 1000000), 0}))
+        iso_from_datetime(
+          :calendar.now_to_universal_time({div(input, 1_000_000), rem(input, 1_000_000), 0})
+        )
+
       # TODO this case should parse the string i guess
       # TODO also prominently absent: [char].
-      XML.valid? input ->
+      XML.valid?(input) ->
         input
-      true -> raise "Invalid input to iso_timestamp." <> (inspect input)
+
+      true ->
+        raise "Invalid input to iso_timestamp." <> inspect(input)
     end
   end
-
 
   @excel_epoch {{1899, 12, 31}, {0, 0, 0}}
   @secs_per_day 86400
@@ -178,21 +188,21 @@ defmodule Elixlsx.Util do
   """
   @spec to_excel_datetime(datetime_t) :: {:excelts, number}
   def to_excel_datetime({{yy, mm, dd}, {h, m, s}}) do
-    in_seconds = :calendar.datetime_to_gregorian_seconds {{yy, mm, dd}, {h, m, s}}
-    excel_epoch = :calendar.datetime_to_gregorian_seconds @excel_epoch
+    in_seconds = :calendar.datetime_to_gregorian_seconds({{yy, mm, dd}, {h, m, s}})
+    excel_epoch = :calendar.datetime_to_gregorian_seconds(@excel_epoch)
 
     t_diff = (in_seconds - excel_epoch) / @secs_per_day
 
     # Apply the "Lotus 123" bug - 1900 is considered a leap year.
-    t_diff = if t_diff > 59 do
-      t_diff + 1
-    else
-      t_diff
-    end
+    t_diff =
+      if t_diff > 59 do
+        t_diff + 1
+      else
+        t_diff
+      end
 
     {:excelts, t_diff}
   end
-
 
   @doc ~S"""
   Convert a unix timestamp to excel time.
@@ -200,7 +210,8 @@ defmodule Elixlsx.Util do
   @spec to_excel_datetime(number) :: {:excelts, number}
   def to_excel_datetime(input) when is_number(input) do
     to_excel_datetime(
-      :calendar.now_to_universal_time({div(input, 1000000), rem(input, 1000000), 0}))
+      :calendar.now_to_universal_time({div(input, 1_000_000), rem(input, 1_000_000), 0})
+    )
   end
 
   @doc ~S"""
@@ -215,7 +226,7 @@ defmodule Elixlsx.Util do
   @doc ~S"""
   Formula's value calculate on opening excel programm. We don't need to format this here.
   """
-  @spec to_excel_datetime({:formula, String.t}) :: {:formula, String.t}
+  @spec to_excel_datetime({:formula, String.t()}) :: {:formula, String.t()}
   def to_excel_datetime({:formula, value}) do
     {:formula, value}
   end
@@ -229,9 +240,9 @@ defmodule Elixlsx.Util do
       "HElloO WoOrld"
 
   """
-  @spec replace_all(String.t, [{String.t, String.t}]) :: String.t
+  @spec replace_all(String.t(), [{String.t(), String.t()}]) :: String.t()
 
-  def replace_all(input, [{s,r}|srx]) do
+  def replace_all(input, [{s, r} | srx]) do
     String.replace(input, s, r) |> replace_all(srx)
   end
 
@@ -239,8 +250,7 @@ defmodule Elixlsx.Util do
     input
   end
 
-
-  @version Mix.Project.config[:version]
+  @version Mix.Project.config()[:version]
   @doc ~S"""
   Returns the application version suitable for the <ApplicationVersion> tag.
   """

@@ -4,22 +4,30 @@ defmodule Elixlsx.Style.NumFmt do
   defstruct format: nil
 
   @type t :: %NumFmt{
-    format: String.t
-  }
+          format: String.t()
+        }
 
   def from_props(props) do
     cond do
-      props[:yyyymmdd] -> date_yyyy_mm_dd()
-      props[:datetime] -> date_datetime()
+      props[:yyyymmdd] ->
+        date_yyyy_mm_dd()
+
+      props[:datetime] ->
+        date_datetime()
+
       props[:num_format] ->
-        if XML.valid? props[:num_format] do
+        if XML.valid?(props[:num_format]) do
           %NumFmt{format: props[:num_format]}
         else
           raise %ArgumentError{
-            message: ":date_format parameter needs to be a" <>
-              " valid string, but is " <> inspect props[:num_format]}
+            message:
+              ":date_format parameter needs to be a" <>
+                " valid string, but is " <> inspect(props[:num_format])
+          }
         end
-      true -> nil
+
+      true ->
+        nil
     end
   end
 
@@ -39,7 +47,7 @@ defmodule Elixlsx.Style.NumFmt do
 
   def is_date?(numfmt) do
     # TODO while this is probably reliable enough for 99% of cases...
-    String.contains? numfmt.format, "yy"
+    String.contains?(numfmt.format, "yy")
   end
 
   @doc ~S"""
@@ -50,6 +58,7 @@ defmodule Elixlsx.Style.NumFmt do
   """
   def get_stylexml_entry(numfmt, idx) do
     fmt = Elixlsx.XMLTemplates.xml_escape(numfmt.format)
+
     """
     <numFmt numFmtId="#{idx}" formatCode="#{fmt}" />
     """

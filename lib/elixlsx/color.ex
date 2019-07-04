@@ -15,13 +15,16 @@ defmodule Elixlsx.Color do
   def to_rgb_color(color) do
     case String.match?(color, ~r/#[0-9a-fA-F]{6}/) do
       true ->
-        "FF" <> (
-          color |>
-          String.slice(1..-1) |> # remove leading character
-          String.upcase)
+        "FF" <>
+          (color
+           # remove leading character
+           |> String.slice(1..-1)
+           |> String.upcase())
+
       false ->
-        raise %ArgumentError{message: "Font color must be in format #rrggbb (hex values), is " <> (inspect color)}
+        raise %ArgumentError{
+          message: "Font color must be in format #rrggbb (hex values), is " <> inspect(color)
+        }
     end
   end
-
 end

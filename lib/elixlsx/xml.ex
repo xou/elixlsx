@@ -9,8 +9,8 @@ defmodule XML do
   #   any Unicode character, excluding the surrogate blocks, FFFE, and FFFF.
   #   Char ::= #x9 | #xA | #xD | [#x20-#xD7FF] | [#xE000-#xFFFD] | [#x10000-#x10FFFF]
   def valid?(<<h::utf8, t::binary>>)
-    when h in @xml_chars_block_1 or h in @xml_chars_block_2
-      or h in @xml_chars_block_3 or h in @xml_chars_block_4 do
+      when h in @xml_chars_block_1 or h in @xml_chars_block_2 or h in @xml_chars_block_3 or
+             h in @xml_chars_block_4 do
     valid?(t)
   end
 
