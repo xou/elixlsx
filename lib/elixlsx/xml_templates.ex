@@ -165,7 +165,13 @@ defmodule Elixlsx.XMLTemplates do
       x when is_number(x) ->
         {"n", to_string(x)}
       x when is_binary(x) ->
-        {"s", to_string(StringDB.get_id wci.stringdb, x)}
+        id = StringDB.get_id(wci.stringdb, x)
+
+        if id == -1 do
+          {:empty, :empty}
+        else
+          {"s", to_string(id)}
+        end
       x when is_boolean(x) ->
         {"b", if x do "1" else "0" end}
       :empty ->

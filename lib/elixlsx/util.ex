@@ -16,7 +16,7 @@ defmodule Elixlsx.Util do
   @spec encode_col(non_neg_integer) :: String.t
   def encode_col(0), do: ""
   def encode_col(num) when num <= 26, do: <<num + 64>>
-  
+
   def encode_col(num, suffix \\ "")
   def encode_col(num, suffix) when num <= 26, do: <<num + 64>> <> suffix
   def encode_col(num, suffix) do
@@ -47,9 +47,9 @@ defmodule Elixlsx.Util do
   def decode_col(""), do: 0
   def decode_col(s) when is_binary(s) do
     case String.match? s, ~r/^[A-Z]*$/ do
-      false -> 
+      false ->
         raise %ArgumentError{message: "Invalid column string: " <> inspect s}
-  
+
       true ->
         # translate list of strings to the base-26 value they represent
         Enum.map(String.to_charlist(s), (fn x -> :string.chr(@col_alphabet, x) end)) |>
@@ -163,7 +163,7 @@ defmodule Elixlsx.Util do
         iso_from_datetime(:calendar.now_to_universal_time({div(input, 1000000), rem(input, 1000000), 0}))
       # TODO this case should parse the string i guess
       # TODO also prominently absent: [char].
-      String.valid? input ->
+      XML.valid? input ->
         input
       true -> raise "Invalid input to iso_timestamp." <> (inspect input)
     end
