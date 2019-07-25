@@ -25,7 +25,8 @@ defmodule Elixlsx.Sheet do
             group_rows: [],
             merge_cells: [],
             pane_freeze: nil,
-            show_grid_lines: true
+            show_grid_lines: true,
+            protected: false
 
   @type t :: %Sheet{
           name: String.t(),
@@ -36,7 +37,8 @@ defmodule Elixlsx.Sheet do
           group_rows: list(rowcol_group),
           merge_cells: [{String.t(), String.t()}],
           pane_freeze: {number, number} | nil,
-          show_grid_lines: boolean()
+          show_grid_lines: boolean(),
+          protected: boolean()
         }
   @type rowcol_group :: Range.t() | {Range.t(), opts :: keyword}
 
