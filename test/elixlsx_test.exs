@@ -92,6 +92,15 @@ defmodule ElixlsxTest do
     assert xmlAttribute(name, :value) == 'Arial'
   end
 
+  test "blank sheet name" do
+    sheet1 = Sheet.with_name("")
+
+    assert_raise ArgumentError, "The sheet name cannot be blank.", fn ->
+      %Workbook{sheets: [sheet1]}
+      |> Elixlsx.write_to("test.xlsx")
+    end
+  end
+
   test "too long sheet name" do
     sheet1 = Sheet.with_name("This is a very looong sheet name")
 
@@ -101,5 +110,20 @@ defmodule ElixlsxTest do
                    %Workbook{sheets: [sheet1]}
                    |> Elixlsx.write_to("test.xlsx")
                  end
+  end
+
+  test "invalid chars in sheet name" do
+    sheet_names = ~W(: \ / ? * [ ])
+
+    Enum.each(sheet_names, fn name ->
+      sheet1 = Sheet.with_name(name)
+
+      assert_raise ArgumentError,
+                   ~r/The sheet name .* contains following invalid characters:/,
+                   fn ->
+                     %Workbook{sheets: [sheet1]}
+                     |> Elixlsx.write_to("test.xlsx")
+                   end
+    end)
   end
 end
