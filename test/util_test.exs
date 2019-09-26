@@ -11,5 +11,4 @@ defmodule ExCheck.UtilTest do
       end
     end
   end
-  
 end
