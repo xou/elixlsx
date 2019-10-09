@@ -1,8 +1,13 @@
 defmodule ElixlsxTest do
   require Record
-  Record.defrecord :xmlAttribute, Record.extract(:xmlAttribute, from_lib: "xmerl/include/xmerl.hrl")
-  Record.defrecord :xmlElement, Record.extract(:xmlElement, from_lib: "xmerl/include/xmerl.hrl")
-  Record.defrecord :xmlText, Record.extract(:xmlText, from_lib: "xmerl/include/xmerl.hrl")
+
+  Record.defrecord(
+    :xmlAttribute,
+    Record.extract(:xmlAttribute, from_lib: "xmerl/include/xmerl.hrl")
+  )
+
+  Record.defrecord(:xmlElement, Record.extract(:xmlElement, from_lib: "xmerl/include/xmerl.hrl"))
+  Record.defrecord(:xmlText, Record.extract(:xmlText, from_lib: "xmerl/include/xmerl.hrl"))
 
   use ExUnit.Case
   doctest Elixlsx
@@ -24,48 +29,51 @@ defmodule ElixlsxTest do
   end
 
   defp xml_inner_strings(xml, path) do
-    {xmerl, []} = :xmerl_scan.string String.to_charlist(xml)
+    {xmerl, []} = :xmerl_scan.string(String.to_charlist(xml))
 
     Enum.map(
       xpath(xmerl, path),
-      fn(element) ->
-        Enum.reduce(xmlElement(element, :content), "", fn(text, acc) ->
+      fn element ->
+        Enum.reduce(xmlElement(element, :content), "", fn text, acc ->
           acc <> to_text(text)
         end)
       end
     )
   end
 
-  defp to_text xml_text do
+  defp to_text(xml_text) do
     xmlText(value: value) = xml_text
-    to_string value
+    to_string(value)
   end
 
   test "basic StringDB functionality" do
-    sdb = (%StringDB{}
-            |> StringDB.register_string("Hello")
-            |> StringDB.register_string("World")
-            |> StringDB.register_string("Hello"))
+    sdb =
+      %StringDB{}
+      |> StringDB.register_string("Hello")
+      |> StringDB.register_string("World")
+      |> StringDB.register_string("Hello")
 
-    xml = XMLTemplates.make_xl_shared_strings(StringDB.sorted_id_string_tuples sdb)
+    xml = XMLTemplates.make_xl_shared_strings(StringDB.sorted_id_string_tuples(sdb))
 
     assert xml_inner_strings(xml, '/sst/si/t') == ["Hello", "World"]
   end
 
   test "xml escaping StringDB functionality" do
-    sdb = (%StringDB{}
-            |> StringDB.register_string("Hello World & Goodbye Cruel World"))
+    sdb =
+      %StringDB{}
+      |> StringDB.register_string("Hello World & Goodbye Cruel World")
 
-    xml = XMLTemplates.make_xl_shared_strings(StringDB.sorted_id_string_tuples sdb)
+    xml = XMLTemplates.make_xl_shared_strings(StringDB.sorted_id_string_tuples(sdb))
 
     assert xml_inner_strings(xml, '/sst/si/t') == ["Hello World & Goodbye Cruel World"]
   end
 
   test "font color" do
-    xml = Font.from_props(color: "#012345") |>
-    Font.get_stylexml_entry
+    xml =
+      Font.from_props(color: "#012345")
+      |> Font.get_stylexml_entry()
 
-    {xmerl, []} = :xmerl_scan.string String.to_charlist(xml)
+    {xmerl, []} = :xmerl_scan.string(String.to_charlist(xml))
 
     [color] = :xmerl_xpath.string('/font/color/@rgb', xmerl)
 
@@ -73,21 +81,49 @@ defmodule ElixlsxTest do
   end
 
   test "font name" do
-    xml = Font.from_props(font: "Arial") |>
-    Font.get_stylexml_entry
+    xml =
+      Font.from_props(font: "Arial")
+      |> Font.get_stylexml_entry()
 
-    {xmerl, []} = :xmerl_scan.string String.to_charlist(xml)
+    {xmerl, []} = :xmerl_scan.string(String.to_charlist(xml))
 
     [name] = :xmerl_xpath.string('/font/name/@val', xmerl)
 
     assert xmlAttribute(name, :value) == 'Arial'
   end
 
-  test "too long sheet name" do
-    sheet1 = Sheet.with_name("This is a very looong sheet name")
-    assert_raise ArgumentError, ~r/The sheet name .* is too long. Maximum 31 chars allowed for name./, fn ->
+  test "blank sheet name" do
+    sheet1 = Sheet.with_name("")
+
+    assert_raise ArgumentError, "The sheet name cannot be blank.", fn ->
       %Workbook{sheets: [sheet1]}
       |> Elixlsx.write_to("test.xlsx")
     end
+  end
+
+  test "too long sheet name" do
+    sheet1 = Sheet.with_name("This is a very looong sheet name")
+
+    assert_raise ArgumentError,
+                 ~r/The sheet name .* is too long. Maximum 31 chars allowed for name./,
+                 fn ->
+                   %Workbook{sheets: [sheet1]}
+                   |> Elixlsx.write_to("test.xlsx")
+                 end
+  end
+
+  test "invalid chars in sheet name" do
+    sheet_names = ~W(: \ / ? * [ ])
+
+    Enum.each(sheet_names, fn name ->
+      sheet1 = Sheet.with_name(name)
+
+      assert_raise ArgumentError,
+                   ~r/The sheet name .* contains following invalid characters:/,
+                   fn ->
+                     %Workbook{sheets: [sheet1]}
+                     |> Elixlsx.write_to("test.xlsx")
+                   end
+    end)
   end
 end
