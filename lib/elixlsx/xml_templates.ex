@@ -541,7 +541,7 @@ defmodule Elixlsx.XMLTemplates do
     """ <>
       Enum.map_join(stringlist, fn {_, value} ->
         # the only two characters that *must* be replaced for safe XML encoding are & and <:
-        "<si><t>#{minimal_xml_text_escape(value)}</t></si>"
+        "<si><t xml:space=\"preserve\">#{minimal_xml_text_escape value}</t></si>"
       end) <> "</sst>"
   end
 
