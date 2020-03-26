@@ -1,6 +1,7 @@
 defmodule Elixlsx.Sheet do
   alias __MODULE__
   alias Elixlsx.Sheet
+  alias Elixlsx.Image
   alias Elixlsx.Util
 
   @moduledoc ~S"""
@@ -19,6 +20,7 @@ defmodule Elixlsx.Sheet do
   """
   defstruct name: "",
             rows: [],
+            images: [],
             col_widths: %{},
             row_heights: %{},
             group_cols: [],
@@ -30,6 +32,7 @@ defmodule Elixlsx.Sheet do
   @type t :: %Sheet{
           name: String.t(),
           rows: list(list(any())),
+          images: list(Image.t()),
           col_widths: %{pos_integer => number},
           row_heights: %{pos_integer => number},
           group_cols: list(rowcol_group),
@@ -95,7 +98,8 @@ defmodule Elixlsx.Sheet do
     set_at(sheet, row, col, content, opts)
   end
 
-  @spec set_at(Sheet.t(), non_neg_integer, non_neg_integer, any(), Keyword.t()) :: Sheet.t()
+  @spec set_at(Sheet.t(), non_neg_integer, non_neg_integer, any(), Keyword.t()) ::
+          Sheet.t()
   @doc ~S"""
   Set a cell at a given row/column index. Indizes start at 0.
 
@@ -110,6 +114,8 @@ defmodule Elixlsx.Sheet do
   """
   def set_at(sheet, rowidx, colidx, content, opts \\ [])
       when is_number(rowidx) and is_number(colidx) do
+    sheet = maybe_extend(sheet, rowidx, colidx)
+
     cond do
       length(sheet.rows) <= rowidx ->
         # append new rows, call self again with new sheet
@@ -133,6 +139,30 @@ defmodule Elixlsx.Sheet do
             List.replace_at(cols, colidx, [content | opts])
           end)
         end)
+    end
+  end
+
+  @spec maybe_extend(Sheet.t(), non_neg_integer, non_neg_integer) :: Sheet.t()
+  defp maybe_extend(sheet, rowidx, colidx) do
+    cond do
+      length(sheet.rows) <= rowidx ->
+        # append new rows, call self again with new sheet
+        n_new_rows = rowidx - length(sheet.rows)
+        new_rows = 0..n_new_rows |> Enum.map(fn _ -> [] end)
+
+        update_in(sheet.rows, &(&1 ++ new_rows))
+        |> maybe_extend(rowidx, colidx)
+
+      length(Enum.at(sheet.rows, rowidx)) <= colidx ->
+        n_new_cols = colidx - length(Enum.at(sheet.rows, rowidx))
+        new_cols = 0..n_new_cols |> Enum.map(fn _ -> nil end)
+        new_row = Enum.at(sheet.rows, rowidx) ++ new_cols
+
+        update_in(sheet.rows, &List.replace_at(&1, rowidx, new_row))
+        |> maybe_extend(rowidx, colidx)
+
+      true ->
+        sheet
     end
   end
 
@@ -204,5 +234,21 @@ defmodule Elixlsx.Sheet do
   """
   def remove_pane_freeze(sheet) do
     %{sheet | pane_freeze: nil}
+  end
+
+  @doc """
+  Insert an image at a given position.
+  """
+  @spec insert_image(Sheet.t(), non_neg_integer, non_neg_integer, String.t(), key: any) ::
+          Sheet.t()
+  def insert_image(sheet, rowidx, colidx, imagepath, opts \\ [])
+      when is_number(rowidx) and is_number(colidx) do
+    image = Image.new(imagepath, rowidx, colidx, opts)
+
+    # Ensure there are enough rows and columns to accomodate the image position
+    sheet = maybe_extend(sheet, rowidx, colidx)
+
+    # Add the image to the list of images in this sheet
+    update_in(sheet.images, &[image | &1])
   end
 end
