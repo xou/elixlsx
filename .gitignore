@@ -12,3 +12,6 @@ doc
 *.pdf
 
 *.swp
+
+# Elixir LS cache
+/.elixir_ls/
