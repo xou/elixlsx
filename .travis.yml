@@ -14,7 +14,7 @@ env:
     - PRONTO_PULL_REQUEST_ID=$TRAVIS_PULL_REQUEST
 
 before_script:
-  - rvm install ruby-2.3.1
+  - rvm install ruby-2.7.1
   - gem install pronto-credo
 
 script:
