@@ -184,7 +184,10 @@ defmodule Elixlsx.Util do
   @secs_per_day 86400
 
   @doc ~S"""
-  Convert an erlang :calendar object to an excel timestamp.
+  Convert an erlang :calendar object, or a unix timestamp to an excel timestamp.
+
+  Timestampts that are already in excel format are passed through
+  unmodified.
   """
   @spec to_excel_datetime(datetime_t) :: {:excelts, number}
   def to_excel_datetime({{yy, mm, dd}, {h, m, s}}) do
@@ -204,9 +207,6 @@ defmodule Elixlsx.Util do
     {:excelts, t_diff}
   end
 
-  @doc ~S"""
-  Convert a unix timestamp to excel time.
-  """
   @spec to_excel_datetime(number) :: {:excelts, number}
   def to_excel_datetime(input) when is_number(input) do
     to_excel_datetime(
@@ -214,10 +214,6 @@ defmodule Elixlsx.Util do
     )
   end
 
-  @doc ~S"""
-  Timestampts that are already in excel format are passed through
-  unmodified.
-  """
   @spec to_excel_datetime({:excelts, number}) :: {:excelts, number}
   def to_excel_datetime({:excelts, value}) do
     {:excelts, value}
