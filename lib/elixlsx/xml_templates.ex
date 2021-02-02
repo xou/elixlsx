@@ -573,10 +573,11 @@ defmodule Elixlsx.XMLTemplates do
         do: 0,
         else: FillDB.get_id(wci.filldb, style.fill)
 
-    numfmtid =
-      if is_nil(style.numfmt),
-        do: 0,
-        else: NumFmtDB.get_id(wci.numfmtdb, style.numfmt)
+    numfmtid = case style.numfmt do
+      nil -> 0
+      %{format: "# ##0.00"} -> 4
+      f -> NumFmtDB.get_id wci.numfmtdb, f
+    end
 
     borderid =
       if is_nil(style.border),
