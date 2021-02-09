@@ -1,10 +1,10 @@
 defmodule Elixlsx do
   @moduledoc ~S"""
-  Elixlsx is a writer for the MS Excel OpenXML format (.xlsx).
+  Elixlsx is a writer for the MS Excel OpenXML format (`.xlsx`).
 
   # Quick Overview
 
-  The `write_to` function takes a `Elixlsx.Workbook` object
+  The `write_to/2` function takes a `Elixlsx.Workbook` object
   and a filename. A Workbook is a collection of `Elixlsx.Sheet`s with
   (currently only) a *creation date*.
 
@@ -13,7 +13,7 @@ defmodule Elixlsx do
   # Hacking / Technical overview
 
   XLSX stores potentially repeating values in databases, most
-  notably sharedStrings.xml and styles.xml. In these databases,
+  notably `sharedStrings.xml` and `styles.xml`. In these databases,
   each element is assigned a unique ID which is then referenced
   later. IDs are consecutive and correspond to the (0-indexed)
   position in the database (except for number/date formattings,
@@ -28,7 +28,7 @@ defmodule Elixlsx do
   the XML generating function, which then `get_id`'s the ID
   associated with the string found in the cell.
 
-  For styles.xml, the procedure is in general the same, but slightly
+  For `styles.xml`, the procedure is in general the same, but slightly
   more complicated since elements can reference other elements in
   the same file. The `Elixlsx.Style.CellStyle` element is the
   combination of sub-styles (`Elixlsx.Style.Font`, `Elixlsx.Style.NumFmt`,
@@ -41,7 +41,7 @@ defmodule Elixlsx do
   """
 
   @doc ~S"""
-  Write a Workbook object to the given filename
+  Write a Workbook object to the given filename.
   """
   @spec write_to(Elixlsx.Workbook.t(), String.t()) :: {:ok, String.t()} | {:error, any()}
   def write_to(workbook, filename) do
@@ -50,7 +50,8 @@ defmodule Elixlsx do
   end
 
   @doc ~S"""
-  Write a Workbook object to the binary
+  Write a Workbook object to the binary.
+
   Returns a tuple containing a filename and the binary
   """
   @spec write_to_memory(Elixlsx.Workbook.t(), String.t()) ::

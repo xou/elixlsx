@@ -2,9 +2,11 @@ defmodule Elixlsx.Util do
   @col_alphabet Enum.to_list(?A..?Z)
 
   @doc ~S"""
-  returns the column letter(s) associated with a column index. Col idx starts at 1.
+  Returns the column letter(s) associated with a column index.
 
-  ## Example
+  Col idx starts at 1.
+
+  ## Examples
 
       iex> encode_col(1)
       "A"
@@ -32,9 +34,9 @@ defmodule Elixlsx.Util do
   end
 
   @doc ~S"""
-  returns the column index associated with a given letter.
+  Returns the column index associated with a given letter.
 
-  ## Example
+  ## Examples
 
       iex> decode_col("AB")
       28
@@ -66,6 +68,7 @@ defmodule Elixlsx.Util do
 
   @doc ~S"""
   Returns the Char/Number representation of a given row/column combination.
+
   Indizes start with 1.
 
   ## Examples
@@ -84,10 +87,11 @@ defmodule Elixlsx.Util do
 
   @spec from_excel_coords(String.t()) :: {pos_integer, pos_integer}
   @doc ~S"""
-  returns a tuple {row, col} corresponding to the input.
-  row and col are 1-indexed, use from_excel_coords0 for zero-indexing.
+  Returns a tuple {row, col} corresponding to the input.
 
-  Example:
+  Row and col are 1-indexed, use from_excel_coords0 for zero-indexing.
+
+  ## Examples
 
       iex> from_excel_coords("C2")
       {2, 3}
@@ -118,7 +122,7 @@ defmodule Elixlsx.Util do
   Returns the ISO String representation (in UTC) for a erlang datetime() or datetime1970()
   object.
 
-  ## Example
+  ## Examples
 
       iex> iso_from_datetime {{2000, 12, 30}, {23, 59, 59}}
       "2000-12-30T23:59:59Z"
@@ -138,14 +142,14 @@ defmodule Elixlsx.Util do
   end
 
   @doc ~S"""
-  returns
+  Returns
 
   - the current current timestamp if input is nil,
   - the UNIX-Timestamp interpretation when given an integer,
 
   both in ISO-Repr.
 
-  If input is a String, the string is returned.
+  If input is a String, the string is returned:
 
       iex> iso_timestamp 0
       "1970-01-01T00:00:00Z"
@@ -184,7 +188,7 @@ defmodule Elixlsx.Util do
   @secs_per_day 86400
 
   @doc ~S"""
-  Convert an erlang :calendar object, or a unix timestamp to an excel timestamp.
+  Convert an erlang `:calendar` object, or a unix timestamp to an excel timestamp.
 
   Timestampts that are already in excel format are passed through
   unmodified.
@@ -219,18 +223,17 @@ defmodule Elixlsx.Util do
     {:excelts, value}
   end
 
-  @doc ~S"""
-  Formula's value calculate on opening excel programm. We don't need to format this here.
-  """
+  # Formula's value calculate on opening excel programm.
+  # We don't need to format this here.
   @spec to_excel_datetime({:formula, String.t()}) :: {:formula, String.t()}
   def to_excel_datetime({:formula, value}) do
     {:formula, value}
   end
 
   @doc ~S"""
-  replace_all(input, [{search, replace}])
+  Replace_all(input, [{search, replace}]).
 
-  ## Example
+  ## Examples
 
       iex> replace_all("Hello World", [{"e", "E"}, {"o", "oO"}])
       "HElloO WoOrld"

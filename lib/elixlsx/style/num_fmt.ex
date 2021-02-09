@@ -32,14 +32,14 @@ defmodule Elixlsx.Style.NumFmt do
   end
 
   @doc ~S"""
-  returns a semi-ISO date format (YYYY-MM-DD)
+  Returns a semi-ISO date format (YYYY-MM-DD).
   """
   def date_yyyy_mm_dd do
     %NumFmt{format: "yyyy-mm-dd"}
   end
 
   @doc ~S"""
-  returns a standard semi-iso datetime format.
+  Returns a standard semi-iso datetime format.
   """
   def date_datetime do
     %NumFmt{format: "yyyy-mm-dd h:mm:ss"}
@@ -51,7 +51,9 @@ defmodule Elixlsx.Style.NumFmt do
   end
 
   @doc ~S"""
-  in contrast to most (all?) other entries in styles.xml,
+  Returns a style XML entry.
+
+  In contrast to most (all?) other entries in styles.xml,
   numFmts actually carry their index in each element; probably
   to avoid confusion with the built-in styles. Therefore,
   get_stylexml_entry requires a second parameter here.

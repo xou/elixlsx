@@ -25,7 +25,7 @@ defmodule Elixlsx.Style.Fill do
 
   @spec get_stylexml_entry(Elixlsx.Style.Fill.t()) :: String.t()
   @doc ~S"""
-  Create a <fill /> entry from a Fill struct.
+  Create a `<fill />` entry from a Fill struct.
   """
   def get_stylexml_entry(fill) do
     fg_color =

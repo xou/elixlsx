@@ -1,6 +1,7 @@
 defmodule Elixlsx.Style.Border do
   @moduledoc ~S"""
-  Border styling properties
+  Border styling properties.
+
   - type: atom (:left, :right, :top, :bottom, :diagonal)
   - style: atom (:solid, :dotted, :dashed, :double,
               :dash_dot, :dash_dot_dot, :thin, :medium, :thick)
@@ -85,7 +86,7 @@ defmodule Elixlsx.Style.Border do
 
   @spec get_border_entry(Border.t()) :: String.t()
   @doc ~S"""
-   Create an entity for border
+  Create an entity for border.
 
   ## Examples
 

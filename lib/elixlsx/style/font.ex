@@ -64,7 +64,7 @@ defmodule Elixlsx.Style.Font do
 
   @spec get_stylexml_entry(Elixlsx.Style.Font.t()) :: String.t()
   @doc ~S"""
-  Create a <font /> entry from a Font struct.
+  Create a `<font />` entry from a Font struct.
   """
   def get_stylexml_entry(font) do
     bold =

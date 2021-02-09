@@ -15,9 +15,10 @@ defmodule Elixlsx.Writer do
 
   @spec create_files(Workbook.t(), WorkbookCompInfo.t()) :: list(zip_tuple)
   @doc ~S"""
-  Returns a list of tuples {filename, filecontent}. Both
-  filename and filecontent are represented as charlists
-  (so that they can be used with the OTP :zip module.)
+  Returns a list of tuples {filename, filecontent}.
+
+  Both filename and filecontent are represented as charlists (so that they can
+  be used with the OTP :zip module.)
   """
   def create_files(workbook, wci) do
     get_docProps_dir(workbook) ++
@@ -27,7 +28,7 @@ defmodule Elixlsx.Writer do
 
   @spec get_docProps_app_xml(Workbook.t()) :: zip_tuple
   @doc ~S"""
-  returns a tuple {'docProps/app.xml', "XML Data"}
+  Returns a tuple `{'docProps/app.xml', "XML Data"}`.
   """
   def get_docProps_app_xml(_) do
     {'docProps/app.xml', XMLTemplates.docprops_app()}
@@ -49,7 +50,7 @@ defmodule Elixlsx.Writer do
 
   @spec get__rels_dotrels(Workbook.t()) :: zip_tuple
   @doc ~S"""
-  Returns the filename '_rels/.rels' and it's content as a tuple
+  Returns the filename `_rels/.rels` and it's content as a tuple.
   """
   def get__rels_dotrels(_) do
     {'_rels/.rels', XMLTemplates.rels_dotrels()}
@@ -57,7 +58,7 @@ defmodule Elixlsx.Writer do
 
   @spec get__rels_dir(Workbook.t()) :: list(zip_tuple)
   @doc ~S"""
-  Returns files in the _rels/ directory.
+  Returns files in the `_rels/` directory.
   """
   def get__rels_dir(data) do
     [get__rels_dotrels(data)]
