@@ -288,6 +288,29 @@ defmodule Elixlsx.XMLTemplates do
     updated_row
   end
 
+  defp make_validations([]) do
+    ""
+  end
+
+  defp make_validations(validations) do
+    """
+    <dataValidations count="#{Enum.count(validations)}">
+      #{Enum.map(validations, &make_validation/1)}
+    </dataValidations>
+    """
+  end
+
+  defp make_validation({start_cell, end_cell, values}) do
+    """
+    <dataValidation allowBlank="true" operator="equal" showDropDown="false" showErrorMessage="true" showInputMessage="false" sqref="#{
+      start_cell
+    }:#{end_cell}" type="list">
+      <formula1>"#{Enum.join(values, ",")}"</formula1>
+      <formula2>0</formula2>
+    </dataValidation>
+    """
+  end
+
   defp xl_merge_cells([]) do
     ""
   end
@@ -472,6 +495,7 @@ defmodule Elixlsx.XMLTemplates do
       </sheetData>
       """ <>
       xl_merge_cells(sheet.merge_cells) <>
+      make_validations(sheet.validations) <>
       """
       <pageMargins left="0.75" right="0.75" top="1" bottom="1.0" header="0.5" footer="0.5"/>
       </worksheet>
