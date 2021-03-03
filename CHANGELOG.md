@@ -1,5 +1,9 @@
 # Changelog
 
+- Documentation improvements (#103, #106)
+- Preserve leading whitespace (#95)
+- `mix format` the entire codebase
+
 ## 0.4.2
 
 - Dialyzer fixes
