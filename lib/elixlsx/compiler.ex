@@ -7,6 +7,7 @@ defmodule Elixlsx.Compiler do
 
   @doc ~S"""
   Accepts a list of Sheets and the next free relationship ID.
+
   Returns a tuple containing a list of SheetCompInfo's and the next free
   relationship ID.
   """

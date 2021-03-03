@@ -1,16 +1,20 @@
 defmodule Elixlsx.Mixfile do
   use Mix.Project
 
+  @source_url "https://github.com/xou/elixlsx"
+  @version "0.4.2"
+
   def project do
     [
       app: :elixlsx,
-      version: "0.4.2",
+      version: @version,
       elixir: "~> 1.3",
       package: package(),
-      description: "a writer for XLSX spreadsheet files",
+      description: "Elixlsx is a writer for the MS Excel OpenXML format (`.xlsx`).",
       build_embedded: Mix.env() == :prod,
       start_permanent: Mix.env() == :prod,
-      deps: deps()
+      deps: deps(),
+      docs: docs()
     ]
   end
 
@@ -23,8 +27,17 @@ defmodule Elixlsx.Mixfile do
       {:excheck, "~> 0.5", only: :test},
       {:triq, "~> 1.0", only: :test},
       {:credo, "~> 0.5", only: [:dev, :test]},
-      {:ex_doc, "~> 0.19", only: [:dev]},
+      {:ex_doc, ">= 0.0.0", only: [:docs], runtime: false},
       {:dialyxir, "~> 0.5", only: [:dev], runtime: false}
+    ]
+  end
+
+  defp docs do
+    [
+      extras: ["CHANGELOG.md", "README.md"],
+      main: "readme",
+      source_url: @source_url,
+      source_ref: "v#{@version}"
     ]
   end
 
@@ -32,7 +45,10 @@ defmodule Elixlsx.Mixfile do
     [
       maintainers: ["Nikolai Weh <niko.weh@gmail.com>"],
       licenses: ["MIT"],
-      links: %{"GitHub" => "https://github.com/xou/elixlsx"}
+      links: %{
+        "Changelog" => "https://hexdocs.pm/elixlsx/changelog.html",
+        "GitHub" => @source_url
+      }
     ]
   end
 end

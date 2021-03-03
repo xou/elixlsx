@@ -15,9 +15,9 @@ defmodule Elixlsx.Compiler.NumFmtDB do
   end
 
   @doc ~S"""
-  register an ID for a built-in NumFmt object.
+  Register an ID for a built-in NumFmt object.
 
-  built-in refers to the 164 objects (ids 0-163) that are
+  Built-in refers to the 164 objects (ids 0-163) that are
   defined or reserved in the XLSX standard. A NumFmt object
   mimicking the behaviour of such a built-in style can be
   associated with the built-in id using this function, which
@@ -33,7 +33,7 @@ defmodule Elixlsx.Compiler.NumFmtDB do
   def id_sorted_numfmts(db), do: DBUtil.id_sorted_values(db.numfmts)
 
   @doc ~S"""
-  Return a list of tuples {id, NumFmt.t} for all custom (id >= 164)
+  Returns a list of tuples `{id, NumFmt.t}` for all custom (id >= 164)
   NumFmts.
   """
   @spec custom_numfmt_id_tuples(NumFmtDB.t()) :: list({non_neg_integer, NumFmt.t()})

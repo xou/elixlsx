@@ -20,7 +20,7 @@ defmodule Elixlsx.XMLTemplates do
   There are 5 characters that should be escaped in XML (<,>,",',&), but only
   2 of them *must* be escaped. Saves a couple of CPU cycles, for the environment.
 
-  ## Example
+  ## Examples
 
       iex> Elixlsx.XMLTemplates.minimal_xml_text_escape "Only '&' and '<' are escaped here, '\"' & '>' & \"'\" are not."
       "Only '&amp;' and '&lt;' are escaped here, '\"' &amp; '>' &amp; \"'\" are not."
@@ -34,7 +34,7 @@ defmodule Elixlsx.XMLTemplates do
   Escape characters for embedding in XML
   documents.
 
-  ## Example
+  ## Examples
 
       iex> Elixlsx.XMLTemplates.xml_escape "&\"'<>'"
       "&amp;&quot;&apos;&lt;&gt;&apos;"
@@ -686,8 +686,9 @@ defmodule Elixlsx.XMLTemplates do
 
   @spec make_xl_styles(WorkbookCompInfo.t()) :: String.t()
   @doc ~S"""
-  get the content of the styles.xml file.
-  the WorkbookCompInfo struct must be computed before calling this,
+  Get the content of the `styles.xml` file.
+
+  The WorkbookCompInfo struct must be computed before calling this,
   (especially CellStyleDB.register_all)
   """
   def make_xl_styles(wci) do
