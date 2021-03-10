@@ -136,7 +136,31 @@ sheet6 =
   # nest further
   |> Sheet.group_cols("C", "D")
 
+
+# Autofilter can be applied to allow filtering a range
+sheet7 =
+  %Sheet{
+    name: "Autofilter columns",
+    rows: [
+      [1, 2, 3],
+      [4, 5, 6],
+      [7, 8, 9],
+      [10, 11, 12],
+      [13, 14, 15],
+    ]
+  }
+  # first you select the filtering range
+  |> Sheet.set_autofilter("A1", "C5")
+  # then you can either apply a list filter
+  |> Sheet.append_list_filter("A", [1, 4, 10])
+  # or a criteria filter
+  |> Sheet.append_criteria_filter("B", :less_than_or_equal, 8)
+  # Criteria filters can also be connected by connectives :and and :or
+  |> Sheet.append_criteria_filter("C", :less_than, 8, :greater_than, 10, :or)
+
+
 Workbook.append_sheet(workbook, sheet4)
 |> Workbook.append_sheet(sheet5)
 |> Workbook.append_sheet(sheet6)
+|> Workbook.append_sheet(sheet7)
 |> Elixlsx.write_to("example.xlsx")
