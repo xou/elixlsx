@@ -562,7 +562,7 @@ defmodule Elixlsx.XMLTemplates do
       </sheetData>
       """ <>
       xl_merge_cells(sheet.merge_cells) <>
-      make_autofilter(sheet.autofilter_ref, sheet.filter_cols) <>
+      make_autofilter(sheet.autofilter_ref, sheet.autofilter_cols) <>
       ~S"""
       <pageMargins left="0.75" right="0.75" top="1" bottom="1.0" header="0.5" footer="0.5"/>
       </worksheet>
