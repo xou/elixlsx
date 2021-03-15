@@ -42,6 +42,11 @@ sheet1 =
   |> Sheet.set_cell("E6", {:formula, "SUM(E1:E5)", value: 15.70}, num_format: "0.00", bold: true)
   |> Sheet.set_cell("F1", {:formula, "NOW()"}, num_format: "yyyy-mm-dd hh:MM:ss")
   |> Sheet.set_col_width("F", 18.0)
+  # Validations
+  |> Sheet.set_cell("G1", "dog")
+  |> Sheet.set_cell("G2", "cat")
+  |> Sheet.set_cell("G3", "cow")
+  |> Sheet.add_validation("G1", "G10", ["dog", "cat", "cow"])
 
 workbook = %Workbook{sheets: [sheet1]}
 
