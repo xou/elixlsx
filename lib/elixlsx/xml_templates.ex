@@ -301,12 +301,18 @@ defmodule Elixlsx.XMLTemplates do
   end
 
   defp make_validation({start_cell, end_cell, values}) do
+    joined_values =
+      values
+      |> Enum.join(",")
+      |> String.codepoints()
+      |> Enum.chunk_every(255)
+      |> Enum.join("&quot;&amp;&quot;")
+
     """
-    <dataValidation allowBlank="true" operator="equal" showDropDown="false" showErrorMessage="true" showInputMessage="false" sqref="#{
-      start_cell
-    }:#{end_cell}" type="list">
-      <formula1>"#{Enum.join(values, ",")}"</formula1>
-      <formula2>0</formula2>
+    <dataValidation type="list" allowBlank="1" showErrorMessage="1" sqref="#{start_cell}:#{
+      end_cell
+    }">
+      <formula1>&quot;#{joined_values}&quot;</formula1>
     </dataValidation>
     """
   end
