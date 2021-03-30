@@ -3,6 +3,7 @@ defmodule Elixlsx.Compiler do
   alias Elixlsx.Compiler.SheetCompInfo
   alias Elixlsx.Compiler.CellStyleDB
   alias Elixlsx.Compiler.StringDB
+  alias Elixlsx.XML
   alias Elixlsx.Sheet
 
   @doc ~S"""

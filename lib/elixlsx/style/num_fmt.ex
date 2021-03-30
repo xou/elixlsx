@@ -1,4 +1,5 @@
 defmodule Elixlsx.Style.NumFmt do
+  alias Elixlsx.XML
   alias __MODULE__
 
   defstruct format: nil

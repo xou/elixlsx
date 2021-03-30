@@ -1,4 +1,5 @@
 defmodule Elixlsx.Util do
+  alias Elixlsx.XML
   @col_alphabet Enum.to_list(?A..?Z)
 
   @doc ~S"""
