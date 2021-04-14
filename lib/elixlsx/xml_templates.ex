@@ -447,7 +447,7 @@ defmodule Elixlsx.XMLTemplates do
     </sheetPr>
     <dimension ref="A1"/>
     <sheetViews>
-    <sheetView workbookViewId="0"
+    <sheetView showZeros="0" workbookViewId="0"
     """ <>
       make_sheet_show_grid(sheet) <>
       """
