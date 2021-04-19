@@ -439,11 +439,11 @@ defmodule Elixlsx.XMLTemplates do
   def make_sheet(sheet, wci) do
     grouping_info = get_grouping_info(sheet.group_rows)
 
-    ~S"""
+    ~s"""
     <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
     <worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">
     <sheetPr filterMode="false">
-      <pageSetUpPr fitToPage="false"/>
+      <pageSetUpPr fitToPage="#{make_sheet_fit_to_page(sheet)}"/>
     </sheetPr>
     <dimension ref="A1"/>
     <sheetViews>
@@ -493,6 +493,13 @@ defmodule Elixlsx.XMLTemplates do
     case sheet.show_zeros do
       true -> ""
       false -> ~s[ showZeros="0" ]
+    end
+  end
+
+  defp make_sheet_fit_to_page(sheet) do
+    case sheet.fit_to_page do
+      true -> "1"
+      _ -> "false"
     end
   end
 

@@ -26,7 +26,8 @@ defmodule Elixlsx.Sheet do
             merge_cells: [],
             pane_freeze: nil,
             show_grid_lines: true,
-            show_zeros: false
+            show_zeros: false,
+            fit_to_page: false
 
   @type t :: %Sheet{
           name: String.t(),
