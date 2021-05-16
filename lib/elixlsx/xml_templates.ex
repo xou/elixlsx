@@ -499,7 +499,7 @@ defmodule Elixlsx.XMLTemplates do
   defp make_sheet_fit_to_page(sheet) do
     case sheet.fit_to_page do
       true -> "1"
-      _ -> "false"
+      _ -> "0"
     end
   end
 
