@@ -1,6 +1,8 @@
 defmodule XMLTest do
   use ExUnit.Case
 
+  alias Elixlsx.XML
+
   test "valid? allows normal string" do
     assert XML.valid?("Hello World & Goodbye Cruel World")
   end
