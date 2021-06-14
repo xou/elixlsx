@@ -254,7 +254,8 @@ defmodule Elixlsx.Sheet do
 
   @spec append_criteria_filter(Sheet.t(), String.t(), operator, any()) :: Sheet.t()
   @doc ~S"""
-  Add filter on a column as an operator-based criteria
+  Add filter on a column as an operator-based criteria.
+  Valid operators are: :equal, :not_equal, :less_than, :less_than_or_equal, :greater_than, :greather_than_or_equal
   """
   def append_criteria_filter(sheet, column, op, val) when is_binary(column) do
     append_criteria_filter(sheet, Util.decode_col(column), op, val)
@@ -262,7 +263,8 @@ defmodule Elixlsx.Sheet do
 
   @spec append_criteria_filter(Sheet.t(), number, operator, any()) :: Sheet.t()
   @doc ~S"""
-  Add filter on a column as an operator-based criteria
+  Add filter on a column as an operator-based criteria.
+  Valid operators are: :equal, :not_equal, :less_than, :less_than_or_equal, :greater_than, :greather_than_or_equal
   """
   def append_criteria_filter(sheet, column, op, val) do
     update_in(sheet.autofilter_cols, &Map.put(&1, column, {:operator, {op, val}}))
@@ -273,7 +275,8 @@ defmodule Elixlsx.Sheet do
 
   @spec append_criteria_filter(Sheet.t(), String.t(), operator, any(), operator, any(), connective) :: Sheet.t()
   @doc ~S"""
-  Add filter on a column as an operator-based criteria
+  Add two filters connected by :and or :or on a column as an operator-based criteria.
+  Valid operators are: :equal, :not_equal, :less_than, :less_than_or_equal, :greater_than, :greather_than_or_equal
   """
   def append_criteria_filter(sheet, column, op1, val1, op2, val2, connective) when is_binary(column) do
     append_criteria_filter(sheet, Util.decode_col(column), op1, val1, op2, val2, connective)
@@ -281,7 +284,8 @@ defmodule Elixlsx.Sheet do
 
   @spec append_criteria_filter(Sheet.t(), number, operator, any(), operator, any(), connective) :: Sheet.t()
   @doc ~S"""
-  Add filter on a column as an operator-based criteria
+  Add two filters connected by :and or :or on a column as an operator-based criteria.
+  Valid operators are: :equal, :not_equal, :less_than, :less_than_or_equal, :greater_than, :greather_than_or_equal
   """
   def append_criteria_filter(sheet, column, op1, val1, op2, val2, connective) do
     update_in(sheet.autofilter_cols, &Map.put(&1, column, {:operator, {op1, val1, connective, op2, val2}}))
