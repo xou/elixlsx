@@ -495,11 +495,11 @@ defmodule Elixlsx.XMLTemplates do
     "<filter val=\"#{val}\"/>"
   end
 
-  def make_custom_filters(expr) do
+  defp make_custom_filters(expr) do
     case expr do
       {operator, val} -> "<customFilters>#{make_custom_filter(operator, val)}</customFilters>"
       {operator1, val1, connective, operator2, val2} -> """
-        <customFilters and="#{connective == :and}">
+        <customFilters and="#{if connective == :and, do: 1, else: 0}">
           #{make_custom_filter(operator1, val1)}
           #{make_custom_filter(operator2, val2)}
         </customFilters>
@@ -507,7 +507,7 @@ defmodule Elixlsx.XMLTemplates do
     end
   end
 
-  def make_custom_filter(operator, val) do
+  defp make_custom_filter(operator, val) do
     operators = %{
         equal: "equal",
         not_equal: "notEqual",

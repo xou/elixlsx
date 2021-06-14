@@ -45,7 +45,7 @@ defmodule Elixlsx.Sheet do
   @type rowcol_group :: Range.t() | {Range.t(), opts :: keyword}
   @type filter_type :: :list | :operator
   @type operator :: :equal | :not_equal | :less_than | :less_than_or_equal | :greater_than | :greather_than_or_equal
-  @type connective :: :and
+  @type connective :: :and | :or
   @type operator_filter :: {operator, any()} | {operator, any(), connective, operator, any()}
   @type filter :: {:list, list(any())} | {:operator, operator_filter}
 
