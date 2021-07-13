@@ -1,7 +1,7 @@
 defmodule Elixlsx.Mixfile do
   use Mix.Project
 
-  @source_url "https://github.com/xou/elixlsx"
+  @source_url "https://github.com/brainnco/elixlsx"
   @version "0.4.2"
 
   def project do
