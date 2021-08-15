@@ -1,5 +1,7 @@
 # Changelog
 
+## 0.5.0
+
 - Autofilter support (#105)
 - Namespace XML module (#111, #107)
 - Documentation improvements (#103, #106)

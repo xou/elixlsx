@@ -27,7 +27,7 @@ Via Hex, in `mix.exs`:
 
 ```elixir
 defp deps do
-  [{:elixlsx, "~> 0.4.2"}]
+  [{:elixlsx, "~> 0.5.0"}]
 end
 ```
 
