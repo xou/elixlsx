@@ -1,5 +1,7 @@
 # Changelog
 
+- Autofilter support (#105)
+- Namespace XML module (#111, #107)
 - Documentation improvements (#103, #106)
 - Preserve leading whitespace (#95)
 - `mix format` the entire codebase
