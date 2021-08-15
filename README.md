@@ -1,6 +1,6 @@
 # Elixlsx
 
-[![Build Status](https://travis-ci.org/xou/elixlsx.svg?branch=master)](https://travis-ci.org/xou/elixlsx)
+[![Build Status](https://travis-ci.com/xou/elixlsx.svg?branch=master)](https://travis-ci.org/xou/elixlsx)
 [![Module Version](https://img.shields.io/hexpm/v/elixlsx.svg)](https://hex.pm/packages/elixlsx)
 [![Hex Docs](https://img.shields.io/badge/hex-docs-lightgreen.svg)](https://hexdocs.pm/elixlsx/)
 [![Total Download](https://img.shields.io/hexpm/dt/elixlsx.svg)](https://hex.pm/packages/elixlsx)

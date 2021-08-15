@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.5.1
+
+- Fix build error
+
 ## 0.5.0
 
 - Autofilter support (#105)
