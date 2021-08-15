@@ -1,5 +1,9 @@
 # Changelog
 
+## Next version
+
+- Revert autofilter support (breaks build)
+
 ## 0.5.0
 
 - Autofilter support (#105)
