@@ -1,6 +1,6 @@
 # Changelog
 
-## Next version
+## 0.5.1
 
 - Revert autofilter support (breaks build)
 - Migrate travis-ci.com, fixing the CI system (which apparently failed open for months) 
