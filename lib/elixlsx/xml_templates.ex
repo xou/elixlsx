@@ -432,96 +432,6 @@ defmodule Elixlsx.XMLTemplates do
     end
   end
 
-  defp make_autofilter(nil, filter_cols) do
-    ""
-  end
-
-  defp make_autofilter(autofilter_ref, filter_cols) do
-    {row1, col1, row2, col2} = autofilter_ref
-
-    """
-      <autoFilter ref="#{Util.to_excel_coords(row1, col1)}:#{Util.to_excel_coords(row2, col2)}">
-    """ <>
-    make_filter_columns(autofilter_ref, filter_cols) <>
-    """
-      </autoFilter>
-    """
-  end
-
-  defp make_filter_columns(autofilter_ref, filter_cols) do
-    {_row1, col1, _row2, col2} = autofilter_ref
-
-    Enum.map_join(filter_cols, fn col, {filter_type, filters} ->
-      if col < col1 or col > col2 do
-        # Filter column out of autofilter range
-        ""
-      else
-        # Filter columns are relative to first column in the autofilter.
-        make_filter_column(col - col1, filter_type, filters)
-      end
-    end)
-  end
-
-  defp make_filter_column(col_id, filter_type, filters) do
-    """
-    <filterColumn colId="#{col_id}">
-    """ <>
-    if filter_type == :list, do: make_filters(filters), else: make_custom_filters(filters) <>
-    """
-    </filterColumn>
-    """
-  end
-
-  defp make_filters(filters) do
-    non_blanks = Enum.reject(filters, fn filter -> filter != :blank end)
-
-    blank = length(filters) != length(non_blanks)
-    """
-    <filters blank="#{blank}">
-    """ <>
-    Enum.map_join(non_blanks, &make_filter/1)
-    """
-    </filters>
-    """
-  end
-
-  defp make_filter({%DateTime{year: year, month: month, day: day, hour: hour, minute: minute, second: second} = date, grouping}) do
-    """
-    <dateGroupItem year="#{year}" month="#{month}" day="#{day}" hour="#{hour}" minute="#{minute}" second="#{second}" dateTimeGrouping="#{grouping}"/>
-    """
-  end
-
-  defp make_filter(val) do
-    "<filter val=\"#{val}\"/>"
-  end
-
-  defp make_custom_filters(expr) do
-    case expr do
-      {operator, val} -> "<customFilters>#{make_custom_filter(operator, val)}</customFilters>"
-      {operator1, val1, connective, operator2, val2} -> """
-        <customFilters and="#{if connective == :and, do: 1, else: 0}">
-          #{make_custom_filter(operator1, val1)}
-          #{make_custom_filter(operator2, val2)}
-        </customFilters>
-      """
-    end
-  end
-
-  defp make_custom_filter(operator, val) do
-    operators = %{
-        equal: "equal",
-        not_equal: "notEqual",
-        less_than: "lessThan",
-        less_than_or_equal: "lessThanOrEqual",
-        greater_than: "greaterThan",
-        greather_than_or_equal: "greaterThanOrEqual"
-    }
-
-    """
-      <customFilter operator="#{operators[operator]} val=#{val}" />
-    """
-  end
-
   @spec make_sheet(Sheet.t(), WorkbookCompInfo.t()) :: String.t()
   @doc ~S"""
   Returns the XML content for single sheet.
@@ -562,8 +472,7 @@ defmodule Elixlsx.XMLTemplates do
       </sheetData>
       """ <>
       xl_merge_cells(sheet.merge_cells) <>
-      make_autofilter(sheet.autofilter_ref, sheet.autofilter_cols) <>
-      ~S"""
+      """
       <pageMargins left="0.75" right="0.75" top="1" bottom="1.0" header="0.5" footer="0.5"/>
       </worksheet>
       """

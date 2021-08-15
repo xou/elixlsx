@@ -28,9 +28,7 @@ defmodule Elixlsx.Sheet do
             group_rows: [],
             merge_cells: [],
             pane_freeze: nil,
-            show_grid_lines: true,
-            autofilter_ref: nil,
-            autofilter_cols: %{}
+            show_grid_lines: true
 
   @type t :: %Sheet{
           name: String.t(),
@@ -41,16 +39,9 @@ defmodule Elixlsx.Sheet do
           group_rows: list(rowcol_group),
           merge_cells: [{String.t(), String.t()}],
           pane_freeze: {number, number} | nil,
-          show_grid_lines: boolean(),
-          autofilter_ref: {number, number, number, number} | nil,
-          autofilter_cols: [{number, operator_filter}]
+          show_grid_lines: boolean()
         }
   @type rowcol_group :: Range.t() | {Range.t(), opts :: keyword}
-  @type filter_type :: :list | :operator
-  @type operator :: :equal | :not_equal | :less_than | :less_than_or_equal | :greater_than | :greather_than_or_equal
-  @type connective :: :and | :or
-  @type operator_filter :: {operator, any()} | {operator, any(), connective, operator, any()}
-  @type filter :: {:list, list(any())} | {:operator, operator_filter}
 
   @doc ~S"""
   Create a sheet with a sheet name.
@@ -227,81 +218,5 @@ defmodule Elixlsx.Sheet do
   """
   def remove_pane_freeze(sheet) do
     %{sheet | pane_freeze: nil}
-  end
-
-
-  @spec set_autofilter(Sheet.t(), String.t(), String.t()) :: Sheet.t()
-  @doc ~S"""
-  Set the range for autofiltering
-  """
-  def set_autofilter(sheet, start_cell, end_cell) do
-    {row1, col1} = Util.from_excel_coords(start_cell)
-    {row2, col2} = Util.from_excel_coords(end_cell)
-    set_autofilter(sheet, row1, col1, row2, col2)
-  end
-
-  @spec set_autofilter(Sheet.t(), number, number, number, number) :: Sheet.t()
-  @doc ~S"""
-  Set the range for autofiltering
-  """
-  def set_autofilter(sheet, row1, col1, row2, col2) do
-    %{sheet | autofilter_ref: {row1, col1, row2, col2}}
-  end
-
-
-  @spec append_list_filter(Sheet.t(), String.t(), list(any())) :: Sheet.t()
-  @doc ~S"""
-  Add filter on a column as a list of inclusive elements
-  """
-  def append_list_filter(sheet, column, filters) when is_binary(column) do
-    append_list_filter(sheet, Util.decode_col(column), filters)
-  end
-
-  @spec append_list_filter(Sheet.t(), number, list(any())) :: Sheet.t()
-  @doc ~S"""
-  Add filter on a column as a list of inclusive elements
-  """
-  def append_list_filter(sheet, column, filters) do
-    update_in(sheet.autofilter_cols, &Map.put(&1, column, {:list, filters}))
-  end
-
-
-  @spec append_criteria_filter(Sheet.t(), String.t(), operator, any()) :: Sheet.t()
-  @doc ~S"""
-  Add filter on a column as an operator-based criteria.
-  Valid operators are: :equal, :not_equal, :less_than, :less_than_or_equal, :greater_than, :greather_than_or_equal
-  """
-  def append_criteria_filter(sheet, column, op, val) when is_binary(column) do
-    append_criteria_filter(sheet, Util.decode_col(column), op, val)
-  end
-
-  @spec append_criteria_filter(Sheet.t(), number, operator, any()) :: Sheet.t()
-  @doc ~S"""
-  Add filter on a column as an operator-based criteria.
-  Valid operators are: :equal, :not_equal, :less_than, :less_than_or_equal, :greater_than, :greather_than_or_equal
-  """
-  def append_criteria_filter(sheet, column, op, val) do
-    update_in(sheet.autofilter_cols, &Map.put(&1, column, {:operator, {op, val}}))
-  end
-
-
-  def append_criteria_filter(sheet, column, op1, val1, op2, val2, connective \\ :and)
-
-  @spec append_criteria_filter(Sheet.t(), String.t(), operator, any(), operator, any(), connective) :: Sheet.t()
-  @doc ~S"""
-  Add two filters connected by :and or :or on a column as an operator-based criteria.
-  Valid operators are: :equal, :not_equal, :less_than, :less_than_or_equal, :greater_than, :greather_than_or_equal
-  """
-  def append_criteria_filter(sheet, column, op1, val1, op2, val2, connective) when is_binary(column) do
-    append_criteria_filter(sheet, Util.decode_col(column), op1, val1, op2, val2, connective)
-  end
-
-  @spec append_criteria_filter(Sheet.t(), number, operator, any(), operator, any(), connective) :: Sheet.t()
-  @doc ~S"""
-  Add two filters connected by :and or :or on a column as an operator-based criteria.
-  Valid operators are: :equal, :not_equal, :less_than, :less_than_or_equal, :greater_than, :greather_than_or_equal
-  """
-  def append_criteria_filter(sheet, column, op1, val1, op2, val2, connective) do
-    update_in(sheet.autofilter_cols, &Map.put(&1, column, {:operator, {op1, val1, connective, op2, val2}}))
   end
 end
