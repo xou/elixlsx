@@ -439,17 +439,18 @@ defmodule Elixlsx.XMLTemplates do
   def make_sheet(sheet, wci) do
     grouping_info = get_grouping_info(sheet.group_rows)
 
-    ~S"""
+    ~s"""
     <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
     <worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">
     <sheetPr filterMode="false">
-      <pageSetUpPr fitToPage="false"/>
+      <pageSetUpPr fitToPage="#{make_sheet_fit_to_page(sheet)}"/>
     </sheetPr>
     <dimension ref="A1"/>
     <sheetViews>
     <sheetView workbookViewId="0"
     """ <>
       make_sheet_show_grid(sheet) <>
+      make_sheet_show_zeros(sheet) <>
       """
       >
       """ <>
@@ -486,6 +487,20 @@ defmodule Elixlsx.XMLTemplates do
       end
 
     show_grid_lines_xml
+  end
+
+  defp make_sheet_show_zeros(sheet) do
+    case sheet.show_zeros do
+      true -> ""
+      false -> ~s[ showZeros="0" ]
+    end
+  end
+
+  defp make_sheet_fit_to_page(sheet) do
+    case sheet.fit_to_page do
+      true -> "1"
+      _ -> "0"
+    end
   end
 
   defp make_sheetview(sheet) do
@@ -573,10 +588,11 @@ defmodule Elixlsx.XMLTemplates do
         do: 0,
         else: FillDB.get_id(wci.filldb, style.fill)
 
-    numfmtid =
-      if is_nil(style.numfmt),
-        do: 0,
-        else: NumFmtDB.get_id(wci.numfmtdb, style.numfmt)
+    numfmtid = case style.numfmt do
+      nil -> 0
+      %{format: "# ##0.00"} -> 4
+      f -> NumFmtDB.get_id wci.numfmtdb, f
+    end
 
     borderid =
       if is_nil(style.border),
