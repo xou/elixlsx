@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.6.0 [WIP]
+
+! Minimum elixir version raised to 1.7 (#116)
+- Add cell validations (#109)
+
 ## 0.5.1
 
 - Revert autofilter support (breaks build)
