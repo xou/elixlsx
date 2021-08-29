@@ -8,7 +8,7 @@ defmodule Elixlsx.Mixfile do
     [
       app: :elixlsx,
       version: @version,
-      elixir: "~> 1.3",
+      elixir: "~> 1.7",
       package: package(),
       description: "Elixlsx is a writer for the MS Excel OpenXML format (`.xlsx`).",
       build_embedded: Mix.env() == :prod,
