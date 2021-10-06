@@ -175,7 +175,7 @@ defmodule Elixlsx.XMLTemplates do
 
   defp split_into_content_style(cell, _wci), do: {cell, 0, nil}
 
-  if Code.ensure_loaded?(Decimal) do
+  if Code.ensure_loaded?(Decimal) and function_exported?(Decimal, :to_string, 2) do
     defp get_content_type_value(%Decimal{} = content, _wci) do
       {"n", Decimal.to_string(content, :normal)}
     end
