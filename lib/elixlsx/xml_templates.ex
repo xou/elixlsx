@@ -671,6 +671,34 @@ defmodule Elixlsx.XMLTemplates do
     end
   end
 
+  @spec text_rotation_alignment(String.t(), Font.t()) :: String.t()
+  defp text_rotation_alignment(attrs, %Font{text_rotation: nil}), do: attrs
+
+  defp text_rotation_alignment(attrs, %Font{text_rotation: rotation}) do
+    with {:ok, angle} <- validate_text_rotation(rotation) do
+      attrs <> "textRotation=\"#{angle}\" "
+    else
+      _ ->
+        raise %ArgumentError{
+          message: """
+            Given text rotation not supported.
+
+            You can choose from: :angle_ccw, :angle_cw, :vertical, :rotate_up, :rotate_down
+
+            Or choose an angle from 0 to 180
+          """
+        }
+    end
+  end
+
+  defp validate_text_rotation(:angle_ccw), do: {:ok, 45}
+  defp validate_text_rotation(:angle_cw), do: {:ok, 135}
+  defp validate_text_rotation(:vertical), do: {:ok, 255}
+  defp validate_text_rotation(:rotate_up), do: {:ok, 90}
+  defp validate_text_rotation(:rotate_down), do: {:ok, 180}
+  defp validate_text_rotation(255), do: {:ok, 255}
+  defp validate_text_rotation(angle) when angle >= 0 and angle <= 180, do: {:ok, angle}
+
   # Creates an aligment xml tag from font style.
   @spec make_style_alignment(Font.t()) :: String.t()
   defp make_style_alignment(font) do
@@ -679,6 +707,7 @@ defmodule Elixlsx.XMLTemplates do
       |> wrap_text(font)
       |> horizontal_alignment(font)
       |> vertical_alignment(font)
+      |> text_rotation_alignment(font)
 
     case attrs do
       "" ->

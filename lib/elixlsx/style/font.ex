@@ -14,6 +14,7 @@ defmodule Elixlsx.Style.Font do
   - align_horizontal: atom (:left, :right, :center, :justify, :general, :fill)
   - align_vertical: atom (:top, :bottom, :center)
   - font: String
+  - text_rotation: pos_integer : from 0 to 180 or 255 (default is 0) atom (:angle_ccw, :angle_cw, :vertical, :rotate_up, :rotate_down)
   """
   import Elixlsx.Color, only: [to_rgb_color: 1]
   alias __MODULE__
@@ -27,7 +28,8 @@ defmodule Elixlsx.Style.Font do
             color: nil,
             wrap_text: false,
             align_horizontal: nil,
-            align_vertical: nil
+            align_vertical: nil,
+            text_rotation: nil
 
   @type t :: %Font{
           bold: boolean,
@@ -39,7 +41,8 @@ defmodule Elixlsx.Style.Font do
           wrap_text: boolean,
           align_horizontal: atom,
           align_vertical: atom,
-          font: String.t()
+          font: String.t(),
+          text_rotation: pos_integer | atom
         }
 
   @doc ~S"""
@@ -56,7 +59,8 @@ defmodule Elixlsx.Style.Font do
       wrap_text: !!props[:wrap_text],
       align_horizontal: props[:align_horizontal],
       align_vertical: props[:align_vertical],
-      font: props[:font]
+      font: props[:font],
+      text_rotation: props[:text_rotation]
     }
 
     if ft == %Font{}, do: nil, else: ft
