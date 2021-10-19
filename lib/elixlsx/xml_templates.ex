@@ -671,7 +671,7 @@ defmodule Elixlsx.XMLTemplates do
     end
   end
 
-  # Creates an aligment xml tag from font style.
+  # Creates an alignment xml tag from font style.
   @spec make_style_alignment(Font.t()) :: String.t()
   defp make_style_alignment(font) do
     attrs =
