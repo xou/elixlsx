@@ -699,7 +699,7 @@ defmodule Elixlsx.XMLTemplates do
   defp validate_text_rotation(255), do: {:ok, 255}
   defp validate_text_rotation(angle) when angle >= 0 and angle <= 180, do: {:ok, angle}
 
-  # Creates an aligment xml tag from font style.
+  # Creates an alignment xml tag from font style.
   @spec make_style_alignment(Font.t()) :: String.t()
   defp make_style_alignment(font) do
     attrs =

@@ -19,7 +19,7 @@ sheet1 =
   # the datetime: true parameter automatically applies conversion to Excels internal format.
   |> Sheet.set_cell("A2", {{2015, 11, 30}, {21, 20, 38}}, datetime: true)
   |> Sheet.set_cell("A3", 1_448_882_362, datetime: true)
-  # datetime: true ouputs date and time, yyyymmdd limits the output to just the date
+  # datetime: true outputs date and time, yyyymmdd limits the output to just the date
   |> Sheet.set_cell("A4", 1_448_882_362, yyyymmdd: true)
   # make some room in the first column, otherwise the date will only show up as ###
   |> Sheet.set_col_width("A", 18.0)
