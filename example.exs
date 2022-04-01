@@ -4,7 +4,7 @@ require Elixlsx
 
 alias Elixlsx.{Sheet, Workbook}
 
-sheet1 = Sheet.with_name("First")|> Sheet.set_cell("A4", 1_448_882_362, yyyymmdd: true)|> Sheet.set_cell("A5", 1_448_882_362, yyyymm: true)
+sheet1 = Sheet.with_name("First")
   # Set cell B2 to the string "Hi". :)
   |> Sheet.set_cell("B2", "Hi")
   # Optionally, set font properties:
