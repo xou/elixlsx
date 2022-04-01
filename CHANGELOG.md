@@ -1,5 +1,19 @@
 # Changelog
 
+## 0.6.0 [WIP]
+
+! Minimum elixir version raised to 1.7 (#116)
+- Add cell validations (#109)
+
+## 0.5.1
+
+- Revert autofilter support (breaks build)
+- Migrate travis-ci.com, fixing the CI system (which apparently failed open for months) 
+
+## 0.5.0
+
+- Autofilter support (#105)
+- Namespace XML module (#111, #107)
 - Documentation improvements (#103, #106)
 - Preserve leading whitespace (#95)
 - `mix format` the entire codebase

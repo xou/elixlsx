@@ -224,7 +224,7 @@ defmodule Elixlsx.Util do
     {:excelts, value}
   end
 
-  # Formula's value calculate on opening excel programm.
+  # Formula's value calculate on opening excel program.
   # We don't need to format this here.
   @spec to_excel_datetime({:formula, String.t()}) :: {:formula, String.t()}
   def to_excel_datetime({:formula, value}) do

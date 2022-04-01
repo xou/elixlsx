@@ -1,14 +1,14 @@
 defmodule Elixlsx.Mixfile do
   use Mix.Project
 
-  @source_url "https://github.com/brainnco/elixlsx"
-  @version "0.4.2"
+  @source_url "https://github.com/xou/elixlsx"
+  @version "0.5.1"
 
   def project do
     [
       app: :elixlsx,
       version: @version,
-      elixir: "~> 1.3",
+      elixir: "~> 1.7",
       package: package(),
       description: "Elixlsx is a writer for the MS Excel OpenXML format (`.xlsx`).",
       build_embedded: Mix.env() == :prod,
@@ -27,7 +27,7 @@ defmodule Elixlsx.Mixfile do
       {:excheck, "~> 0.5", only: :test},
       {:triq, "~> 1.0", only: :test},
       {:credo, "~> 0.5", only: [:dev, :test]},
-      {:ex_doc, ">= 0.0.0", only: [:docs], runtime: false},
+      {:ex_doc, ">= 0.0.0", only: [:dev], runtime: false},
       {:dialyxir, "~> 0.5", only: [:dev], runtime: false}
     ]
   end
