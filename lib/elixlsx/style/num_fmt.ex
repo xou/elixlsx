@@ -13,6 +13,9 @@ defmodule Elixlsx.Style.NumFmt do
       props[:yyyymmdd] ->
         date_yyyy_mm_dd()
 
+      props[:yyyymm] ->
+        date_yyyy_mm()
+
       props[:datetime] ->
         date_datetime()
 
@@ -37,6 +40,13 @@ defmodule Elixlsx.Style.NumFmt do
   """
   def date_yyyy_mm_dd do
     %NumFmt{format: "yyyy-mm-dd"}
+  end
+
+  @doc ~S"""
+  Returns a semi-ISP date format only month and year (YYYY-MM)
+  """
+  def date_yyyy_mm do
+    %NumFmt{format: "yyyy-mm"}
   end
 
   @doc ~S"""
