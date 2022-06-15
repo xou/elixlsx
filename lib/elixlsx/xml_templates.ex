@@ -21,7 +21,7 @@ defmodule Elixlsx.XMLTemplates do
   There are 5 characters that should be escaped in XML (<,>,",',&), but only
   2 of them *must* be escaped. Saves a couple of CPU cycles, for the environment.
 
-  ## Example
+  ## Examples
 
       iex> Elixlsx.XMLTemplates.minimal_xml_text_escape "Only '&' and '<' are escaped here, '\"' & '>' & \"'\" are not."
       "Only '&amp;' and '&lt;' are escaped here, '\"' &amp; '>' &amp; \"'\" are not."
@@ -35,7 +35,7 @@ defmodule Elixlsx.XMLTemplates do
   Escape characters for embedding in XML
   documents.
 
-  ## Example
+  ## Examples
 
       iex> Elixlsx.XMLTemplates.xml_escape "&\"'<>'"
       "&amp;&quot;&apos;&lt;&gt;&apos;"
@@ -326,6 +326,35 @@ defmodule Elixlsx.XMLTemplates do
     updated_row
   end
 
+  defp make_data_validations([]) do
+    ""
+  end
+
+  defp make_data_validations(data_validations) do
+    """
+    <dataValidations count="#{Enum.count(data_validations)}">
+      #{Enum.map(data_validations, &make_data_validation/1)}
+    </dataValidations>
+    """
+  end
+
+  defp make_data_validation({start_cell, end_cell, values}) do
+    joined_values =
+      values
+      |> Enum.join(",")
+      |> String.codepoints()
+      |> Enum.chunk_every(255)
+      |> Enum.join("&quot;&amp;&quot;")
+
+    """
+    <dataValidation type="list" allowBlank="1" showErrorMessage="1" sqref="#{start_cell}:#{
+      end_cell
+    }">
+      <formula1>&quot;#{joined_values}&quot;</formula1>
+    </dataValidation>
+    """
+  end
+
   defp xl_merge_cells([]) do
     ""
   end
@@ -603,6 +632,7 @@ defmodule Elixlsx.XMLTemplates do
       </sheetData>
       """ <>
       xl_merge_cells(sheet.merge_cells) <>
+      make_data_validations(sheet.data_validations) <>
       """
       <pageMargins left="0.75" right="0.75" top="1" bottom="1.0" header="0.5" footer="0.5"/>
       """ <>
@@ -675,7 +705,7 @@ defmodule Elixlsx.XMLTemplates do
     """ <>
       Enum.map_join(stringlist, fn {_, value} ->
         # the only two characters that *must* be replaced for safe XML encoding are & and <:
-        "<si><t>#{minimal_xml_text_escape(value)}</t></si>"
+        "<si><t xml:space=\"preserve\">#{minimal_xml_text_escape(value)}</t></si>"
       end) <> "</sst>"
   end
 
@@ -775,7 +805,7 @@ defmodule Elixlsx.XMLTemplates do
     end
   end
 
-  # Creates an aligment xml tag from font style.
+  # Creates an alignment xml tag from font style.
   @spec make_style_alignment(Font.t()) :: String.t()
   defp make_style_alignment(font) do
     attrs =
@@ -820,8 +850,9 @@ defmodule Elixlsx.XMLTemplates do
 
   @spec make_xl_styles(WorkbookCompInfo.t()) :: String.t()
   @doc ~S"""
-  get the content of the styles.xml file.
-  the WorkbookCompInfo struct must be computed before calling this,
+  Get the content of the `styles.xml` file.
+
+  The WorkbookCompInfo struct must be computed before calling this,
   (especially CellStyleDB.register_all)
   """
   def make_xl_styles(wci) do

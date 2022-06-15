@@ -1,5 +1,6 @@
 defmodule Elixlsx.Compiler.StringDB do
   alias Elixlsx.Compiler.StringDB
+  alias Elixlsx.XML
 
   @moduledoc ~S"""
   Strings in XLSX can be stored in a sharedStrings.xml file and be looked up

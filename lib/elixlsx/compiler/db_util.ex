@@ -8,8 +8,8 @@ defmodule Elixlsx.Compiler.DBUtil do
 
   @doc ~S"""
   If the value does not exist in the database, return
-  the tuple {dict, nextid} unmodified. Otherwise,
-  returns a tuple {dict', nextid+1}, where dict'
+  the tuple `{dict, nextid}` unmodified. Otherwise,
+  returns a tuple `{dict', nextid+1}`, where dict'
   is the dictionary with the new element inserted
   (with id `nextid`)
   """
@@ -24,7 +24,7 @@ defmodule Elixlsx.Compiler.DBUtil do
   end
 
   @doc ~S"""
-  return the ID for an object in the database
+  Returns the ID for an object in the database.
   """
   @spec get_id(gen_db_datatype, object_type) :: non_neg_integer
   def get_id(dict, value) do

@@ -5,18 +5,21 @@ defmodule Elixlsx.Sheet do
   alias Elixlsx.Util
 
   @moduledoc ~S"""
-  Describes a single sheet with a given name. The name can be up to 31 characters long.
+  Describes a single sheet with a given name. The name can be up to 31
+  characters long.
+
   The rows property is a list, each corresponding to a
   row (from the top), of lists, each corresponding to
   a column (from the left), of contents.
 
-  Content may be
+  Content may be:
+
   - a String.t (unicode),
   - a number, or
   - a list [String|number, property_list...]
 
   The property list describes formatting options for that
-  cell. See Font.from_props/1 for a list of options.
+  cell. See `Font.from_props/1` for a list of options.
   """
   defstruct name: "",
             rows: [],
@@ -27,7 +30,8 @@ defmodule Elixlsx.Sheet do
             group_rows: [],
             merge_cells: [],
             pane_freeze: nil,
-            show_grid_lines: true
+            show_grid_lines: true,
+            data_validations: []
 
   @type t :: %Sheet{
           name: String.t(),
@@ -39,12 +43,14 @@ defmodule Elixlsx.Sheet do
           group_rows: list(rowcol_group),
           merge_cells: [{String.t(), String.t()}],
           pane_freeze: {number, number} | nil,
-          show_grid_lines: boolean()
+          show_grid_lines: boolean(),
+          data_validations: list({String.t(), String.t(), list(String.t())})
         }
   @type rowcol_group :: Range.t() | {Range.t(), opts :: keyword}
 
   @doc ~S"""
   Create a sheet with a sheet name.
+
   The name can be up to 31 characters long.
   """
   @spec with_name(String.t()) :: Sheet.t()
@@ -63,8 +69,9 @@ defmodule Elixlsx.Sheet do
   end
 
   @doc ~S"""
-  Returns a "CSV" representation of the Sheet. This is mainly
-  used for doctests and does not generate valid CSV (yet).
+  Returns a "CSV" representation of the Sheet.
+
+  This is mainly used for doctests and does not generate valid CSV (yet).
   """
   def to_csv_string(sheet) do
     Enum.map_join(sheet.rows, "\n", fn row ->
@@ -83,7 +90,7 @@ defmodule Elixlsx.Sheet do
   @doc ~S"""
   Set a cell indexed by excel coordinates.
 
-  ## Example
+  ## Examples
 
       iex> %Elixlsx.Sheet{} |>
       ...> Elixlsx.Sheet.set_cell("C1", "Hello World",
@@ -101,9 +108,11 @@ defmodule Elixlsx.Sheet do
   @spec set_at(Sheet.t(), non_neg_integer, non_neg_integer, any(), Keyword.t()) ::
           Sheet.t()
   @doc ~S"""
-  Set a cell at a given row/column index. Indizes start at 0.
+  Set a cell at a given row/column index.
 
-  ## Example
+  Indizes start at 0.
+
+  ## Examples
 
       iex> %Elixlsx.Sheet{} |>
       ...> Elixlsx.Sheet.set_at(0, 2, "Hello World",
@@ -168,8 +177,9 @@ defmodule Elixlsx.Sheet do
 
   @spec set_col_width(Sheet.t(), String.t(), number) :: Sheet.t()
   @doc ~S"""
-  Set the column width for a given column. Column is indexed by
-  name ("A", ...)
+  Set the column width for a given column.
+
+  Column is indexed by name ("A", ...)
   """
   def set_col_width(sheet, column, width) do
     update_in(
@@ -180,7 +190,9 @@ defmodule Elixlsx.Sheet do
 
   @spec set_row_height(Sheet.t(), number, number) :: Sheet.t()
   @doc ~S"""
-  Set the row height for a given row. Row is indexed starting from 1
+  Set the row height for a given row.
+
+  Row is indexed starting from 1
   """
   def set_row_height(sheet, row_idx, height) do
     update_in(
@@ -192,6 +204,7 @@ defmodule Elixlsx.Sheet do
   @spec group_cols(Sheet.t(), String.t(), String.t()) :: Sheet.t()
   @doc ~S"""
   Group given column range. (i.e. increase outline level by one)
+
   Column is indexed by name ("A", ...)
 
   ## Options
@@ -207,6 +220,7 @@ defmodule Elixlsx.Sheet do
   @spec group_rows(Sheet.t(), pos_integer, pos_integer) :: Sheet.t()
   @doc ~S"""
   Group given row range. (i.e. increase outline level by one)
+
   Row is indexed starting from 1.
 
   ## Options
@@ -221,7 +235,9 @@ defmodule Elixlsx.Sheet do
 
   @spec set_pane_freeze(Sheet.t(), number, number) :: Sheet.t()
   @doc ~S"""
-  Set the pane freeze at the given row and column. Row and column are indexed starting from 1.
+  Set the pane freeze at the given row and column.
+
+  Row and column are indexed starting from 1.
   Special value 0 means no freezing, e.g. {1, 0} will freeze first row and no columns.
   """
   def set_pane_freeze(sheet, row_idx, col_idx) do
@@ -230,7 +246,7 @@ defmodule Elixlsx.Sheet do
 
   @spec remove_pane_freeze(Sheet.t()) :: Sheet.t()
   @doc ~S"""
-  Removes any pane freezing that has been set
+  Removes any pane freezing that has been set.
   """
   def remove_pane_freeze(sheet) do
     %{sheet | pane_freeze: nil}
@@ -250,5 +266,10 @@ defmodule Elixlsx.Sheet do
 
     # Add the image to the list of images in this sheet
     update_in(sheet.images, &[image | &1])
+  end
+
+  @spec add_data_validations(Sheet.t(), String.t(), String.t(), list(String.t())) :: Sheet.t()
+  def add_data_validations(sheet, start_cell, end_cell, values) do
+    %{sheet | data_validations: [{start_cell, end_cell, values} | sheet.data_validations]}
   end
 end
