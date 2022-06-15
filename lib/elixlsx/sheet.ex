@@ -128,18 +128,11 @@ defmodule Elixlsx.Sheet do
     cond do
       length(sheet.rows) <= rowidx ->
         # append new rows, call self again with new sheet
-        n_new_rows = rowidx - length(sheet.rows)
-        new_rows = 0..n_new_rows |> Enum.map(fn _ -> [] end)
-
-        update_in(sheet.rows, &(&1 ++ new_rows))
+        append_rows(sheet, rowidx)
         |> set_at(rowidx, colidx, content, opts)
 
       length(Enum.at(sheet.rows, rowidx)) <= colidx ->
-        n_new_cols = colidx - length(Enum.at(sheet.rows, rowidx))
-        new_cols = 0..n_new_cols |> Enum.map(fn _ -> nil end)
-        new_row = Enum.at(sheet.rows, rowidx) ++ new_cols
-
-        update_in(sheet.rows, &List.replace_at(&1, rowidx, new_row))
+        replace_rows(sheet, rowidx, colidx)
         |> set_at(rowidx, colidx, content, opts)
 
       true ->
@@ -156,23 +149,33 @@ defmodule Elixlsx.Sheet do
     cond do
       length(sheet.rows) <= rowidx ->
         # append new rows, call self again with new sheet
-        n_new_rows = rowidx - length(sheet.rows)
-        new_rows = 0..n_new_rows |> Enum.map(fn _ -> [] end)
-
-        update_in(sheet.rows, &(&1 ++ new_rows))
+        append_rows(sheet, rowidx)
         |> maybe_extend(rowidx, colidx)
 
       length(Enum.at(sheet.rows, rowidx)) <= colidx ->
-        n_new_cols = colidx - length(Enum.at(sheet.rows, rowidx))
-        new_cols = 0..n_new_cols |> Enum.map(fn _ -> nil end)
-        new_row = Enum.at(sheet.rows, rowidx) ++ new_cols
-
-        update_in(sheet.rows, &List.replace_at(&1, rowidx, new_row))
+        replace_rows(sheet, rowidx, colidx)
         |> maybe_extend(rowidx, colidx)
 
       true ->
         sheet
     end
+  end
+
+  @spec append_rows(Sheet.t(), non_neg_integer) :: Sheet.t()
+  defp append_rows(sheet, rowidx) do
+    n_new_rows = rowidx - length(sheet.rows)
+    new_rows = 0..n_new_rows |> Enum.map(fn _ -> [] end)
+
+    update_in(sheet.rows, &(&1 ++ new_rows))
+  end
+
+  @spec replace_rows(Sheet.t(), non_neg_integer, non_neg_integer) :: Sheet.t()
+  defp replace_rows(sheet, rowidx, colidx) do
+    n_new_cols = colidx - length(Enum.at(sheet.rows, rowidx))
+    new_cols = 0..n_new_cols |> Enum.map(fn _ -> nil end)
+    new_row = Enum.at(sheet.rows, rowidx) ++ new_cols
+
+    update_in(sheet.rows, &List.replace_at(&1, rowidx, new_row))
   end
 
   @spec set_col_width(Sheet.t(), String.t(), number) :: Sheet.t()
