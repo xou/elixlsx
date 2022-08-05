@@ -141,7 +141,19 @@ sheet6 =
   # nest further
   |> Sheet.group_cols("C", "D")
 
+sheet7 = %Sheet{
+  name: "Images",
+  rows: List.duplicate(["A", "B", "C", "D", "E"], 5)
+}
+
+sheet7 =
+  sheet7
+  |> Sheet.insert_image(0, 5, "ladybug-3475779_640.jpg")
+  |> Sheet.set_row_height(1, 40)
+  |> Sheet.insert_image(6, 6, "ladybug-3475779_640.jpg")
+
 Workbook.append_sheet(workbook, sheet4)
 |> Workbook.append_sheet(sheet5)
 |> Workbook.append_sheet(sheet6)
+|> Workbook.append_sheet(sheet7)
 |> Elixlsx.write_to("example.xlsx")
