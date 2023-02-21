@@ -77,6 +77,7 @@ defmodule Elixlsx.Sheet do
 
         case content do
           nil -> ""
+          {:formula, val} -> String.Chars.to_string(val)
           _ -> to_string(content)
         end
       end)
