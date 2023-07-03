@@ -300,6 +300,16 @@ defmodule Elixlsx.XMLTemplates do
     """
   end
 
+  defp make_data_validation({start_cell, end_cell, values}) when is_bitstring(values) do
+    """
+    <dataValidation type="list" allowBlank="1" showErrorMessage="1" sqref="#{start_cell}:#{
+      end_cell
+    }">
+      <formula1>#{values}</formula1>
+    </dataValidation>
+    """
+  end
+
   defp make_data_validation({start_cell, end_cell, values}) do
     joined_values =
       values
