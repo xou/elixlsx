@@ -47,6 +47,10 @@ sheet1 = Sheet.with_name("First")
   |> Sheet.set_cell("A2", "cat")
   |> Sheet.set_cell("A3", "cow")
   |> Sheet.add_data_validations("A1", "A10", ["dog", "cat", "cow"])
+  # within same sheet
+  |> Sheet.add_data_validations("A1", "A10", "=$A$2:$A$16")
+  # reference to other sheet  "=#{sheet.name}!$A$2:$A$16"
+  |> Sheet.add_data_validations("A1", "A10", "=sheet2!$A$2:$A$16")
 
 workbook = %Workbook{sheets: [sheet1]}
 
