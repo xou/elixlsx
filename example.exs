@@ -4,7 +4,8 @@ require Elixlsx
 
 alias Elixlsx.{Sheet, Workbook}
 
-sheet1 = Sheet.with_name("First")
+sheet1 =
+  Sheet.with_name("First")
   # Set cell B2 to the string "Hi". :)
   |> Sheet.set_cell("B2", "Hi")
   # Optionally, set font properties:
@@ -42,6 +43,12 @@ sheet1 = Sheet.with_name("First")
   |> Sheet.set_cell("E6", {:formula, "SUM(E1:E5)", value: 15.70}, num_format: "0.00", bold: true)
   |> Sheet.set_cell("F1", {:formula, "NOW()"}, num_format: "yyyy-mm-dd hh:MM:ss")
   |> Sheet.set_col_width("F", 18.0)
+  |> Sheet.set_cell(
+    "F2",
+    {:link, {"http://www.google.it", "google.it"}},
+    underline: true,
+    color: "#0000ff"
+  )
   # Data validations
   |> Sheet.set_cell("A1", "dog")
   |> Sheet.set_cell("A2", "cat")

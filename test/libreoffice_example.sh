@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -e
+
 test_dir=`dirname $0`
 pushd $test_dir/../
 mix

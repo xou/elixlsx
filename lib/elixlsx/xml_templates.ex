@@ -4,6 +4,7 @@ defmodule Elixlsx.XMLTemplates do
   alias Elixlsx.Compiler.StringDB
   alias Elixlsx.Compiler.FontDB
   alias Elixlsx.Compiler.FillDB
+  alias Elixlsx.Compiler.LinkDB
   alias Elixlsx.Compiler.SheetCompInfo
   alias Elixlsx.Compiler.NumFmtDB
   alias Elixlsx.Compiler.BorderStyleDB
@@ -90,9 +91,20 @@ defmodule Elixlsx.XMLTemplates do
   def make_xl_rel_sheet(sheet_comp_info) do
     # I'd love to use string interpolation here, but unfortunately """< is heredoc notation, so i have to use
     # string concatenation or escape all the quotes. Choosing the first.
-    "<Relationship Id=\"#{sheet_comp_info.rId}\" Type=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet\" Target=\"worksheets/#{
-      sheet_comp_info.filename
-    }\"/>"
+    "<Relationship Id=\"#{sheet_comp_info.rId}\" Type=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet\" Target=\"worksheets/#{sheet_comp_info.filename}\"/>"
+  end
+
+  def make_xl_rels_dir(sheetCompInfos, next_rId) do
+    ~S"""
+    <?xml version="1.0" encoding="UTF-8"?>
+    <Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
+      <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/>
+    """ <>
+      make_xl_rel_sheets(sheetCompInfos) <>
+      """
+        <Relationship Id="rId#{next_rId}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/sharedStrings" Target="sharedStrings.xml"/>
+      </Relationships>
+      """
   end
 
   @spec make_xl_rel_sheets(nonempty_list(SheetCompInfo.t())) :: String.t()
@@ -124,9 +136,7 @@ defmodule Elixlsx.XMLTemplates do
     end
 
     """
-    <sheet name="#{xml_escape(sheet_info.name)}" sheetId="#{sheet_comp_info.sheetId}" state="visible" r:id="#{
-      sheet_comp_info.rId
-    }"/>
+    <sheet name="#{xml_escape(sheet_info.name)}" sheetId="#{sheet_comp_info.sheetId}" state="visible" r:id="#{sheet_comp_info.rId}"/>
     """
   end
 
@@ -145,6 +155,8 @@ defmodule Elixlsx.XMLTemplates do
     ~S"""
     <?xml version="1.0" encoding="UTF-8"?>
     <Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">
+    <Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>
+    <Default Extension="xml" ContentType="application/xml"/>
     <Override PartName="/_rels/.rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>
     <Override PartName="/docProps/app.xml" ContentType="application/vnd.openxmlformats-officedocument.extended-properties+xml"/>
     <Override PartName="/docProps/core.xml" ContentType="application/vnd.openxmlformats-package.core-properties+xml"/>
@@ -186,6 +198,10 @@ defmodule Elixlsx.XMLTemplates do
       {:formula, x, opts} when is_list(opts) ->
         {:formula, x, opts}
 
+      {:link, {_url, name}} ->
+        id = StringDB.get_id(wci.stringdb, name)
+        {"s", to_string(id)}
+
       x when is_number(x) ->
         {"n", to_string(x)}
 
@@ -209,7 +225,7 @@ defmodule Elixlsx.XMLTemplates do
       :empty ->
         {:empty, :empty}
 
-      true ->
+      _ ->
         :error
     end
   end
@@ -302,9 +318,7 @@ defmodule Elixlsx.XMLTemplates do
 
   defp make_data_validation({start_cell, end_cell, values}) when is_bitstring(values) do
     """
-    <dataValidation type="list" allowBlank="1" showErrorMessage="1" sqref="#{start_cell}:#{
-      end_cell
-    }">
+    <dataValidation type="list" allowBlank="1" showErrorMessage="1" sqref="#{start_cell}:#{end_cell}">
       <formula1>#{values}</formula1>
     </dataValidation>
     """
@@ -319,9 +333,7 @@ defmodule Elixlsx.XMLTemplates do
       |> Enum.join("&quot;&amp;&quot;")
 
     """
-    <dataValidation type="list" allowBlank="1" showErrorMessage="1" sqref="#{start_cell}:#{
-      end_cell
-    }">
+    <dataValidation type="list" allowBlank="1" showErrorMessage="1" sqref="#{start_cell}:#{end_cell}">
       <formula1>&quot;#{joined_values}&quot;</formula1>
     </dataValidation>
     """
@@ -334,11 +346,7 @@ defmodule Elixlsx.XMLTemplates do
   defp xl_merge_cells(merge_cells) do
     """
     <mergeCells count="#{Enum.count(merge_cells)}">
-      #{
-      Enum.map(merge_cells, fn {fromCell, toCell} ->
-        "<mergeCell ref=\"#{fromCell}:#{toCell}\"/>"
-      end)
-    }
+      #{Enum.map(merge_cells, fn {fromCell, toCell} -> "<mergeCell ref=\"#{fromCell}:#{toCell}\"/>" end)}
     </mergeCells>
     """
   end
@@ -348,9 +356,7 @@ defmodule Elixlsx.XMLTemplates do
       Enum.zip(data, 1..length(data))
       |> Enum.map_join(fn {row, rowidx} ->
         """
-        <row r="#{rowidx}" #{get_row_height_attr(row_heights, rowidx)}#{
-          get_row_grouping_attr(grouping_info, rowidx)
-        }>
+        <row r="#{rowidx}" #{get_row_height_attr(row_heights, rowidx)}#{get_row_grouping_attr(grouping_info, rowidx)}>
           #{xl_sheet_cols(row, rowidx, wci)}
         </row>
         """
@@ -423,7 +429,7 @@ defmodule Elixlsx.XMLTemplates do
     outline_level_attr = if outline_level, do: " outlineLevel=\"#{outline_level}\"", else: ""
     collapsed_attr = if collapsed, do: " collapsed=\"1\"", else: ""
 
-    '<col min="#{k}" max="#{k}"#{width_attr}#{hidden_attr}#{outline_level_attr}#{collapsed_attr} />'
+    ~c"<col min=\"#{k}\" max=\"#{k}\"#{width_attr}#{hidden_attr}#{outline_level_attr}#{collapsed_attr} />"
   end
 
   defp make_cols(sheet) do
@@ -471,11 +477,10 @@ defmodule Elixlsx.XMLTemplates do
     end
   end
 
-  @spec make_sheet(Sheet.t(), WorkbookCompInfo.t()) :: String.t()
   @doc ~S"""
   Returns the XML content for single sheet.
   """
-  def make_sheet(sheet, wci) do
+  def make_sheet(sheet, wci, sci) do
     grouping_info = get_grouping_info(sheet.group_rows)
 
     ~S"""
@@ -510,12 +515,41 @@ defmodule Elixlsx.XMLTemplates do
       ~S"""
       </sheetData>
       """ <>
+      xl_make_hyperlinks(sheet.rows, sci) <>
       xl_merge_cells(sheet.merge_cells) <>
       make_data_validations(sheet.data_validations) <>
       """
       <pageMargins left="0.75" right="0.75" top="1" bottom="1.0" header="0.5" footer="0.5"/>
       </worksheet>
       """
+  end
+
+  defp xl_make_hyperlinks(rows, sci) do
+    hyperlinks =
+      rows
+      |> Enum.with_index()
+      |> Enum.map(fn {row, rowidx} ->
+        row
+        |> Enum.with_index()
+        |> Enum.map(fn
+          {[{:link, {url, _}} | _], colidx} ->
+            """
+            <hyperlink ref="#{U.to_excel_coords(rowidx + 1, colidx + 1)}" r:id="#{LinkDB.get_id(sci.linkdb, url)}" display="#{url}"/>
+            """
+
+          _ ->
+            ""
+        end)
+        |> Enum.join("")
+      end)
+      |> Enum.join("")
+      |> String.trim()
+
+    if hyperlinks == "" do
+      ""
+    else
+      "<hyperlinks>#{hyperlinks}</hyperlinks>"
+    end
   end
 
   defp make_sheet_show_grid(sheet) do
@@ -554,9 +588,7 @@ defmodule Elixlsx.XMLTemplates do
           top_left_cell = U.to_excel_coords(row_idx + 1, col_idx + 1)
 
           {"pane=\"#{pane}\"",
-           "<pane xSplit=\"#{col_idx}\" ySplit=\"#{row_idx}\" topLeftCell=\"#{top_left_cell}\" activePane=\"#{
-             pane
-           }\" state=\"frozen\" />"}
+           "<pane xSplit=\"#{col_idx}\" ySplit=\"#{row_idx}\" topLeftCell=\"#{top_left_cell}\" activePane=\"#{pane}\" state=\"frozen\" />"}
 
         _any ->
           {"", ""}
@@ -575,9 +607,7 @@ defmodule Elixlsx.XMLTemplates do
 
     """
     <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-    <sst xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" count="#{len}" uniqueCount="#{
-      len
-    }">
+    <sst xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" count="#{len}" uniqueCount="#{len}">
     """ <>
       Enum.map_join(stringlist, fn {_, value} ->
         # the only two characters that *must* be replaced for safe XML encoding are & and <:
@@ -765,6 +795,23 @@ defmodule Elixlsx.XMLTemplates do
         #{make_cellxfs(cell_xfs, wci)}
       </cellXfs>
     </styleSheet>
+    """
+  end
+
+  def make_sheet_rels(%SheetCompInfo{linkdb: %{element_count: 0}}), do: ""
+
+  def make_sheet_rels(%SheetCompInfo{linkdb: %{links: links}}) do
+    rel =
+      links
+      |> Enum.map(fn {url, id} ->
+        """
+        <Relationship Id="#{id}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/hyperlink" Target="#{url}" TargetMode="External"/>
+        """
+      end)
+      |> Enum.join()
+
+    """
+    <?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">#{rel}</Relationships>
     """
   end
 

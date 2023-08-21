@@ -2,6 +2,7 @@ defmodule Elixlsx.Compiler do
   alias Elixlsx.Compiler.WorkbookCompInfo
   alias Elixlsx.Compiler.SheetCompInfo
   alias Elixlsx.Compiler.CellStyleDB
+  alias Elixlsx.Compiler.LinkDB
   alias Elixlsx.Compiler.StringDB
   alias Elixlsx.XML
   alias Elixlsx.Sheet
@@ -15,14 +16,36 @@ defmodule Elixlsx.Compiler do
   @spec make_sheet_info(nonempty_list(Sheet.t()), non_neg_integer) ::
           {list(SheetCompInfo.t()), non_neg_integer}
   def make_sheet_info(sheets, init_rId) do
-    # fold helper. aggregator holds {list(SheetCompInfo), sheetidx, rId}.
-    add_sheet = fn _, {sci, idx, rId} ->
-      {[SheetCompInfo.make(idx, rId) | sci], idx + 1, rId + 1}
-    end
+    {sheetCompInfos, _, nextrID} =
+      List.foldl(sheets, {[], 1, init_rId}, fn sheet, {sci, idx, rId} ->
+        sheetcomp = SheetCompInfo.make(idx, rId)
 
-    # TODO probably better to use a zip [1..] |> map instead of fold[l|r]/reverse
-    {sheetCompInfos, _, nextrID} = List.foldl(sheets, {[], 1, init_rId}, add_sheet)
+        {comp, rId} = complink_from_rows(sheetcomp, sheet.rows, rId + 1)
+
+        {[comp | sci], idx + 1, rId}
+      end)
+
     {Enum.reverse(sheetCompInfos), nextrID}
+  end
+
+  defp complink_from_rows(sci, rows, rid) do
+    List.foldl(rows, {sci, rid}, fn cols, {sci, rid} ->
+      List.foldl(cols, {sci, rid}, fn cell, {sci, rid} ->
+        complink_cell_pass(sci, rid, cell)
+      end)
+    end)
+  end
+
+  defp complink_cell_pass(sci, rid, [{:link, {url, _}} | _]) do
+    {update_in(sci.linkdb, &LinkDB.register_link(&1, url, rid)), rid + 1}
+  end
+
+  defp complink_cell_pass(%SheetCompInfo{} = sci, rid, _cell) do
+    {sci, rid}
+  end
+
+  def compinfo_cell_pass_value(wci, {:link, {_url, value}}) do
+    compinfo_cell_pass_value(wci, value)
   end
 
   def compinfo_cell_pass_value(wci, value) do

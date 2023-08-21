@@ -1,11 +1,12 @@
 defmodule Elixlsx.Compiler.SheetCompInfo do
   alias Elixlsx.Compiler.SheetCompInfo
+  alias Elixlsx.Compiler
 
   @moduledoc ~S"""
   Compilation info for a sheet, to be filled during the actual
   write process.
   """
-  defstruct rId: "", filename: "sheet1.xml", sheetId: 0
+  defstruct rId: "", filename: "sheet1.xml", sheetId: 0, linkdb: %Compiler.LinkDB{}
 
   @type t :: %SheetCompInfo{
           rId: String.t(),
@@ -18,7 +19,8 @@ defmodule Elixlsx.Compiler.SheetCompInfo do
     %SheetCompInfo{
       rId: "rId" <> to_string(rId),
       filename: "sheet" <> to_string(sheetidx) <> ".xml",
-      sheetId: sheetidx
+      sheetId: sheetidx,
+      linkdb: %Compiler.LinkDB{}
     }
   end
 end
