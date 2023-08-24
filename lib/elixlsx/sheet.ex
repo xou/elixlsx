@@ -295,7 +295,7 @@ defmodule Elixlsx.Sheet do
           Sheet.t(),
           non_neg_integer,
           non_neg_integer,
-          String.t(),
+          String.t() | {String.t(), binary},
           key: any
         ) ::
           Sheet.t()

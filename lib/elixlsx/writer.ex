@@ -187,7 +187,13 @@ defmodule Elixlsx.Writer do
     sheets
     |> Enum.flat_map(fn s ->
       Enum.map(s.images, fn image ->
-        {image_full_path(image, wci), read_image(image.file_path)}
+        case image do
+          %{binary: nil} ->
+            {image_full_path(image, wci), read_image(image.file_path)}
+
+          %{binary: binary} ->
+            {image_full_path(image, wci), binary}
+        end
       end)
     end)
     |> Enum.uniq()

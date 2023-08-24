@@ -51,9 +51,9 @@ sheet1 =
   |> Sheet.set_cell("A3", "cow")
   |> Sheet.add_data_validations("A1", "A10", ["dog", "cat", "cow"])
   # within same sheet
-  |> Sheet.add_data_validations("A1", "A10", "=$A$2:$A$16")
+  # |> Sheet.add_data_validations("A1", "A10", "=$A$2:$A$16")
   # reference to other sheet  "=#{sheet.name}!$A$2:$A$16"
-  |> Sheet.add_data_validations("A1", "A10", "=sheet2!$A$2:$A$16")
+  # |> Sheet.add_data_validations("A1", "A10", "=sheet2!$A$2:$A$16")
 
 workbook = %Workbook{sheets: [sheet1]}
 
@@ -170,7 +170,7 @@ sheet7 =
   |> Sheet.set_row_height(5, "100px")
   |> Sheet.insert_image(0, 0, "ladybug-3475779_640.jpg", width: 100, height: 100)
   |> Sheet.insert_image(2, 2, "ladybug-3475779_640.jpg", width: 100, height: 100)
-  |> Sheet.insert_image(2, 0, "ladybug-3475779_640.jpg", width: 100, height: 100)
+  |> Sheet.insert_image(2, 0, {"ladybug-3475779_640.jpg", File.read!("ladybug-3475779_640.jpg")}, width: 100, height: 100)
 
 sheet8 = %Sheet{
   name: "Images 2",
