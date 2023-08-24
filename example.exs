@@ -4,7 +4,8 @@ require Elixlsx
 
 alias Elixlsx.{Sheet, Workbook}
 
-sheet1 = Sheet.with_name("First")
+sheet1 =
+  Sheet.with_name("First")
   # Set cell B2 to the string "Hi". :)
   |> Sheet.set_cell("B2", "Hi")
   # Optionally, set font properties:
@@ -23,6 +24,8 @@ sheet1 = Sheet.with_name("First")
   |> Sheet.set_cell("A5", 1_448_882_362, yyyymm: true)
   # make some room in the first column, otherwise the date will only show up as ###
   |> Sheet.set_col_width("A", 18.0)
+  # We can use pixels too!
+  |> Sheet.set_col_width("B", "120px")
   # Cell borders
   |> Sheet.set_cell("A6", "Double border", border: [bottom: [style: :double, color: "#cc3311"]])
   # Formatting with empty content
@@ -65,7 +68,8 @@ sheet2 =
     name: "Third",
     rows: [[1, 2, 3, 4, 5], [1, 2], ["increased row height"], ["hello", "world"]]
   }
-  |> Sheet.set_row_height(3, 40)
+  |> Sheet.set_row_height(2, 75)
+  |> Sheet.set_row_height(3, "100px")
 
 workbook = Workbook.append_sheet(workbook, sheet2)
 
@@ -145,7 +149,57 @@ sheet6 =
   # nest further
   |> Sheet.group_cols("C", "D")
 
+# Images
+sheet7 = %Sheet{
+  name: "Images",
+  rows: List.duplicate(["A", "B", "C", "D", "E"], 5),
+  max_char_width: 8
+}
+
+sheet7 =
+  sheet7
+  |> Sheet.set_col_width("A", "100px")
+  |> Sheet.set_col_width("B", "100px")
+  |> Sheet.set_col_width("C", "100px")
+  |> Sheet.set_col_width("D", "100px")
+  |> Sheet.set_col_width("E", "100px")
+  |> Sheet.set_row_height(1, "100px")
+  |> Sheet.set_row_height(2, "100px")
+  |> Sheet.set_row_height(3, "100px")
+  |> Sheet.set_row_height(4, "100px")
+  |> Sheet.set_row_height(5, "100px")
+  |> Sheet.insert_image(0, 0, "ladybug-3475779_640.jpg", width: 100, height: 100)
+  |> Sheet.insert_image(2, 2, "ladybug-3475779_640.jpg", width: 100, height: 100)
+  |> Sheet.insert_image(2, 0, "ladybug-3475779_640.jpg", width: 100, height: 100)
+
+sheet8 = %Sheet{
+  name: "Images 2",
+  rows: List.duplicate(["A", "B", "C", "D", "E"], 5),
+  max_char_width: 8
+}
+
+sheet8 =
+  sheet8
+  |> Sheet.set_col_width("A", "100px")
+  |> Sheet.set_col_width("B", "100px")
+  |> Sheet.set_col_width("C", "100px")
+  |> Sheet.set_col_width("D", "100px")
+  |> Sheet.set_col_width("E", "100px")
+  |> Sheet.set_row_height(1, "100px")
+  |> Sheet.set_row_height(2, "100px")
+  |> Sheet.set_row_height(3, "100px")
+  |> Sheet.set_row_height(4, "100px")
+  |> Sheet.set_row_height(5, "100px")
+  |> Sheet.insert_image(0, 0, "ladybug-3475779_640.jpg",
+    width: 100,
+    height: 100,
+    x_offset: 50,
+    y_offset: 50
+  )
+
 Workbook.append_sheet(workbook, sheet4)
 |> Workbook.append_sheet(sheet5)
 |> Workbook.append_sheet(sheet6)
+|> Workbook.append_sheet(sheet7)
+|> Workbook.append_sheet(sheet8)
 |> Elixlsx.write_to("example.xlsx")

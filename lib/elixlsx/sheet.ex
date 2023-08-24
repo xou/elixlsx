@@ -1,6 +1,7 @@
 defmodule Elixlsx.Sheet do
   alias __MODULE__
   alias Elixlsx.Sheet
+  alias Elixlsx.Image
   alias Elixlsx.Util
 
   @moduledoc ~S"""
@@ -22,26 +23,32 @@ defmodule Elixlsx.Sheet do
   """
   defstruct name: "",
             rows: [],
+            images: [],
             col_widths: %{},
             row_heights: %{},
+            max_char_width: 7,
             group_cols: [],
             group_rows: [],
             merge_cells: [],
             pane_freeze: nil,
             show_grid_lines: true,
-            data_validations: []
+            data_validations: [],
+            emu: 9525
 
   @type t :: %Sheet{
           name: String.t(),
           rows: list(list(any())),
+          images: list(Image.t()),
           col_widths: %{pos_integer => number},
           row_heights: %{pos_integer => number},
+          max_char_width: number,
           group_cols: list(rowcol_group),
           group_rows: list(rowcol_group),
           merge_cells: [{String.t(), String.t()}],
           pane_freeze: {number, number} | nil,
           show_grid_lines: boolean(),
-          data_validations: list({String.t(), String.t(), list(String.t()) | String.t()})
+          data_validations: list({String.t(), String.t(), list(String.t())}),
+          emu: number
         }
   @type rowcol_group :: Range.t() | {Range.t(), opts :: keyword}
 
@@ -102,7 +109,8 @@ defmodule Elixlsx.Sheet do
     set_at(sheet, row, col, content, opts)
   end
 
-  @spec set_at(Sheet.t(), non_neg_integer, non_neg_integer, any(), Keyword.t()) :: Sheet.t()
+  @spec set_at(Sheet.t(), non_neg_integer, non_neg_integer, any(), Keyword.t()) ::
+          Sheet.t()
   @doc ~S"""
   Set a cell at a given row/column index.
 
@@ -119,21 +127,16 @@ defmodule Elixlsx.Sheet do
   """
   def set_at(sheet, rowidx, colidx, content, opts \\ [])
       when is_number(rowidx) and is_number(colidx) do
+    sheet = maybe_extend(sheet, rowidx, colidx)
+
     cond do
       length(sheet.rows) <= rowidx ->
         # append new rows, call self again with new sheet
-        n_new_rows = rowidx - length(sheet.rows)
-        new_rows = 0..n_new_rows |> Enum.map(fn _ -> [] end)
-
-        update_in(sheet.rows, &(&1 ++ new_rows))
+        append_rows(sheet, rowidx)
         |> set_at(rowidx, colidx, content, opts)
 
       length(Enum.at(sheet.rows, rowidx)) <= colidx ->
-        n_new_cols = colidx - length(Enum.at(sheet.rows, rowidx))
-        new_cols = 0..n_new_cols |> Enum.map(fn _ -> nil end)
-        new_row = Enum.at(sheet.rows, rowidx) ++ new_cols
-
-        update_in(sheet.rows, &List.replace_at(&1, rowidx, new_row))
+        replace_rows(sheet, rowidx, colidx)
         |> set_at(rowidx, colidx, content, opts)
 
       true ->
@@ -145,12 +148,59 @@ defmodule Elixlsx.Sheet do
     end
   end
 
-  @spec set_col_width(Sheet.t(), String.t(), number) :: Sheet.t()
+  @spec maybe_extend(Sheet.t(), non_neg_integer, non_neg_integer) :: Sheet.t()
+  defp maybe_extend(sheet, rowidx, colidx) do
+    cond do
+      length(sheet.rows) <= rowidx ->
+        # append new rows, call self again with new sheet
+        append_rows(sheet, rowidx)
+        |> maybe_extend(rowidx, colidx)
+
+      length(Enum.at(sheet.rows, rowidx)) <= colidx ->
+        replace_rows(sheet, rowidx, colidx)
+        |> maybe_extend(rowidx, colidx)
+
+      true ->
+        sheet
+    end
+  end
+
+  @spec append_rows(Sheet.t(), non_neg_integer) :: Sheet.t()
+  defp append_rows(sheet, rowidx) do
+    n_new_rows = rowidx - length(sheet.rows)
+    new_rows = 0..n_new_rows |> Enum.map(fn _ -> [] end)
+
+    update_in(sheet.rows, &(&1 ++ new_rows))
+  end
+
+  @spec replace_rows(Sheet.t(), non_neg_integer, non_neg_integer) :: Sheet.t()
+  defp replace_rows(sheet, rowidx, colidx) do
+    n_new_cols = colidx - length(Enum.at(sheet.rows, rowidx))
+    new_cols = 0..n_new_cols |> Enum.map(fn _ -> nil end)
+    new_row = Enum.at(sheet.rows, rowidx) ++ new_cols
+
+    update_in(sheet.rows, &List.replace_at(&1, rowidx, new_row))
+  end
+
   @doc ~S"""
   Set the column width for a given column.
 
   Column is indexed by name ("A", ...)
+
+  width can be a number or a string with px [18, "131px"]
   """
+  @spec set_col_width(Sheet.t(), String.t(), String.t()) :: Sheet.t()
+  def set_col_width(sheet, column, width) when is_binary(width) do
+    px =
+      case Integer.parse(width) do
+        {n, "px"} -> n
+        _ -> raise("Error parsing width value")
+      end
+
+    set_col_width(sheet, column, Util.px_to_width(sheet, px))
+  end
+
+  @spec set_col_width(Sheet.t(), String.t(), number) :: Sheet.t()
   def set_col_width(sheet, column, width) do
     update_in(
       sheet.col_widths,
@@ -158,17 +208,33 @@ defmodule Elixlsx.Sheet do
     )
   end
 
-  @spec set_row_height(Sheet.t(), number, number) :: Sheet.t()
   @doc ~S"""
   Set the row height for a given row.
 
   Row is indexed starting from 1
   """
+  @spec set_row_height(Sheet.t(), number, String.t()) :: Sheet.t()
+  def set_row_height(sheet, row_idx, height) when is_binary(height) do
+    px =
+      case Integer.parse(height) do
+        {n, "px"} -> n
+        _ -> raise("Error parsing height value")
+      end
+
+    set_row_height(sheet, row_idx, Util.px_to_height(px))
+  end
+
+  @spec set_row_height(Sheet.t(), number, number) :: Sheet.t()
   def set_row_height(sheet, row_idx, height) do
     update_in(
       sheet.row_heights,
       &Map.put(&1, row_idx, height)
     )
+  end
+
+  @spec set_max_char_width(Sheet.t(), number) :: Sheet.t()
+  def set_max_char_width(sheet, width) do
+    %{sheet | max_char_width: width}
   end
 
   @spec group_cols(Sheet.t(), String.t(), String.t()) :: Sheet.t()
@@ -220,6 +286,27 @@ defmodule Elixlsx.Sheet do
   """
   def remove_pane_freeze(sheet) do
     %{sheet | pane_freeze: nil}
+  end
+
+  @doc """
+  Insert an image at the given positions.
+  """
+  @spec insert_image(
+          Sheet.t(),
+          non_neg_integer,
+          non_neg_integer,
+          String.t(),
+          key: any
+        ) ::
+          Sheet.t()
+  def insert_image(sheet, x, y, imagepath, opts \\ []) do
+    image = Image.new(imagepath, x, y, opts)
+
+    # Ensure there are enough rows and columns to accomodate the image position
+    sheet = maybe_extend(sheet, y, x)
+
+    # Add the image to the list of images in this sheet
+    update_in(sheet.images, &[image | &1])
   end
 
   @spec add_data_validations(Sheet.t(), String.t(), String.t(), list(String.t())) :: Sheet.t()

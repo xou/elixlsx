@@ -1,6 +1,9 @@
 defmodule Elixlsx.Util do
   alias Elixlsx.XML
   @col_alphabet Enum.to_list(?A..?Z)
+  @padding 5
+  @col_width 8.43
+  @row_height 15
 
   @doc ~S"""
   Returns the column letter(s) associated with a column index.
@@ -256,5 +259,160 @@ defmodule Elixlsx.Util do
   """
   def app_version_string do
     String.replace(@version, ~r/(\d+)\.(\d+)\.(\d+)/, "\\1.\\2\\3")
+  end
+
+  @doc """
+  The total width of the given range of columns
+  """
+  @spec width_from_col_range(Sheet.t(), number, number) :: number
+  def width_from_col_range(_sheet, a, b) when b < a do
+    0
+  end
+
+  def width_from_col_range(sheet, a, b) do
+    a..b
+    |> Enum.into([])
+    |> Enum.uniq()
+    |> Enum.map(fn i -> sheet.col_widths[i + 1] || @col_width end)
+    |> Enum.sum()
+  end
+
+  @doc """
+  The total height of the given range of rows
+  """
+  @spec height_from_row_range(Sheet.t(), number, number) :: number
+  def height_from_row_range(_sheet, a, b) when b < a do
+    0
+  end
+
+  def height_from_row_range(sheet, a, b) do
+    a..b
+    |> Enum.into([])
+    |> Enum.uniq()
+    |> Enum.map(fn i -> sheet.row_heights[i + 1] || @row_height end)
+    |> Enum.sum()
+  end
+
+  @doc """
+  Convert width to pixels
+  """
+  @spec width_to_px(Sheet.t(), number) :: number
+  def width_to_px(_, 0) do
+    0
+  end
+
+  def width_to_px(sheet, v) do
+    round(v * sheet.max_char_width + @padding)
+  end
+
+  @doc """
+  Convert width to emu
+  """
+  @spec width_to_emu(Sheet.t(), number) :: number
+  def width_to_emu(sheet, v) do
+    round(width_to_px(sheet, v) * sheet.emu)
+  end
+
+  @doc """
+  Convert height to pixels
+  """
+  @spec height_to_px(number) :: number
+  def height_to_px(v) do
+    4 / 3 * v
+  end
+
+  @doc """
+  Convert height to emu
+  """
+  @spec height_to_emu(Sheet.t(), number) :: number
+  def height_to_emu(sheet, v) do
+    round(height_to_px(v) * sheet.emu)
+  end
+
+  @doc """
+  Convert pixels to width
+  """
+  @spec px_to_width(Sheet.t(), number) :: number
+  def px_to_width(sheet, px) do
+    if px <= 12 do
+      px / (sheet.max_char_width + @padding)
+    else
+      (px - @padding) / sheet.max_char_width
+    end
+  end
+
+  @doc """
+  Convert pixels to height
+  """
+  @spec px_to_height(number) :: number
+  def px_to_height(px) do
+    0.75 * px
+  end
+
+  @doc """
+  Figure out which columns a pixel width would span.
+  """
+  @spec px_to_col_span(Sheet.t(), number, number) :: {number, number, number}
+  def px_to_col_span(s, start, px) do
+    {end_col, remaining_px} = col_span_acc(s, px, start, 0)
+    {start, end_col, remaining_px}
+  end
+
+  @spec col_span_acc(Sheet.t(), number, number, number) :: {number, number}
+  defp col_span_acc(s, px, col, total) do
+    w = s.col_widths[col + 1] || @col_width
+    p = width_to_px(s, w)
+    t = total + p
+
+    if px > t do
+      col_span_acc(s, px, col + 1, t)
+    else
+      cond do
+        t == px ->
+          {col, p}
+
+        total == 0 ->
+          {col, px}
+
+        true ->
+          {col, px - total}
+      end
+    end
+  end
+
+  @doc """
+  Figure out which rows a pixel height would span.
+  """
+  @spec px_to_row_span(Sheet.t(), number, number) :: {number, number, number}
+  def px_to_row_span(s, start, px) do
+    {end_row, remaining_px} = row_span_acc(s, px, start, 0)
+    {start, end_row, remaining_px}
+  end
+
+  @spec row_span_acc(Sheet.t(), number, number, number) :: {number, number}
+  defp row_span_acc(s, px, row, total) do
+    h = s.row_heights[row + 1] || @row_height
+    p = height_to_px(h)
+    t = total + p
+
+    if px > t do
+      row_span_acc(s, px, row + 1, t)
+    else
+      cond do
+        t == px ->
+          {row, p}
+
+        total == 0 ->
+          {row, px}
+
+        true ->
+          {row, px - total}
+      end
+    end
+  end
+
+  @spec px_to_emu(Sheet.t(), number) :: number
+  def px_to_emu(sheet, px) do
+    round(px * sheet.emu)
   end
 end
