@@ -520,7 +520,15 @@ defmodule Elixlsx.XMLTemplates do
   defp make_xl_drawings_twoCell(image, wci, s) do
     drawing_id = to_string(DrawingDB.get_id(wci.drawingdb, image))
 
-    {_, to_col, to_col_off} = U.px_to_col_span(s, image.x, image.width + image.x_offset)
+    {from_col, to_col, {from_col_off, to_col_off}} =
+      case image.align_x do
+        :left ->
+          U.px_to_col_span_from_left(s, image.x, image.width + image.x_offset)
+
+        :right ->
+          U.px_to_col_span_from_right(s, image.x, image.width + image.x_offset)
+      end
+
     {_, to_row, to_row_off} = U.px_to_row_span(s, image.y, image.height + image.y_offset)
 
     off_x = U.width_from_col_range(s, 0, image.x - 1)
@@ -542,8 +550,8 @@ defmodule Elixlsx.XMLTemplates do
     """
     <xdr:twoCellAnchor editAs="oneCell">
         <xdr:from>
-            <xdr:col>#{image.x}</xdr:col>
-            <xdr:colOff>#{U.px_to_emu(s, image.x_offset)}</xdr:colOff>
+            <xdr:col>#{from_col}</xdr:col>
+            <xdr:colOff>#{U.px_to_emu(s, from_col_off)}</xdr:colOff>
             <xdr:row>#{image.y}</xdr:row>
             <xdr:rowOff>#{U.px_to_emu(s, image.y_offset)}</xdr:rowOff>
         </xdr:from>

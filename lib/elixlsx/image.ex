@@ -10,7 +10,8 @@ defmodule Elixlsx.Image do
             y_offset: 0,
             width: 1,
             height: 1,
-            binary: nil
+            binary: nil,
+            align_x: :left
 
   @type t :: %Image{
           file_path: String.t() | {String.t(), binary},
@@ -22,7 +23,8 @@ defmodule Elixlsx.Image do
           y_offset: integer,
           width: integer,
           height: integer,
-          binary: binary | nil
+          binary: binary | nil,
+          align_x: :left | :right
         }
 
   @doc """
@@ -45,7 +47,8 @@ defmodule Elixlsx.Image do
       x_offset: Keyword.get(opts, :x_offset, 0),
       y_offset: Keyword.get(opts, :y_offset, 0),
       width: Keyword.get(opts, :width, 1),
-      height: Keyword.get(opts, :height, 1)
+      height: Keyword.get(opts, :height, 1),
+      align_x: Keyword.get(opts, :align_x, :left)
     }
   end
 

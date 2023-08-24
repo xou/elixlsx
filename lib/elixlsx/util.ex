@@ -352,10 +352,19 @@ defmodule Elixlsx.Util do
   @doc """
   Figure out which columns a pixel width would span.
   """
-  @spec px_to_col_span(Sheet.t(), number, number) :: {number, number, number}
-  def px_to_col_span(s, start, px) do
+  @spec px_to_col_span_from_left(Sheet.t(), number, number) :: {number, number, number}
+  def px_to_col_span_from_left(s, start, px) do
     {end_col, remaining_px} = col_span_acc(s, px, start, 0)
     {start, end_col, remaining_px}
+  end
+
+  @doc """
+  Figure out which columns a pixel width would span.
+  """
+  @spec px_to_col_span_from_right(Sheet.t(), number, number) :: {number, number, number}
+  def px_to_col_span_from_right(s, start, px) do
+    {end_col, remaining_px} = col_span_dec(s, px, start, px)
+    {end_col, start, remaining_px}
   end
 
   @spec col_span_acc(Sheet.t(), number, number, number) :: {number, number}
@@ -368,14 +377,26 @@ defmodule Elixlsx.Util do
       col_span_acc(s, px, col + 1, t)
     else
       cond do
-        t == px ->
-          {col, p}
+        t == px -> {col, {0, p}}
+        total == 0 -> {col, {0, px}}
+        true -> {col, {px - total, p}}
+      end
+    end
+  end
 
-        total == 0 ->
-          {col, px}
+  @spec col_span_dec(Sheet.t(), number, number, number) :: {number, number}
+  defp col_span_dec(s, px, col, total) do
+    w = s.col_widths[col + 1] || @col_width
+    p = width_to_px(s, w)
+    t = total - p
 
-        true ->
-          {col, px - total}
+    if t > 0 do
+      col_span_dec(s, px, col - 1, t)
+    else
+      cond do
+        t == px -> {col, {0, p, px}}
+        total == px -> {col, {p - px, p}}
+        true -> {col, {p - total, p}}
       end
     end
   end

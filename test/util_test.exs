@@ -62,18 +62,32 @@ defmodule ExCheck.UtilTest do
     assert Util.px_to_height(1) == 0.75
   end
 
-  test "px_to_col_span" do
+  test "px_to_col_span :left" do
     sheet =
       %Sheet{max_char_width: 10}
       |> Sheet.set_col_width("A", "100px")
       |> Sheet.set_col_width("B", "100px")
       |> Sheet.set_col_width("C", "100px")
 
-    assert Util.px_to_col_span(sheet, 0, 25) == {0, 0, 25}
-    assert Util.px_to_col_span(sheet, 0, 100) == {0, 0, 100}
-    assert Util.px_to_col_span(sheet, 0, 200) == {0, 1, 100}
-    assert Util.px_to_col_span(sheet, 0, 201) == {0, 2, 1}
-    assert Util.px_to_col_span(sheet, 0, 300) == {0, 2, 100}
+    assert Util.px_to_col_span_from_left(sheet, 0, 25) == {0, 0, {0, 25}}
+    assert Util.px_to_col_span_from_left(sheet, 0, 100) == {0, 0, {0, 100}}
+    assert Util.px_to_col_span_from_left(sheet, 0, 200) == {0, 1, {0, 100}}
+    assert Util.px_to_col_span_from_left(sheet, 0, 201) == {0, 2, {1, 100}}
+    assert Util.px_to_col_span_from_left(sheet, 0, 300) == {0, 2, {0, 100}}
+  end
+
+  test "px_to_col_span :right" do
+    sheet =
+      %Sheet{max_char_width: 10}
+      |> Sheet.set_col_width("A", "100px")
+      |> Sheet.set_col_width("B", "100px")
+      |> Sheet.set_col_width("C", "100px")
+
+    assert Util.px_to_col_span_from_right(sheet, 2, 25) == {2, 2, {75, 100}}
+    assert Util.px_to_col_span_from_right(sheet, 2, 100) == {2, 2, {0, 100}}
+    assert Util.px_to_col_span_from_right(sheet, 2, 200) == {1, 2, {0, 100}}
+    assert Util.px_to_col_span_from_right(sheet, 2, 201) == {0, 2, {99, 100}}
+    assert Util.px_to_col_span_from_right(sheet, 2, 300) == {0, 2, {0, 100}}
   end
 
   test "px_to_row_span" do
