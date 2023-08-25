@@ -10,11 +10,16 @@ defmodule Elixlsx.Workbook do
   alias Elixlsx.Sheet
   alias Elixlsx.Workbook
 
-  defstruct sheets: [], datetime: nil
+  defstruct sheets: [],
+            datetime: nil,
+            font: nil,
+            font_size: nil
 
   @type t :: %Workbook{
           sheets: nonempty_list(Sheet.t()),
-          datetime: String.t() | integer | nil
+          datetime: String.t() | integer | nil,
+          font: String.t(),
+          font_size: number
         }
 
   @doc "Append a sheet at the end."

@@ -1,4 +1,5 @@
 defmodule Elixlsx.XMLTemplates do
+  alias Elixlsx.Workbook
   alias Elixlsx.Util, as: U
   alias Elixlsx.Compiler.CellStyleDB
   alias Elixlsx.Compiler.StringDB
@@ -7,6 +8,7 @@ defmodule Elixlsx.XMLTemplates do
   alias Elixlsx.Compiler.SheetCompInfo
   alias Elixlsx.Compiler.NumFmtDB
   alias Elixlsx.Compiler.BorderStyleDB
+  alias Elixlsx.Compiler.DrawingDB
   alias Elixlsx.Compiler.WorkbookCompInfo
   alias Elixlsx.Style.CellStyle
   alias Elixlsx.Style.Font
@@ -88,11 +90,33 @@ defmodule Elixlsx.XMLTemplates do
 
   @spec make_xl_rel_sheet(SheetCompInfo.t()) :: String.t()
   def make_xl_rel_sheet(sheet_comp_info) do
-    # I'd love to use string interpolation here, but unfortunately """< is heredoc notation, so i have to use
-    # string concatenation or escape all the quotes. Choosing the first.
-    "<Relationship Id=\"#{sheet_comp_info.rId}\" Type=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet\" Target=\"worksheets/#{
-      sheet_comp_info.filename
-    }\"/>"
+    """
+      <Relationship
+        Id="#{sheet_comp_info.rId}"
+        Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet"
+        Target="worksheets/#{sheet_comp_info.filename}"
+      />
+    """
+    |> clean_xml()
+  end
+
+  @spec make_xl_worksheet_rel_sheet(Workbook.t(), Sheet.t(), WorkbookCompInfo.t()) :: String.t()
+  def make_xl_worksheet_rel_sheet(w, sheet, wci) do
+    has_images? = fn s -> s.images != [] end
+    sheets = for sheet <- w.sheets, has_images?.(sheet), do: sheet
+    {_, di} = Enum.zip(sheets, wci.drawing_info) |> Enum.find(fn {s, _} -> s == sheet end)
+
+    """
+    <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+    <Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
+      <Relationship
+        Id="rId1"
+        Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/drawing"
+        Target="../drawings/#{di.filename}"
+      />
+    </Relationships>
+    """
+    |> clean_xml()
   end
 
   @spec make_xl_rel_sheets(nonempty_list(SheetCompInfo.t())) :: String.t()
@@ -124,9 +148,7 @@ defmodule Elixlsx.XMLTemplates do
     end
 
     """
-    <sheet name="#{xml_escape(sheet_info.name)}" sheetId="#{sheet_comp_info.sheetId}" state="visible" r:id="#{
-      sheet_comp_info.rId
-    }"/>
+    <sheet name="#{xml_escape(sheet_info.name)}" sheetId="#{sheet_comp_info.sheetId}" state="visible" r:id="#{sheet_comp_info.rId}"/>
     """
   end
 
@@ -141,22 +163,52 @@ defmodule Elixlsx.XMLTemplates do
     Enum.map_join(sheet_comp_infos, &contenttypes_sheet_entry/1)
   end
 
+  defp contenttypes_drawing_entry(drawing_comp_info) do
+    """
+    <Override
+      PartName="/xl/drawings/#{drawing_comp_info.filename}"
+      ContentType="application/vnd.openxmlformats-officedocument.drawing+xml"
+    />
+    """
+    |> clean_xml()
+  end
+
+  defp contenttypes_drawing_entries(drawing_comp_infos) do
+    Enum.map_join(drawing_comp_infos, &contenttypes_drawing_entry/1)
+  end
+
+  defp contenttypes_drawing_type({extension, type}) do
+    """
+    <Default
+      Extension="#{extension}"
+      ContentType="#{type}"
+    />
+    """
+    |> clean_xml()
+  end
+
+  defp contenttypes_drawing_types(drawing_db) do
+    drawing_types = DrawingDB.image_types(drawing_db)
+    Enum.map_join(drawing_types, &contenttypes_drawing_type/1)
+  end
+
   def make_contenttypes_xml(wci) do
-    ~S"""
+    """
     <?xml version="1.0" encoding="UTF-8"?>
     <Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">
-    <Override PartName="/_rels/.rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>
-    <Override PartName="/docProps/app.xml" ContentType="application/vnd.openxmlformats-officedocument.extended-properties+xml"/>
-    <Override PartName="/docProps/core.xml" ContentType="application/vnd.openxmlformats-package.core-properties+xml"/>
-    <Override PartName="/xl/_rels/workbook.xml.rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>
-    <Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>
-    <Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/>
-    """ <>
-      contenttypes_sheet_entries(wci.sheet_info) <>
-      ~S"""
-      <Override PartName="/xl/sharedStrings.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sharedStrings+xml"/>
-      </Types>
-      """
+      <Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml" />
+      <Override PartName="/_rels/.rels" ContentType="application/vnd.openxmlformats-package.relationships+xml" />
+      <Override PartName="/docProps/app.xml" ContentType="application/vnd.openxmlformats-officedocument.extended-properties+xml" />
+      <Override PartName="/docProps/core.xml" ContentType="application/vnd.openxmlformats-package.core-properties+xml" />
+      <Override PartName="/xl/_rels/workbook.xml.rels" ContentType="application/vnd.openxmlformats-package.relationships+xml" />
+      <Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml" />
+      <Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml" />
+      #{contenttypes_sheet_entries(wci.sheet_info)}
+      #{contenttypes_drawing_entries(wci.drawing_info)}
+      #{contenttypes_drawing_types(wci.drawingdb)}
+      <Override PartName="/xl/sharedStrings.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sharedStrings+xml" />
+    </Types>
+    """
   end
 
   ###
@@ -300,31 +352,29 @@ defmodule Elixlsx.XMLTemplates do
     """
   end
 
-  defp make_data_validation({start_cell, end_cell, values}) when is_bitstring(values) do
-    """
-    <dataValidation type="list" allowBlank="1" showErrorMessage="1" sqref="#{start_cell}:#{
-      end_cell
-    }">
-      <formula1>#{values}</formula1>
-    </dataValidation>
-    """
-  end
-
   defp make_data_validation({start_cell, end_cell, values}) do
-    joined_values =
-      values
-      |> Enum.join(",")
-      |> String.codepoints()
-      |> Enum.chunk_every(255)
-      |> Enum.join("&quot;&amp;&quot;")
+    case values do
+      v when is_list(v) ->
+        joined_values =
+          values
+          |> Enum.join(",")
+          |> String.codepoints()
+          |> Enum.chunk_every(255)
+          |> Enum.join("&quot;&amp;&quot;")
 
-    """
-    <dataValidation type="list" allowBlank="1" showErrorMessage="1" sqref="#{start_cell}:#{
-      end_cell
-    }">
-      <formula1>&quot;#{joined_values}&quot;</formula1>
-    </dataValidation>
-    """
+        """
+        <dataValidation type="list" allowBlank="1" showErrorMessage="1" sqref="#{start_cell}:#{end_cell}">
+          <formula1>&quot;#{joined_values}&quot;</formula1>
+        </dataValidation>
+        """
+
+      v when is_binary(v) ->
+        """
+        <dataValidation type="list" allowBlank="1" showErrorMessage="1" sqref="#{start_cell}:#{end_cell}">
+          <formula1>#{v}</formula1>
+        </dataValidation>
+        """
+    end
   end
 
   defp xl_merge_cells([]) do
@@ -334,11 +384,7 @@ defmodule Elixlsx.XMLTemplates do
   defp xl_merge_cells(merge_cells) do
     """
     <mergeCells count="#{Enum.count(merge_cells)}">
-      #{
-      Enum.map(merge_cells, fn {fromCell, toCell} ->
-        "<mergeCell ref=\"#{fromCell}:#{toCell}\"/>"
-      end)
-    }
+      #{Enum.map(merge_cells, fn {fromCell, toCell} -> "<mergeCell ref=\"#{fromCell}:#{toCell}\"/>" end)}
     </mergeCells>
     """
   end
@@ -348,9 +394,7 @@ defmodule Elixlsx.XMLTemplates do
       Enum.zip(data, 1..length(data))
       |> Enum.map_join(fn {row, rowidx} ->
         """
-        <row r="#{rowidx}" #{get_row_height_attr(row_heights, rowidx)}#{
-          get_row_grouping_attr(grouping_info, rowidx)
-        }>
+        <row r="#{rowidx}" #{get_row_height_attr(row_heights, rowidx)}#{get_row_grouping_attr(grouping_info, rowidx)}>
           #{xl_sheet_cols(row, rowidx, wci)}
         </row>
         """
@@ -471,6 +515,109 @@ defmodule Elixlsx.XMLTemplates do
     end
   end
 
+  ###
+  ### xl/drawings/drawing*.xml
+  ###
+  @spec make_drawing(Sheet.t(), WorkbookCompInfo.t()) :: String.t()
+  def make_drawing(%{images: []}, _wci), do: ""
+
+  def make_drawing(s, wci) do
+    """
+    <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+    <xdr:wsDr
+      xmlns:xdr="http://schemas.openxmlformats.org/drawingml/2006/spreadsheetDrawing"
+      xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"
+      xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"
+      xmlns:c="http://schemas.openxmlformats.org/drawingml/2006/chart"
+      xmlns:cx="http://schemas.microsoft.com/office/drawing/2014/chartex"
+      xmlns:cx1="http://schemas.microsoft.com/office/drawing/2015/9/8/chartex"
+      xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+      xmlns:dgm="http://schemas.openxmlformats.org/drawingml/2006/diagram"
+      xmlns:x3Unk="http://schemas.microsoft.com/office/drawing/2010/slicer"
+      xmlns:sle15="http://schemas.microsoft.com/office/drawing/2012/slicer">
+      #{Enum.map_join(s.images, "\n", fn i -> make_xl_drawings_one_cell(i, wci, s) end)}
+    </xdr:wsDr>
+    """
+    |> clean_xml()
+  end
+
+  defp make_xl_drawings_one_cell(image, wci, s) do
+    drawing_id = to_string(DrawingDB.get_id(wci.drawingdb, image))
+
+    w = s.col_widths[image.x + 1] || 8.43
+    w_px = U.width_to_px(w, image)
+
+    col_off =
+      case image.align_x do
+        :left ->
+          image.x_offset * 9525
+
+        :right ->
+          (w_px - image.width - image.x_offset) * 9525
+      end
+
+    """
+    <xdr:oneCellAnchor>
+      <xdr:from>
+        <xdr:col>#{image.x}</xdr:col>
+        <xdr:colOff>#{col_off}</xdr:colOff>
+        <xdr:row>#{image.y}</xdr:row>
+        <xdr:rowOff>#{image.y_offset * 9525}</xdr:rowOff>
+      </xdr:from>
+      <xdr:ext cx="#{image.width * 9525}" cy="#{image.height * 9525}"/>
+      <xdr:pic>
+        <xdr:nvPicPr>
+          <xdr:cNvPr id="0" name="image1.png" title="Image" />
+          <xdr:cNvPicPr preferRelativeResize="0" />
+        </xdr:nvPicPr>
+        <xdr:blipFill>
+          <a:blip cstate="print" r:embed="rId#{drawing_id}" />
+          <a:stretch>
+            <a:fillRect />
+          </a:stretch>
+        </xdr:blipFill>
+        <xdr:spPr>
+          <a:prstGeom prst="rect">
+            <a:avLst />
+          </a:prstGeom>
+          <a:noFill />
+        </xdr:spPr>
+      </xdr:pic>
+      <xdr:clientData fLocksWithSheet="0" />
+    </xdr:oneCellAnchor>
+    """
+  end
+
+  def xl_drawing_rel_sheet_rows(images, wci) do
+    Enum.map_join(images, "\n", fn image ->
+      id = DrawingDB.get_id(wci.drawingdb, image)
+
+      """
+      <Relationship
+        Id="rId#{id}"
+        Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image"
+        Target="../media/image#{id}.#{image.extension}"
+      />
+      """
+    end)
+    |> clean_xml()
+  end
+
+  @spec make_xl_drawing_rel_sheet(list(Image.t()), WorkbookCompInfo.t()) :: String.t()
+  def make_xl_drawing_rel_sheet(images, wci) do
+    """
+    <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+    <Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
+      #{xl_drawing_rel_sheet_rows(images, wci)}
+    </Relationships>
+    """
+    |> clean_xml()
+  end
+
+  @spec make_drawing_ref(List.t()) :: String.t()
+  defp make_drawing_ref([]), do: ""
+  defp make_drawing_ref(_drawings), do: "<drawing r:id=\"rId1\"/>"
+
   @spec make_sheet(Sheet.t(), WorkbookCompInfo.t()) :: String.t()
   @doc ~S"""
   Returns the XML content for single sheet.
@@ -514,6 +661,9 @@ defmodule Elixlsx.XMLTemplates do
       make_data_validations(sheet.data_validations) <>
       """
       <pageMargins left="0.75" right="0.75" top="1" bottom="1.0" header="0.5" footer="0.5"/>
+      """ <>
+      make_drawing_ref(sheet.images) <>
+      """
       </worksheet>
       """
   end
@@ -554,9 +704,7 @@ defmodule Elixlsx.XMLTemplates do
           top_left_cell = U.to_excel_coords(row_idx + 1, col_idx + 1)
 
           {"pane=\"#{pane}\"",
-           "<pane xSplit=\"#{col_idx}\" ySplit=\"#{row_idx}\" topLeftCell=\"#{top_left_cell}\" activePane=\"#{
-             pane
-           }\" state=\"frozen\" />"}
+           "<pane xSplit=\"#{col_idx}\" ySplit=\"#{row_idx}\" topLeftCell=\"#{top_left_cell}\" activePane=\"#{pane}\" state=\"frozen\" />"}
 
         _any ->
           {"", ""}
@@ -575,9 +723,7 @@ defmodule Elixlsx.XMLTemplates do
 
     """
     <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-    <sst xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" count="#{len}" uniqueCount="#{
-      len
-    }">
+    <sst xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" count="#{len}" uniqueCount="#{len}">
     """ <>
       Enum.map_join(stringlist, fn {_, value} ->
         # the only two characters that *must* be replaced for safe XML encoding are & and <:
@@ -724,14 +870,14 @@ defmodule Elixlsx.XMLTemplates do
     Enum.map_join(borders_list, "\n", &BorderStyle.get_border_style_entry(&1))
   end
 
-  @spec make_xl_styles(WorkbookCompInfo.t()) :: String.t()
+  @spec make_xl_styles(Workbook.t(), WorkbookCompInfo.t()) :: String.t()
   @doc ~S"""
   Get the content of the `styles.xml` file.
 
   The WorkbookCompInfo struct must be computed before calling this,
   (especially CellStyleDB.register_all)
   """
-  def make_xl_styles(wci) do
+  def make_xl_styles(workbook, wci) do
     font_list = FontDB.id_sorted_fonts(wci.fontdb)
     fill_list = FillDB.id_sorted_fills(wci.filldb)
     cell_xfs = CellStyleDB.id_sorted_styles(wci.cellstyledb)
@@ -743,7 +889,7 @@ defmodule Elixlsx.XMLTemplates do
     <styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">
       #{make_numfmts(numfmts_list)}
       <fonts count="#{1 + length(font_list)}">
-        <font />
+        #{workbook_font(workbook)}
         #{make_font_list(font_list)}
       </fonts>
       <fills count="#{2 + length(fill_list)}">
@@ -812,5 +958,30 @@ defmodule Elixlsx.XMLTemplates do
       <calcPr fullCalcOnLoad="1" iterateCount="100" refMode="A1" iterate="false" iterateDelta="0.001"/>
       </workbook>
       """
+  end
+
+  @spec clean_xml(String.t()) :: String.t()
+  defp clean_xml(str) do
+    str
+    |> String.split("\n")
+    |> Enum.map_join(" ", &String.trim/1)
+    |> String.replace("\" />", "\"/>", global: true)
+    |> String.replace("> <", "><", global: true)
+    |> String.replace(">  <", "><", global: true)
+  end
+
+  defp workbook_font(workbook) do
+    case workbook do
+      %{font: font, font_size: size} when is_binary(font) and is_integer(size) ->
+        """
+        <font>
+          <name val="#{workbook.font}" />
+          <sz val="#{workbook.font_size}" />
+        </font>
+        """
+
+      _ ->
+        "<font />"
+    end
   end
 end

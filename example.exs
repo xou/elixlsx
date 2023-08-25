@@ -4,7 +4,8 @@ require Elixlsx
 
 alias Elixlsx.{Sheet, Workbook}
 
-sheet1 = Sheet.with_name("First")
+sheet1 =
+  Sheet.with_name("First")
   # Set cell B2 to the string "Hi". :)
   |> Sheet.set_cell("B2", "Hi")
   # Optionally, set font properties:
@@ -48,11 +49,15 @@ sheet1 = Sheet.with_name("First")
   |> Sheet.set_cell("A3", "cow")
   |> Sheet.add_data_validations("A1", "A10", ["dog", "cat", "cow"])
   # within same sheet
-  |> Sheet.add_data_validations("A1", "A10", "=$A$2:$A$16")
+  |> Sheet.add_data_validations("B1", "B10", "=$B$2:$B$16")
   # reference to other sheet  "=#{sheet.name}!$A$2:$A$16"
-  |> Sheet.add_data_validations("A1", "A10", "=sheet2!$A$2:$A$16")
+  |> Sheet.add_data_validations("C1", "C10", "=Third!$A$2:$A$16")
 
-workbook = %Workbook{sheets: [sheet1]}
+workbook = %Workbook{
+  sheets: [sheet1],
+  font: "Arial",
+  font_size: 12
+}
 
 # it is also possible to add a custom "created" date to workbook, otherwise,
 # the current date is used.
@@ -65,7 +70,7 @@ sheet2 =
     name: "Third",
     rows: [[1, 2, 3, 4, 5], [1, 2], ["increased row height"], ["hello", "world"]]
   }
-  |> Sheet.set_row_height(3, 40)
+  |> Sheet.set_row_height(2, 75)
 
 workbook = Workbook.append_sheet(workbook, sheet2)
 
@@ -136,7 +141,7 @@ sheet5 =
 sheet6 =
   %Sheet{
     name: "Row and Column Groups",
-    rows: 1..100 |> Enum.chunk(10),
+    rows: 1..100 |> Enum.chunk_every(10),
     # collapse and hide rows 2 to 3
     group_rows: [{2..3, collapsed: true}, 6..7],
     # nest
@@ -145,7 +150,70 @@ sheet6 =
   # nest further
   |> Sheet.group_cols("C", "D")
 
+# Images
+sheet7 = %Sheet{
+  name: "Images",
+  rows: List.duplicate(["A", "B", "C", "D", "E"], 5)
+}
+
+sheet7 =
+  sheet7
+  |> Sheet.set_col_width("A", 10)
+  |> Sheet.set_col_width("B", 10)
+  |> Sheet.set_col_width("C", 10)
+  |> Sheet.set_col_width("D", 10)
+  |> Sheet.set_col_width("E", 10)
+  |> Sheet.set_row_height(1, 75)
+  |> Sheet.set_row_height(2, 75)
+  |> Sheet.set_row_height(3, 75)
+  |> Sheet.set_row_height(4, 75)
+  |> Sheet.set_row_height(5, 75)
+  # Images can be aligned from the right, but you
+  # might need to adjust the char (max character width)
+  # which is different per font and size.
+  |> Sheet.insert_image(1, 1, "ladybug-3475779_640.jpg",
+    width: 50,
+    height: 50,
+    align_x: :right,
+    char: 9
+  )
+  |> Sheet.insert_image(2, 2, "ladybug-3475779_640.jpg",
+    width: 100,
+    height: 100
+  )
+  # Pass in the binary instead of loading from a file path
+  |> Sheet.insert_image(3, 0, {"ladybug-3475779_640.jpg", File.read!("ladybug-3475779_640.jpg")},
+    width: 150,
+    height: 150
+  )
+
+sheet8 = %Sheet{
+  name: "Images 2",
+  rows: List.duplicate(["A", "B", "C", "D", "E"], 5)
+}
+
+sheet8 =
+  sheet8
+  |> Sheet.set_col_width("A", 10)
+  |> Sheet.set_col_width("B", 10)
+  |> Sheet.set_col_width("C", 10)
+  |> Sheet.set_col_width("D", 10)
+  |> Sheet.set_col_width("E", 10)
+  |> Sheet.set_row_height(1, 75)
+  |> Sheet.set_row_height(2, 75)
+  |> Sheet.set_row_height(3, 75)
+  |> Sheet.set_row_height(4, 75)
+  |> Sheet.set_row_height(5, 75)
+  |> Sheet.insert_image(0, 0, "ladybug-3475779_640.jpg",
+    width: 100,
+    height: 100,
+    x_offset: 50,
+    y_offset: 50
+  )
+
 Workbook.append_sheet(workbook, sheet4)
 |> Workbook.append_sheet(sheet5)
 |> Workbook.append_sheet(sheet6)
+|> Workbook.append_sheet(sheet7)
+|> Workbook.append_sheet(sheet8)
 |> Elixlsx.write_to("example.xlsx")

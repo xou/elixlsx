@@ -31,3 +31,6 @@ elixlsx-*.tar
 
 # Misc.
 *.swp
+
+# Elixir LS cache
+/.elixir_ls/
