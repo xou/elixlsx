@@ -61,8 +61,8 @@ defmodule Elixlsx.Compiler do
 
   @spec compinfo_from_rows(WorkbookCompInfo.t(), list(list(any()))) :: WorkbookCompInfo.t()
   def compinfo_from_rows(wci, rows) do
-    List.foldl(rows, wci, fn cols, wci ->
-      List.foldl(cols, wci, fn cell, wci ->
+    Enum.reduce(rows, wci, fn {_row, cols}, wci ->
+      Enum.reduce(cols, wci, fn {_col, cell}, wci ->
         compinfo_cell_pass(wci, cell)
       end)
     end)
@@ -71,7 +71,7 @@ defmodule Elixlsx.Compiler do
   @spec compinfo_from_sheets(WorkbookCompInfo.t(), list(Sheet.t())) :: WorkbookCompInfo.t()
   def compinfo_from_sheets(wci, sheets) do
     List.foldl(sheets, wci, fn sheet, wci ->
-      compinfo_from_rows(wci, sheet.rows)
+      compinfo_from_rows(wci, sheet.cells)
     end)
   end
 

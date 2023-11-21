@@ -90,9 +90,7 @@ defmodule Elixlsx.XMLTemplates do
   def make_xl_rel_sheet(sheet_comp_info) do
     # I'd love to use string interpolation here, but unfortunately """< is heredoc notation, so i have to use
     # string concatenation or escape all the quotes. Choosing the first.
-    "<Relationship Id=\"#{sheet_comp_info.rId}\" Type=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet\" Target=\"worksheets/#{
-      sheet_comp_info.filename
-    }\"/>"
+    "<Relationship Id=\"#{sheet_comp_info.rId}\" Type=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet\" Target=\"worksheets/#{sheet_comp_info.filename}\"/>"
   end
 
   @spec make_xl_rel_sheets(nonempty_list(SheetCompInfo.t())) :: String.t()
@@ -124,9 +122,7 @@ defmodule Elixlsx.XMLTemplates do
     end
 
     """
-    <sheet name="#{xml_escape(sheet_info.name)}" sheetId="#{sheet_comp_info.sheetId}" state="visible" r:id="#{
-      sheet_comp_info.rId
-    }"/>
+    <sheet name="#{xml_escape(sheet_info.name)}" sheetId="#{sheet_comp_info.sheetId}" state="visible" r:id="#{sheet_comp_info.rId}"/>
     """
   end
 
@@ -216,13 +212,16 @@ defmodule Elixlsx.XMLTemplates do
 
   # TODO i know now about string interpolation, i should probably clean this up. ;)
   defp xl_sheet_cols(row, rowidx, wci) do
-    {updated_row, _id} =
-      row
-      |> List.foldl({"", 1}, fn cell, {acc, colidx} ->
+    updated_row =
+      Map.keys(row)
+      |> Enum.sort()
+      |> Enum.map(&(&1 + 1))
+      |> Enum.reduce("", fn colidx, acc ->
+        cell = row[colidx - 1]
         {content, styleID, cellstyle} = split_into_content_style(cell, wci)
 
         if is_nil(content) do
-          {acc, colidx + 1}
+          acc
         else
           content =
             if CellStyle.is_date?(cellstyle) do
@@ -275,13 +274,14 @@ defmodule Elixlsx.XMLTemplates do
               type ->
                 """
                 <c r="#{U.to_excel_coords(rowidx, colidx)}"
+
                 s="#{styleID}" t="#{type}">
                 <v>#{content_value}</v>
                 </c>
                 """
             end
 
-          {acc <> cell_xml, colidx + 1}
+          acc <> cell_xml
         end
       end)
 
@@ -302,9 +302,7 @@ defmodule Elixlsx.XMLTemplates do
 
   defp make_data_validation({start_cell, end_cell, values}) when is_bitstring(values) do
     """
-    <dataValidation type="list" allowBlank="1" showErrorMessage="1" sqref="#{start_cell}:#{
-      end_cell
-    }">
+    <dataValidation type="list" allowBlank="1" showErrorMessage="1" sqref="#{start_cell}:#{end_cell}">
       <formula1>#{values}</formula1>
     </dataValidation>
     """
@@ -319,9 +317,7 @@ defmodule Elixlsx.XMLTemplates do
       |> Enum.join("&quot;&amp;&quot;")
 
     """
-    <dataValidation type="list" allowBlank="1" showErrorMessage="1" sqref="#{start_cell}:#{
-      end_cell
-    }">
+    <dataValidation type="list" allowBlank="1" showErrorMessage="1" sqref="#{start_cell}:#{end_cell}">
       <formula1>&quot;#{joined_values}&quot;</formula1>
     </dataValidation>
     """
@@ -334,32 +330,31 @@ defmodule Elixlsx.XMLTemplates do
   defp xl_merge_cells(merge_cells) do
     """
     <mergeCells count="#{Enum.count(merge_cells)}">
-      #{
-      Enum.map(merge_cells, fn {fromCell, toCell} ->
-        "<mergeCell ref=\"#{fromCell}:#{toCell}\"/>"
-      end)
-    }
+      #{Enum.map(merge_cells, fn {fromCell, toCell} -> "<mergeCell ref=\"#{fromCell}:#{toCell}\"/>" end)}
     </mergeCells>
     """
   end
 
-  defp xl_sheet_rows(data, row_heights, grouping_info, wci) do
+  defp xl_sheet_rows(cells, row_heights, grouping_info, wci) do
+    max_row = Map.keys(cells) |> Enum.max()
+
     rows =
-      Enum.zip(data, 1..length(data))
-      |> Enum.map_join(fn {row, rowidx} ->
+      Map.keys(cells)
+      |> Enum.sort()
+      |> Enum.map_join(fn rowidx ->
+        row = cells[rowidx]
+
         """
-        <row r="#{rowidx}" #{get_row_height_attr(row_heights, rowidx)}#{
-          get_row_grouping_attr(grouping_info, rowidx)
-        }>
-          #{xl_sheet_cols(row, rowidx, wci)}
+        <row r="#{rowidx + 1}" #{get_row_height_attr(row_heights, rowidx + 1)}#{get_row_grouping_attr(grouping_info, rowidx + 1)}>
+          #{xl_sheet_cols(row, rowidx + 1, wci)}
         </row>
         """
       end)
 
-    if (length(data) + 1) in grouping_info.collapsed_idxs do
+    if (max_row + 1) in grouping_info.collapsed_idxs do
       rows <>
         """
-        <row r="#{length(data) + 1}" collapsed="1"></row>
+        <row r="#{max_row + 1}" collapsed="1"></row>
         """
     else
       rows
@@ -506,7 +501,7 @@ defmodule Elixlsx.XMLTemplates do
       """
       <sheetData>
       """ <>
-      xl_sheet_rows(sheet.rows, sheet.row_heights, grouping_info, wci) <>
+      xl_sheet_rows(sheet.cells, sheet.row_heights, grouping_info, wci) <>
       ~S"""
       </sheetData>
       """ <>
@@ -554,9 +549,7 @@ defmodule Elixlsx.XMLTemplates do
           top_left_cell = U.to_excel_coords(row_idx + 1, col_idx + 1)
 
           {"pane=\"#{pane}\"",
-           "<pane xSplit=\"#{col_idx}\" ySplit=\"#{row_idx}\" topLeftCell=\"#{top_left_cell}\" activePane=\"#{
-             pane
-           }\" state=\"frozen\" />"}
+           "<pane xSplit=\"#{col_idx}\" ySplit=\"#{row_idx}\" topLeftCell=\"#{top_left_cell}\" activePane=\"#{pane}\" state=\"frozen\" />"}
 
         _any ->
           {"", ""}
@@ -575,9 +568,7 @@ defmodule Elixlsx.XMLTemplates do
 
     """
     <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-    <sst xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" count="#{len}" uniqueCount="#{
-      len
-    }">
+    <sst xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" count="#{len}" uniqueCount="#{len}">
     """ <>
       Enum.map_join(stringlist, fn {_, value} ->
         # the only two characters that *must* be replaced for safe XML encoding are & and <:
