@@ -85,17 +85,6 @@ defmodule Elixlsx.Sheet do
         end
       end)
     end)
-
-    # Enum.map_join(sheet.rows, "\n", fn row ->
-    #   Enum.map_join(row, ",", fn cell ->
-    #     {content, _} = split_cell_content_props(cell)
-
-    #     case content do
-    #       nil -> ""
-    #       _ -> to_string(content)
-    #     end
-    #   end)
-    # end)
   end
 
   @spec set_cell(Sheet.t(), String.t(), any(), Keyword.t()) :: Sheet.t()
