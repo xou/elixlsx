@@ -19,7 +19,7 @@ defmodule Elixlsx.Color do
         "FF" <>
           (color
            # remove leading character
-           |> String.slice(1..-1)
+           |> String.slice(1..-1//1)
            |> String.upcase())
 
       false ->
