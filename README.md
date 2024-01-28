@@ -50,6 +50,9 @@ iex(1)> Workbook.append_sheet(%Workbook{}, Sheet.with_name("Sheet 1") |> Sheet.s
 
 See [example.exs](https://github.com/xou/elixlsx/blob/master/example.exs) for examples how to use the various features.
 
+- The workbook is a XML file ultimately, so remember that formulas containing "<" or ">" must be escaped properly.
+- `:xmerl_lib.export_text/1` can be used to escape formulas properly
+
 ## Number and date formatting reference
 
 A quick introduction how number formattings look like can be found
