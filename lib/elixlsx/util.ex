@@ -1,5 +1,7 @@
 defmodule Elixlsx.Util do
   alias Elixlsx.XML
+  alias Elixlsx.Image
+
   @col_alphabet Enum.to_list(?A..?Z)
 
   @doc ~S"""
@@ -256,5 +258,15 @@ defmodule Elixlsx.Util do
   """
   def app_version_string do
     String.replace(@version, ~r/(\d+)\.(\d+)\.(\d+)/, "\\1.\\2\\3")
+  end
+
+  @doc """
+  Convert width to pixels
+  """
+  @spec width_to_px(number, Image.t()) :: number
+  def width_to_px(0, _), do: 0
+
+  def width_to_px(w, image) do
+    w * image.char + 5
   end
 end

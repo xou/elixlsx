@@ -24,6 +24,7 @@ defmodule Elixlsx.Mixfile do
 
   defp deps do
     [
+      {:floki, "~> 0.34.3", only: [:dev, :test]},
       {:excheck, "~> 0.5", only: :test},
       {:triq, "~> 1.0", only: :test},
       {:credo, "~> 0.5", only: [:dev, :test]},

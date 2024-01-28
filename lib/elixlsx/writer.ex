@@ -2,6 +2,7 @@ defmodule Elixlsx.Writer do
   alias Elixlsx.Util, as: U
   alias Elixlsx.XMLTemplates
   alias Elixlsx.Compiler.StringDB
+  alias Elixlsx.Compiler.DrawingDB
   alias Elixlsx.Compiler.WorkbookCompInfo
   alias Elixlsx.Compiler.SheetCompInfo
   alias Elixlsx.Workbook
@@ -81,9 +82,9 @@ defmodule Elixlsx.Writer do
     ]
   end
 
-  @spec get_xl_styles_xml(WorkbookCompInfo.t()) :: zip_tuple
-  def get_xl_styles_xml(wci) do
-    {'xl/styles.xml', XMLTemplates.make_xl_styles(wci)}
+  @spec get_xl_styles_xml(Workbook.t(), WorkbookCompInfo.t()) :: zip_tuple
+  def get_xl_styles_xml(workbook, wci) do
+    {'xl/styles.xml', XMLTemplates.make_xl_styles(workbook, wci)}
   end
 
   @spec get_xl_workbook_xml(Workbook.t(), [SheetCompInfo.t()]) :: zip_tuple
@@ -102,14 +103,102 @@ defmodule Elixlsx.Writer do
     String.to_charlist("xl/worksheets/#{sci.filename}")
   end
 
+  @spec sheet_full__rels_path(SheetCompInfo.t()) :: list(char)
+  defp sheet_full__rels_path(sci) do
+    String.to_charlist("xl/worksheets/_rels/#{sci.filename}.rels")
+  end
+
+  @spec get_xl_worksheets__rel_dir(
+          Workbook.t(),
+          Sheet.t(),
+          SheetCompInfo.t(),
+          WorkbookCompInfo.t()
+        ) ::
+          list(zip_tuple)
+  def get_xl_worksheets__rel_dir(w, s, sci, wci) do
+    if s.images == [] do
+      []
+    else
+      filename = sheet_full__rels_path(sci)
+      xml = XMLTemplates.make_xl_worksheet_rel_sheet(w, s, wci)
+      [{filename, xml}]
+    end
+  end
+
   @spec get_xl_worksheets_dir(Workbook.t(), WorkbookCompInfo.t()) :: list(zip_tuple)
   def get_xl_worksheets_dir(data, wci) do
     sheets = data.sheets
 
     Enum.zip(sheets, wci.sheet_info)
-    |> Enum.map(fn {s, sci} ->
-      {sheet_full_path(sci), XMLTemplates.make_sheet(s, wci)}
+    |> Enum.flat_map(fn {s, sci} ->
+      [{sheet_full_path(sci), XMLTemplates.make_sheet(s, wci)}] ++
+        get_xl_worksheets__rel_dir(data, s, sci, wci)
     end)
+  end
+
+  @spec drawing_full_path(DrawingCompInfo.t()) :: list(char)
+  defp drawing_full_path(dci) do
+    String.to_charlist("xl/drawings/#{dci.filename}")
+  end
+
+  @spec drawing_full__rels_path(DrawingCompInfo.t()) :: list(char)
+  defp drawing_full__rels_path(dci) do
+    String.to_charlist("xl/drawings/_rels/#{dci.filename}.rels")
+  end
+
+  @spec image_full_path(Image.t(), WorkbookCompInfo.t()) :: list(char)
+  def image_full_path(image, wci) do
+    id = DrawingDB.get_id(wci.drawingdb, image)
+
+    String.to_charlist("xl/media/image#{id}.#{image.extension}")
+  end
+
+  @spec read_image(String.t()) :: binary
+  def read_image(file_path) do
+    File.read!(file_path)
+  end
+
+  @spec get_xl_drawings__rel_dir(list(Image.t()), DrawingCompInfo.t(), WorkbookCompInfo.t()) ::
+          list(zip_tuple)
+  def get_xl_drawings__rel_dir(images, dci, wci) do
+    if images == [] do
+      []
+    else
+      [{drawing_full__rels_path(dci), XMLTemplates.make_xl_drawing_rel_sheet(images, wci)}]
+    end
+  end
+
+  @spec get_xl_drawings_dir(Workbook.t(), WorkbookCompInfo.t()) :: list(zip_tuple)
+  def get_xl_drawings_dir(data, wci) do
+    ## We have one wci.drawing_info per sheet that has any images
+    has_images? = fn s -> s.images != [] end
+    sheets = for sheet <- data.sheets, has_images?.(sheet), do: sheet
+
+    Enum.zip(sheets, wci.drawing_info)
+    |> Enum.flat_map(fn {s, dci} ->
+      [{drawing_full_path(dci), XMLTemplates.make_drawing(s, wci)}] ++
+        get_xl_drawings__rel_dir(s.images, dci, wci)
+    end)
+  end
+
+  @spec get_xl_media_dir(Workbook.t(), WorkbookCompInfo.t()) :: list(zip_tuple)
+  def get_xl_media_dir(data, wci) do
+    has_images? = fn s -> s.images != [] end
+    sheets = for sheet <- data.sheets, has_images?.(sheet), do: sheet
+
+    sheets
+    |> Enum.flat_map(fn s ->
+      Enum.map(s.images, fn image ->
+        case image do
+          %{binary: nil} ->
+            {image_full_path(image, wci), read_image(image.file_path)}
+
+          %{binary: binary} ->
+            {image_full_path(image, wci), binary}
+        end
+      end)
+    end)
+    |> Enum.uniq()
   end
 
   def get_contentTypes_xml(_, wci) do
@@ -121,11 +210,12 @@ defmodule Elixlsx.Writer do
     next_free_xl_rid = wci.next_free_xl_rid
 
     [
-      get_xl_styles_xml(wci),
+      get_xl_styles_xml(data, wci),
       get_xl_sharedStrings_xml(data, wci),
       get_xl_workbook_xml(data, sheet_comp_infos)
     ] ++
       get_xl_rels_dir(data, sheet_comp_infos, next_free_xl_rid) ++
-      get_xl_worksheets_dir(data, wci)
+      get_xl_worksheets_dir(data, wci) ++
+      get_xl_drawings_dir(data, wci) ++ get_xl_media_dir(data, wci)
   end
 end
