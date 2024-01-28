@@ -4,6 +4,10 @@
 
 ! Minimum elixir version raised to 1.7 (#116)
 - Add cell validations (#109)
+- Fix some typos (#120)
+- Add a new YYYY-MM date format (#123)
+- Fix warnings for range syntax (#139)
+- Update README.md, call out requirement to escape '<' and '>' characters (#138)
 
 ## 0.5.1
 
