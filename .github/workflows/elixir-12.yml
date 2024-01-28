@@ -3,7 +3,7 @@
 # separate terms of service, privacy policy, and support
 # documentation.
 
-name: Elixir 1.7 CI 
+name: Elixir 1.12 CI 
 
 on:
   push:
@@ -18,15 +18,17 @@ jobs:
   build:
 
     name: Build and test
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-20.04
 
     steps:
     - uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
     - name: Set up Elixir
       uses: erlef/setup-beam@61e01a43a562a89bfc54c7f9a378ff67b03e4a21 # v1.16.0
       with:
-        elixir-version: '1.7.4' # [Required] Define the Elixir version
-        otp-version: '19.x'      # [Required] Define the Erlang/OTP version
+        elixir-version: '1.12.3' # [Required] Define the Elixir version
+        otp-version: '22.x'      # [Required] Define the Erlang/OTP version
     - name: Restore dependencies cache
       uses: actions/cache@v3
       with:
@@ -37,3 +39,9 @@ jobs:
       run: mix deps.get
     - name: Run tests
       run: mix test
+    - name: Build example.exs
+      run: mix run example.exs
+    - name: Run credo
+      run: mix credo diff --from-git-merge-base origin/master
+    - name: Run Dialyzer
+      run: mix dialyzer

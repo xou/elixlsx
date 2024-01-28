@@ -18,16 +18,16 @@ Features:
 - Font and cell background color, borders
 - Merged cells
 
+
 ## Installation
 
+As of version 0.6, elixlsx requires Elixir 1.12 or above.
 
-### Elixir 1.7 and above
-
-Via Hex, in `mix.exs`:
+Installation via Hex, in `mix.exs`:
 
 ```elixir
 defp deps do
-  [{:elixlsx, "~> 0.5.1"}]
+  [{:elixlsx, "~> 0.6.0"}]
 end
 ```
 
