@@ -2,12 +2,13 @@
 
 ## 0.6.0 [WIP]
 
-! Minimum elixir version raised to 1.7 (#116)
+! Minimum elixir version raised to ~~1.7 (#116)~~ 1.12 (#140)
 - Add cell validations (#109)
 - Fix some typos (#120)
 - Add a new YYYY-MM date format (#123)
 - Fix warnings for range syntax (#139)
 - Update README.md, call out requirement to escape '<' and '>' characters (#138)
+- Fix: Actually throw ArgumentError when cell content type is invalid (#140)
 
 ## 0.5.1
 
