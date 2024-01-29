@@ -209,7 +209,7 @@ defmodule Elixlsx.XMLTemplates do
       :empty ->
         {:empty, :empty}
 
-      true ->
+      _ ->
         :error
     end
   end
