@@ -21,7 +21,7 @@ defmodule Elixlsx.Sheet do
   cell. See `Font.from_props/1` for a list of options.
   """
   defstruct name: "",
-            rows: [],
+            cells: %{},
             col_widths: %{},
             row_heights: %{},
             group_cols: [],
@@ -33,7 +33,7 @@ defmodule Elixlsx.Sheet do
 
   @type t :: %Sheet{
           name: String.t(),
-          rows: list(list(any())),
+          cells: %{integer() => %{integer() => any()}},
           col_widths: %{pos_integer => number},
           row_heights: %{pos_integer => number},
           group_cols: list(rowcol_group),
@@ -71,9 +71,13 @@ defmodule Elixlsx.Sheet do
   This is mainly used for doctests and does not generate valid CSV (yet).
   """
   def to_csv_string(sheet) do
-    Enum.map_join(sheet.rows, "\n", fn row ->
-      Enum.map_join(row, ",", fn cell ->
-        {content, _} = split_cell_content_props(cell)
+    last_row_idx = Map.keys(sheet.cells) |> Enum.max()
+
+    Enum.map_join(0..last_row_idx, "\n", fn row ->
+      last_col_idx = Map.keys(sheet.cells[row]) |> Enum.max()
+
+      Enum.map_join(0..last_col_idx, ",", fn col ->
+        {content, _} = split_cell_content_props(sheet.cells[row][col])
 
         case content do
           nil -> ""
@@ -119,30 +123,7 @@ defmodule Elixlsx.Sheet do
   """
   def set_at(sheet, rowidx, colidx, content, opts \\ [])
       when is_number(rowidx) and is_number(colidx) do
-    cond do
-      length(sheet.rows) <= rowidx ->
-        # append new rows, call self again with new sheet
-        n_new_rows = rowidx - length(sheet.rows)
-        new_rows = 0..n_new_rows |> Enum.map(fn _ -> [] end)
-
-        update_in(sheet.rows, &(&1 ++ new_rows))
-        |> set_at(rowidx, colidx, content, opts)
-
-      length(Enum.at(sheet.rows, rowidx)) <= colidx ->
-        n_new_cols = colidx - length(Enum.at(sheet.rows, rowidx))
-        new_cols = 0..n_new_cols |> Enum.map(fn _ -> nil end)
-        new_row = Enum.at(sheet.rows, rowidx) ++ new_cols
-
-        update_in(sheet.rows, &List.replace_at(&1, rowidx, new_row))
-        |> set_at(rowidx, colidx, content, opts)
-
-      true ->
-        update_in(sheet.rows, fn rows ->
-          List.update_at(rows, rowidx, fn cols ->
-            List.replace_at(cols, colidx, [content | opts])
-          end)
-        end)
-    end
+    put_in(sheet, [Access.key!(:cells), Access.key(rowidx, %{}), colidx], [content | opts])
   end
 
   @spec set_col_width(Sheet.t(), String.t(), number) :: Sheet.t()
