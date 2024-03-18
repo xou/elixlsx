@@ -136,7 +136,7 @@ sheet5 =
 sheet6 =
   %Sheet{
     name: "Row and Column Groups",
-    rows: 1..100 |> Enum.chunk(10),
+    rows: 1..100 |> Enum.chunk_every(10),
     # collapse and hide rows 2 to 3
     group_rows: [{2..3, collapsed: true}, 6..7],
     # nest
