@@ -1,4 +1,3 @@
-
 use PropCheck
 
 defmodule UtilTest do

@@ -55,7 +55,7 @@ defmodule ElixlsxTest do
 
     xml = XMLTemplates.make_xl_shared_strings(StringDB.sorted_id_string_tuples(sdb))
 
-    assert xml_inner_strings(xml, '/sst/si/t') == ["Hello", "World"]
+    assert xml_inner_strings(xml, ~c"/sst/si/t") == ["Hello", "World"]
   end
 
   test "xml escaping StringDB functionality" do
@@ -65,7 +65,7 @@ defmodule ElixlsxTest do
 
     xml = XMLTemplates.make_xl_shared_strings(StringDB.sorted_id_string_tuples(sdb))
 
-    assert xml_inner_strings(xml, '/sst/si/t') == ["Hello World & Goodbye Cruel World"]
+    assert xml_inner_strings(xml, ~c"/sst/si/t") == ["Hello World & Goodbye Cruel World"]
   end
 
   test "font color" do
@@ -75,9 +75,9 @@ defmodule ElixlsxTest do
 
     {xmerl, []} = :xmerl_scan.string(String.to_charlist(xml))
 
-    [color] = :xmerl_xpath.string('/font/color/@rgb', xmerl)
+    [color] = :xmerl_xpath.string(~c"/font/color/@rgb", xmerl)
 
-    assert xmlAttribute(color, :value) == 'FF012345'
+    assert xmlAttribute(color, :value) == ~c"FF012345"
   end
 
   test "font name" do
@@ -87,9 +87,9 @@ defmodule ElixlsxTest do
 
     {xmerl, []} = :xmerl_scan.string(String.to_charlist(xml))
 
-    [name] = :xmerl_xpath.string('/font/name/@val', xmerl)
+    [name] = :xmerl_xpath.string(~c"/font/name/@val", xmerl)
 
-    assert xmlAttribute(name, :value) == 'Arial'
+    assert xmlAttribute(name, :value) == ~c"Arial"
   end
 
   test "blank sheet name" do

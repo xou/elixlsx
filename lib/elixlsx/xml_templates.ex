@@ -90,9 +90,7 @@ defmodule Elixlsx.XMLTemplates do
   def make_xl_rel_sheet(sheet_comp_info) do
     # I'd love to use string interpolation here, but unfortunately """< is heredoc notation, so i have to use
     # string concatenation or escape all the quotes. Choosing the first.
-    "<Relationship Id=\"#{sheet_comp_info.rId}\" Type=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet\" Target=\"worksheets/#{
-      sheet_comp_info.filename
-    }\"/>"
+    "<Relationship Id=\"#{sheet_comp_info.rId}\" Type=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet\" Target=\"worksheets/#{sheet_comp_info.filename}\"/>"
   end
 
   @spec make_xl_rel_sheets(nonempty_list(SheetCompInfo.t())) :: String.t()
@@ -124,9 +122,7 @@ defmodule Elixlsx.XMLTemplates do
     end
 
     """
-    <sheet name="#{xml_escape(sheet_info.name)}" sheetId="#{sheet_comp_info.sheetId}" state="visible" r:id="#{
-      sheet_comp_info.rId
-    }"/>
+    <sheet name="#{xml_escape(sheet_info.name)}" sheetId="#{sheet_comp_info.sheetId}" state="visible" r:id="#{sheet_comp_info.rId}"/>
     """
   end
 
@@ -302,9 +298,7 @@ defmodule Elixlsx.XMLTemplates do
 
   defp make_data_validation({start_cell, end_cell, values}) when is_bitstring(values) do
     """
-    <dataValidation type="list" allowBlank="1" showErrorMessage="1" sqref="#{start_cell}:#{
-      end_cell
-    }">
+    <dataValidation type="list" allowBlank="1" showErrorMessage="1" sqref="#{start_cell}:#{end_cell}">
       <formula1>#{values}</formula1>
     </dataValidation>
     """
@@ -319,9 +313,7 @@ defmodule Elixlsx.XMLTemplates do
       |> Enum.join("&quot;&amp;&quot;")
 
     """
-    <dataValidation type="list" allowBlank="1" showErrorMessage="1" sqref="#{start_cell}:#{
-      end_cell
-    }">
+    <dataValidation type="list" allowBlank="1" showErrorMessage="1" sqref="#{start_cell}:#{end_cell}">
       <formula1>&quot;#{joined_values}&quot;</formula1>
     </dataValidation>
     """
@@ -334,11 +326,7 @@ defmodule Elixlsx.XMLTemplates do
   defp xl_merge_cells(merge_cells) do
     """
     <mergeCells count="#{Enum.count(merge_cells)}">
-      #{
-      Enum.map(merge_cells, fn {fromCell, toCell} ->
-        "<mergeCell ref=\"#{fromCell}:#{toCell}\"/>"
-      end)
-    }
+      #{Enum.map(merge_cells, fn {fromCell, toCell} -> "<mergeCell ref=\"#{fromCell}:#{toCell}\"/>" end)}
     </mergeCells>
     """
   end
@@ -348,9 +336,7 @@ defmodule Elixlsx.XMLTemplates do
       Enum.zip(data, 1..length(data))
       |> Enum.map_join(fn {row, rowidx} ->
         """
-        <row r="#{rowidx}" #{get_row_height_attr(row_heights, rowidx)}#{
-          get_row_grouping_attr(grouping_info, rowidx)
-        }>
+        <row r="#{rowidx}" #{get_row_height_attr(row_heights, rowidx)}#{get_row_grouping_attr(grouping_info, rowidx)}>
           #{xl_sheet_cols(row, rowidx, wci)}
         </row>
         """
@@ -423,7 +409,7 @@ defmodule Elixlsx.XMLTemplates do
     outline_level_attr = if outline_level, do: " outlineLevel=\"#{outline_level}\"", else: ""
     collapsed_attr = if collapsed, do: " collapsed=\"1\"", else: ""
 
-    '<col min="#{k}" max="#{k}"#{width_attr}#{hidden_attr}#{outline_level_attr}#{collapsed_attr} />'
+    ~c'<col min="#{k}" max="#{k}"#{width_attr}#{hidden_attr}#{outline_level_attr}#{collapsed_attr} />'
   end
 
   defp make_cols(sheet) do
@@ -554,9 +540,7 @@ defmodule Elixlsx.XMLTemplates do
           top_left_cell = U.to_excel_coords(row_idx + 1, col_idx + 1)
 
           {"pane=\"#{pane}\"",
-           "<pane xSplit=\"#{col_idx}\" ySplit=\"#{row_idx}\" topLeftCell=\"#{top_left_cell}\" activePane=\"#{
-             pane
-           }\" state=\"frozen\" />"}
+           "<pane xSplit=\"#{col_idx}\" ySplit=\"#{row_idx}\" topLeftCell=\"#{top_left_cell}\" activePane=\"#{pane}\" state=\"frozen\" />"}
 
         _any ->
           {"", ""}
@@ -575,9 +559,7 @@ defmodule Elixlsx.XMLTemplates do
 
     """
     <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-    <sst xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" count="#{len}" uniqueCount="#{
-      len
-    }">
+    <sst xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" count="#{len}" uniqueCount="#{len}">
     """ <>
       Enum.map_join(stringlist, fn {_, value} ->
         # the only two characters that *must* be replaced for safe XML encoding are & and <:
