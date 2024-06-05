@@ -123,8 +123,14 @@ defmodule Elixlsx.XMLTemplates do
       }
     end
 
+   state = case sheet_info.state do
+      :hidden -> "hidden"
+      :very_hidden -> "veryHidden"
+      _ -> "visible"
+    end
+
     """
-    <sheet name="#{xml_escape(sheet_info.name)}" sheetId="#{sheet_comp_info.sheetId}" state="visible" r:id="#{
+    <sheet name="#{xml_escape(sheet_info.name)}" sheetId="#{sheet_comp_info.sheetId}" state="#{state}" r:id="#{
       sheet_comp_info.rId
     }"/>
     """

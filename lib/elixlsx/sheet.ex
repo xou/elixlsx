@@ -28,6 +28,7 @@ defmodule Elixlsx.Sheet do
             group_rows: [],
             merge_cells: [],
             pane_freeze: nil,
+            state: :visible,
             show_grid_lines: true,
             data_validations: []
 
@@ -40,6 +41,7 @@ defmodule Elixlsx.Sheet do
           group_rows: list(rowcol_group),
           merge_cells: [{String.t(), String.t()}],
           pane_freeze: {number, number} | nil,
+          state: :visible | :hidden | :very_hidden,
           show_grid_lines: boolean(),
           data_validations: list({String.t(), String.t(), list(String.t()) | String.t()})
         }
@@ -49,10 +51,18 @@ defmodule Elixlsx.Sheet do
   Create a sheet with a sheet name.
 
   The name can be up to 31 characters long.
+
+  ## Options
+
+  * `state` - sets the default visibility of the sheet. Can be one of:
+    - `:visible` (default)
+    - `:hidden`
+    - `:very_hidden`
   """
   @spec with_name(String.t()) :: Sheet.t()
-  def with_name(name) do
-    %Sheet{name: name}
+  def with_name(name, opts \\ []) do
+    state = Keyword.get(opts, :state, :visible)
+    %Sheet{name: name, state: state}
   end
 
   defp split_cell_content_props(cell) do
