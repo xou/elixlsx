@@ -21,6 +21,8 @@ sheet1 = Sheet.with_name("First")
   |> Sheet.set_cell("A4", 1_448_882_362, yyyymmdd: true)
   # datetime: true ouputs date and time, yyyymmdd limits the output to just the date
   |> Sheet.set_cell("A5", 1_448_882_362, yyyymm: true)
+  # Date formatting can also be applied without setting the cell content
+  |> Sheet.set_cell("A6", "", datetime: true)
   # make some room in the first column, otherwise the date will only show up as ###
   |> Sheet.set_col_width("A", 18.0)
   # Cell borders
