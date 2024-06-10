@@ -145,7 +145,11 @@ sheet6 =
   # nest further
   |> Sheet.group_cols("C", "D")
 
+# Sheets can also be hidden.
+sheet7 = Sheet.with_name("Hidden", state: :hidden)
+
 Workbook.append_sheet(workbook, sheet4)
 |> Workbook.append_sheet(sheet5)
 |> Workbook.append_sheet(sheet6)
+|> Workbook.append_sheet(sheet7)
 |> Elixlsx.write_to("example.xlsx")
