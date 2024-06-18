@@ -467,7 +467,7 @@ defmodule Elixlsx.XMLTemplates do
     outline_level_attr = if outline_level, do: " outlineLevel=\"#{outline_level}\"", else: ""
     collapsed_attr = if collapsed, do: " collapsed=\"1\"", else: ""
 
-    '<col min="#{k}" max="#{k}"#{width_attr}#{hidden_attr}#{outline_level_attr}#{collapsed_attr} />'
+    ~c"<col min=\"#{k}\" max=\"#{k}\"#{width_attr}#{hidden_attr}#{outline_level_attr}#{collapsed_attr} />"
   end
 
   defp make_cols(sheet) do

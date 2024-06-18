@@ -55,7 +55,7 @@ defmodule ElixlsxTest do
 
     xml = XMLTemplates.make_xl_shared_strings(StringDB.sorted_id_string_tuples(sdb))
 
-    assert xml_inner_strings(xml, '/sst/si/t') == ["Hello", "World"]
+    assert xml_inner_strings(xml, ~c"/sst/si/t") == ["Hello", "World"]
   end
 
   test "xml escaping StringDB functionality" do
@@ -65,7 +65,7 @@ defmodule ElixlsxTest do
 
     xml = XMLTemplates.make_xl_shared_strings(StringDB.sorted_id_string_tuples(sdb))
 
-    assert xml_inner_strings(xml, '/sst/si/t') == ["Hello World & Goodbye Cruel World"]
+    assert xml_inner_strings(xml, ~c"/sst/si/t") == ["Hello World & Goodbye Cruel World"]
   end
 
   test "font color" do
@@ -75,9 +75,9 @@ defmodule ElixlsxTest do
 
     {xmerl, []} = :xmerl_scan.string(String.to_charlist(xml))
 
-    [color] = :xmerl_xpath.string('/font/color/@rgb', xmerl)
+    [color] = :xmerl_xpath.string(~c"/font/color/@rgb", xmerl)
 
-    assert xmlAttribute(color, :value) == 'FF012345'
+    assert xmlAttribute(color, :value) == ~c"FF012345"
   end
 
   test "font name" do
@@ -87,9 +87,9 @@ defmodule ElixlsxTest do
 
     {xmerl, []} = :xmerl_scan.string(String.to_charlist(xml))
 
-    [name] = :xmerl_xpath.string('/font/name/@val', xmerl)
+    [name] = :xmerl_xpath.string(~c"/font/name/@val", xmerl)
 
-    assert xmlAttribute(name, :value) == 'Arial'
+    assert xmlAttribute(name, :value) == ~c"Arial"
   end
 
   test "blank sheet name" do
@@ -131,7 +131,7 @@ defmodule ElixlsxTest do
     workbook = %Workbook{sheets: [Sheet.with_name("foo")]}
     wci = Elixlsx.Compiler.make_workbook_comp_info(workbook)
     res = Elixlsx.Writer.create_files(workbook, wci)
-    doc = get_doc(res, 'docProps/app.xml')
+    doc = get_doc(res, ~c"docProps/app.xml")
 
     expected = """
       <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
@@ -151,7 +151,7 @@ defmodule ElixlsxTest do
     workbook = %Workbook{sheets: [Sheet.with_name("foo")]}
     wci = Elixlsx.Compiler.make_workbook_comp_info(workbook)
     res = Elixlsx.Writer.create_files(workbook, wci)
-    doc = get_doc(res, 'docProps/core.xml')
+    doc = get_doc(res, ~c"docProps/core.xml")
 
     assert [
              {:pi, "xml", [{"version", "1.0"}, {"encoding", "UTF-8"}, {"standalone", "yes"}]},
@@ -179,7 +179,7 @@ defmodule ElixlsxTest do
     workbook = %Workbook{sheets: [Sheet.with_name("foo")]}
     wci = Elixlsx.Compiler.make_workbook_comp_info(workbook)
     res = Elixlsx.Writer.create_files(workbook, wci)
-    doc = get_doc(res, '_rels/.rels')
+    doc = get_doc(res, ~c"_rels/.rels")
 
     expected = """
     <?xml version="1.0" encoding="UTF-8"?>
@@ -214,7 +214,7 @@ defmodule ElixlsxTest do
 
     wci = Elixlsx.Compiler.make_workbook_comp_info(workbook)
     res = Elixlsx.Writer.create_files(workbook, wci)
-    doc = get_doc(res, 'xl/styles.xml')
+    doc = get_doc(res, ~c"xl/styles.xml")
 
     expected = """
     <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
@@ -254,7 +254,7 @@ defmodule ElixlsxTest do
     workbook = %Workbook{sheets: [Sheet.with_name("foo")]}
     wci = Elixlsx.Compiler.make_workbook_comp_info(workbook)
     res = Elixlsx.Writer.create_files(workbook, wci)
-    doc = get_doc(res, 'xl/sharedStrings.xml')
+    doc = get_doc(res, ~c"xl/sharedStrings.xml")
 
     expected = """
     <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
@@ -272,7 +272,7 @@ defmodule ElixlsxTest do
     workbook = %Workbook{sheets: [Sheet.with_name("foo")]}
     wci = Elixlsx.Compiler.make_workbook_comp_info(workbook)
     res = Elixlsx.Writer.create_files(workbook, wci)
-    doc = get_doc(res, 'xl/workbook.xml')
+    doc = get_doc(res, ~c"xl/workbook.xml")
 
     expected = """
     <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
@@ -297,7 +297,7 @@ defmodule ElixlsxTest do
     workbook = %Workbook{sheets: [Sheet.with_name("foo")]}
     wci = Elixlsx.Compiler.make_workbook_comp_info(workbook)
     res = Elixlsx.Writer.create_files(workbook, wci)
-    doc = get_doc(res, 'xl/_rels/workbook.xml.rels')
+    doc = get_doc(res, ~c"xl/_rels/workbook.xml.rels")
 
     expected = """
     <?xml version="1.0" encoding="UTF-8"?>
@@ -327,7 +327,7 @@ defmodule ElixlsxTest do
     workbook = %Workbook{sheets: [Sheet.with_name("foo")]}
     wci = Elixlsx.Compiler.make_workbook_comp_info(workbook)
     res = Elixlsx.Writer.create_files(workbook, wci)
-    doc = get_doc(res, 'xl/worksheets/sheet1.xml')
+    doc = get_doc(res, ~c"xl/worksheets/sheet1.xml")
 
     expected = """
     <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
@@ -354,7 +354,7 @@ defmodule ElixlsxTest do
     workbook = %Workbook{sheets: [Sheet.with_name("foo")]}
     wci = Elixlsx.Compiler.make_workbook_comp_info(workbook)
     res = Elixlsx.Writer.create_files(workbook, wci)
-    doc = get_doc(res, '[Content_Types].xml')
+    doc = get_doc(res, ~c"[Content_Types].xml")
 
     expected = """
     <?xml version="1.0" encoding="UTF-8"?>
@@ -387,20 +387,20 @@ defmodule ElixlsxTest do
     wci = Elixlsx.Compiler.make_workbook_comp_info(workbook)
     res = Elixlsx.Writer.create_files(workbook, wci)
 
-    doc = get_doc(res, 'xl/worksheets/sheet1.xml')
+    doc = get_doc(res, ~c"xl/worksheets/sheet1.xml")
     assert Floki.find(doc, "drawing") == [{"drawing", [{"r:id", "rId1"}], []}]
 
-    doc = get_doc(res, 'xl/worksheets/sheet2.xml')
+    doc = get_doc(res, ~c"xl/worksheets/sheet2.xml")
     assert Floki.find(doc, "drawing") == [{"drawing", [{"r:id", "rId1"}], []}]
 
-    doc = get_doc(res, 'xl/worksheets/_rels/sheet1.xml.rels')
+    doc = get_doc(res, ~c"xl/worksheets/_rels/sheet1.xml.rels")
     rel = Floki.find(doc, "relationship")
     assert Floki.attribute(rel, "id") == ["rId1"]
     assert Floki.attribute(rel, "target") == ["../drawings/drawing1.xml"]
 
     # target should be drawing 2, but the id
     # should be the same as sheet 1
-    doc = get_doc(res, 'xl/worksheets/_rels/sheet2.xml.rels')
+    doc = get_doc(res, ~c"xl/worksheets/_rels/sheet2.xml.rels")
     rel = Floki.find(doc, "relationship")
     assert Floki.attribute(rel, "id") == ["rId1"]
     assert Floki.attribute(rel, "target") == ["../drawings/drawing2.xml"]
@@ -424,7 +424,7 @@ defmodule ElixlsxTest do
     wci = Elixlsx.Compiler.make_workbook_comp_info(workbook)
     res = Elixlsx.Writer.create_files(workbook, wci)
 
-    doc = get_doc(res, 'xl/drawings/drawing1.xml')
+    doc = get_doc(res, ~c"xl/drawings/drawing1.xml")
 
     xml = """
     <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
