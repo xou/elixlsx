@@ -136,7 +136,7 @@ defmodule Elixlsx.Util do
 
     to_string(
       :io_lib.format(
-        '~4.10.0b-~2.10.0b-~2.10.0bT~2.10.0b:~2.10.0b:~2.10.0bZ',
+        ~c"~4.10.0b-~2.10.0b-~2.10.0bT~2.10.0b:~2.10.0b:~2.10.0bZ",
         [y, m, d, hours, minutes, seconds]
       )
     )
