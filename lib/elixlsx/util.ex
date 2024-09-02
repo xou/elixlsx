@@ -231,6 +231,10 @@ defmodule Elixlsx.Util do
     {:formula, value}
   end
 
+  @spec to_excel_datetime(binary() | nil) :: binary()
+  def to_excel_datetime(nil), do: ""
+  def to_excel_datetime(""), do: ""
+
   @doc ~S"""
   Replace_all(input, [{search, replace}]).
 
