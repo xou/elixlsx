@@ -29,7 +29,8 @@ defmodule Elixlsx.Sheet do
             merge_cells: [],
             pane_freeze: nil,
             show_grid_lines: true,
-            data_validations: []
+            data_validations: [],
+            protected: false
 
   @type t :: %Sheet{
           name: String.t(),
@@ -41,7 +42,8 @@ defmodule Elixlsx.Sheet do
           merge_cells: [{String.t(), String.t()}],
           pane_freeze: {number, number} | nil,
           show_grid_lines: boolean(),
-          data_validations: list({String.t(), String.t(), list(String.t()) | String.t()})
+          data_validations: list({String.t(), String.t(), list(String.t()) | String.t()}),
+          protected: boolean()
         }
   @type rowcol_group :: Range.t() | {Range.t(), opts :: keyword}
 
@@ -54,6 +56,7 @@ defmodule Elixlsx.Sheet do
   def with_name(name) do
     %Sheet{name: name}
   end
+
 
   defp split_cell_content_props(cell) do
     cond do
@@ -222,8 +225,16 @@ defmodule Elixlsx.Sheet do
     %{sheet | pane_freeze: nil}
   end
 
-  @spec add_data_validations(Sheet.t(), String.t(), String.t(), String.t() | list(String.t())) :: Sheet.t()
+  @spec add_data_validations(Sheet.t(), String.t(), String.t(), list(String.t())) :: Sheet.t()
   def add_data_validations(sheet, start_cell, end_cell, values) do
     %{sheet | data_validations: [{start_cell, end_cell, values} | sheet.data_validations]}
+  end
+
+  @spec set_protected(Sheet.t()) :: Sheet.t()
+  @doc ~S"""
+  Set protection on the sheet so that cells may be set to locked (readonly).
+  """
+  def set_protected(sheet) do
+    %{sheet | protected: true}
   end
 end
