@@ -31,13 +31,13 @@ defmodule Elixlsx.Writer do
   Returns a tuple `{'docProps/app.xml', "XML Data"}`.
   """
   def get_docProps_app_xml(_) do
-    {'docProps/app.xml', XMLTemplates.docprops_app()}
+    {~c"docProps/app.xml", XMLTemplates.docprops_app()}
   end
 
   @spec get_docProps_core_xml(Workbook.t()) :: zip_tuple
   def get_docProps_core_xml(workbook) do
     timestamp = U.iso_timestamp(workbook.datetime)
-    {'docProps/core.xml', XMLTemplates.docprops_core(timestamp)}
+    {~c"docProps/core.xml", XMLTemplates.docprops_core(timestamp)}
   end
 
   @spec get_docProps_dir(Workbook.t()) :: list(zip_tuple)
@@ -53,7 +53,7 @@ defmodule Elixlsx.Writer do
   Returns the filename `_rels/.rels` and it's content as a tuple.
   """
   def get__rels_dotrels(_) do
-    {'_rels/.rels', XMLTemplates.rels_dotrels()}
+    {~c"_rels/.rels", XMLTemplates.rels_dotrels()}
   end
 
   @spec get__rels_dir(Workbook.t()) :: list(zip_tuple)
@@ -67,7 +67,7 @@ defmodule Elixlsx.Writer do
   @spec get_xl_rels_dir(any, [SheetCompInfo.t()], non_neg_integer) :: list(zip_tuple)
   def get_xl_rels_dir(_, sheetCompInfos, next_rId) do
     [
-      {'xl/_rels/workbook.xml.rels',
+      {~c"xl/_rels/workbook.xml.rels",
        ~S"""
        <?xml version="1.0" encoding="UTF-8"?>
        <Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
@@ -83,17 +83,17 @@ defmodule Elixlsx.Writer do
 
   @spec get_xl_styles_xml(WorkbookCompInfo.t()) :: zip_tuple
   def get_xl_styles_xml(wci) do
-    {'xl/styles.xml', XMLTemplates.make_xl_styles(wci)}
+    {~c"xl/styles.xml", XMLTemplates.make_xl_styles(wci)}
   end
 
   @spec get_xl_workbook_xml(Workbook.t(), [SheetCompInfo.t()]) :: zip_tuple
   def get_xl_workbook_xml(data, sheetCompInfos) do
-    {'xl/workbook.xml', XMLTemplates.make_workbook_xml(data, sheetCompInfos)}
+    {~c"xl/workbook.xml", XMLTemplates.make_workbook_xml(data, sheetCompInfos)}
   end
 
   @spec get_xl_sharedStrings_xml(any, WorkbookCompInfo.t()) :: zip_tuple
   def get_xl_sharedStrings_xml(_, wci) do
-    {'xl/sharedStrings.xml',
+    {~c"xl/sharedStrings.xml",
      XMLTemplates.make_xl_shared_strings(StringDB.sorted_id_string_tuples(wci.stringdb))}
   end
 
@@ -113,7 +113,7 @@ defmodule Elixlsx.Writer do
   end
 
   def get_contentTypes_xml(_, wci) do
-    {'[Content_Types].xml', XMLTemplates.make_contenttypes_xml(wci)}
+    {~c"[Content_Types].xml", XMLTemplates.make_contenttypes_xml(wci)}
   end
 
   def get_xl_dir(data, wci) do
