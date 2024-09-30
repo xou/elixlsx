@@ -145,7 +145,18 @@ sheet6 =
   # nest further
   |> Sheet.group_cols("C", "D")
 
+# Text rotation.
+sheet7 =
+  %Sheet{name: "Text rotation"}
+  |> Sheet.set_cell("A1", "Hello - angle_ccw",  text_rotation: :angle_ccw)
+  |> Sheet.set_cell("B1", "Hello - angle_cw",  text_rotation: :angle_cw)
+  |> Sheet.set_cell("C1", "Vertical - vertical", text_rotation: :vertical)
+  |> Sheet.set_cell("D1", "Hello - rotate_up", text_rotation: :rotate_up)
+  |> Sheet.set_cell("E1", "Hello - rotate_down", text_rotation: :rotate_down)
+  |> Sheet.set_cell("F1", "Hello - 20", text_rotation: 20)
+
 Workbook.append_sheet(workbook, sheet4)
 |> Workbook.append_sheet(sheet5)
 |> Workbook.append_sheet(sheet6)
+|> Workbook.append_sheet(sheet7)
 |> Elixlsx.write_to("example.xlsx")
