@@ -775,6 +775,24 @@ defmodule Elixlsx.XMLTemplates do
     |> Enum.map_join(&make_xl_workbook_xml_sheet_entry/1)
   end
 
+  defp workbook_defined_names(%{}) do
+    ""
+  end
+
+  defp workbook_defined_names(defined_names) do
+    """
+    <definedNames>
+    #{Enum.map_join(defined_names, &make_defined_name/1)}
+    </definedNames>
+    """
+  end
+
+  defp make_defined_name({name, definition}) do
+    """
+    <definedName name="#{xml_escape(name)}">#{xml_escape(definition)}</definedName>
+    """
+  end
+
   @doc ~S"""
   Return the data for /xl/workbook.xml
   """
@@ -791,6 +809,9 @@ defmodule Elixlsx.XMLTemplates do
       workbook_sheet_entries(data.sheets, sci) <>
       ~S"""
       </sheets>
+      """ <>
+      workbook_defined_names(data.defined_names) <>
+      """
       <calcPr fullCalcOnLoad="1" iterateCount="100" refMode="A1" iterate="false" iterateDelta="0.001"/>
       </workbook>
       """
