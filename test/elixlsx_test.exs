@@ -126,4 +126,26 @@ defmodule ElixlsxTest do
                    end
     end)
   end
+
+  test "test csv can export function value" do
+    csv = Sheet.with_name("A name")
+    |> Sheet.set_at(
+         0,
+         0,
+         {:formula, "foo"}
+       )
+    |> Sheet.set_at(
+         0,
+         1,
+         {:formula, "=HYPERLINK(\"https://www.google.com\", \"Go To Google\")"}
+       )
+    |> Sheet.set_at(
+         0,
+         2,
+         {:formula, "bar"}
+       )
+    |> Sheet.to_csv_string()
+
+    assert csv == "foo,=HYPERLINK(\"https://www.google.com\", \"Go To Google\"),bar"
+  end
 end
