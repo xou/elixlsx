@@ -149,3 +149,10 @@ Workbook.append_sheet(workbook, sheet4)
 |> Workbook.append_sheet(sheet5)
 |> Workbook.append_sheet(sheet6)
 |> Elixlsx.write_to("example.xlsx")
+
+# Autofilter example
+sheet7 = %Sheet{
+  name: "Autofilter example",
+  rows: []
+}
+|> Sheet.set_autofilter("A1", "D5")

@@ -467,9 +467,9 @@ defmodule Elixlsx.XMLTemplates do
     ~S"""
     <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
     <worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">
-    <sheetPr filterMode="false">
-      <pageSetUpPr fitToPage="false"/>
-    </sheetPr>
+    """ <>
+    make_sheet_pr(sheet) <>
+    """
     <dimension ref="A1"/>
     <sheetViews>
     <sheetView workbookViewId="0"
@@ -498,10 +498,20 @@ defmodule Elixlsx.XMLTemplates do
       """ <>
       xl_merge_cells(sheet.merge_cells) <>
       make_data_validations(sheet.data_validations) <>
+      make_autofilter(sheet.autofilter) <>
       """
       <pageMargins left="0.75" right="0.75" top="1" bottom="1.0" header="0.5" footer="0.5"/>
       </worksheet>
       """
+  end
+
+  defp make_sheet_pr(sheet) do
+    filter_mode = if sheet.autofilter, do: "true", else: "false"
+    """
+    <sheetPr filterMode="#{filter_mode}">
+      <pageSetUpPr fitToPage="false"/>
+    </sheetPr>
+    """
   end
 
   defp make_sheet_show_grid(sheet) do
@@ -794,5 +804,12 @@ defmodule Elixlsx.XMLTemplates do
       <calcPr fullCalcOnLoad="1" iterateCount="100" refMode="A1" iterate="false" iterateDelta="0.001"/>
       </workbook>
       """
+  end
+
+  # Create XML for autofilter if it's set
+  defp make_autofilter(nil), do: ""
+  defp make_autofilter({start_cell, end_cell}) do
+    range = "#{start_cell}:#{end_cell}"
+    ~s|<autoFilter ref="#{range}"/>|
   end
 end
