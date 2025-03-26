@@ -6,6 +6,7 @@
 [![Total Download](https://img.shields.io/hexpm/dt/elixlsx.svg)](https://hex.pm/packages/elixlsx)
 [![License](https://img.shields.io/hexpm/l/elixlsx.svg)](https://github.com/xou/elixlsx/blob/master/LICENSE)
 [![Last Updated](https://img.shields.io/github/last-commit/xou/elixlsx.svg)](https://github.com/xou/elixlsx/commits/master)
+[![libs.tech recommends](https://libs.tech/project/46763801/badge.svg)](https://libs.tech/project/46763801/elixlsx)
 
 Elixlsx is a writer for the MS Excel OpenXML format (`.xlsx`).
 
