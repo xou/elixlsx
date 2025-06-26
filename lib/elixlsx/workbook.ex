@@ -13,7 +13,7 @@ defmodule Elixlsx.Workbook do
   defstruct sheets: [], datetime: nil
 
   @type t :: %Workbook{
-          sheets: nonempty_list(Sheet.t()),
+          sheets: list(Sheet.t()),
           datetime: String.t() | integer | nil
         }
 
