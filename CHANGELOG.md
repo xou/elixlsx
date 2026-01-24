@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.6.0 [WIP]
+## 0.6.0
 
 ! Minimum elixir version raised to ~~1.7 (#116)~~ 1.12 (#140)
 - Add cell validations (#109)
@@ -9,6 +9,9 @@
 - Fix warnings for range syntax (#139)
 - Update README.md, call out requirement to escape '<' and '>' characters (#138)
 - Fix: Actually throw ArgumentError when cell content type is invalid (#140)
+- Fix data validation where source is within same sheet or reference to other sheet (#131)
+- Fix charlist deprecation warnings for Elixir 1.17+ (single-quoted strings → ~c sigil)
+- Fix Sheet.add_data_validations typespec (#154)
 
 ## 0.5.1
 
