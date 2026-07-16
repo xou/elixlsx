@@ -331,7 +331,7 @@ defmodule Elixlsx.XMLTemplates do
     """
   end
 
-  defp xl_sheet_rows(data, row_heights, grouping_info, wci) do
+  defp xl_sheet_rows([_ | _] = data, row_heights, grouping_info, wci) do
     rows =
       Enum.zip(data, 1..length(data))
       |> Enum.map_join(fn {row, rowidx} ->
@@ -351,6 +351,8 @@ defmodule Elixlsx.XMLTemplates do
       rows
     end
   end
+
+  defp xl_sheet_rows([], _row_heights, _grouping_info, _wci), do: ""
 
   defp get_row_height_attr(row_heights, rowidx) do
     row_height = Map.get(row_heights, rowidx)
